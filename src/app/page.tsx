@@ -12,6 +12,7 @@ export default function LandingPage() {
 
   return (
     <>
+
       <Header />
       <HeroSection />
 
@@ -300,7 +301,7 @@ function Header() {
             ? 'bg-blue-600 text-white hover:bg-primary-700'
             : 'bg-white text-gray-900 hover:bg-gray-100'
             }`}>
-            Acessar Plataforma
+            Testar Grátis
           </button>
         </nav>
       </div>
