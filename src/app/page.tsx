@@ -180,6 +180,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <TestimonialsSection />
+
       {/* Seção Social Proof */}
       <section className="py-16 bg-white border-t border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
@@ -333,6 +335,53 @@ function HeroSection() {
         </div>
       </div>
 
+    </section>
+  );
+}
+
+function TestimonialsSection() {
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            O que nossos clientes dizem
+          </h2>
+          <p className="text-xl text-gray-600">
+            Profissionais que transformaram sua rotina jurídica
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {[
+            {
+              quote: "A Jurieasy reduziu em 80% o tempo que gastava com contratos padrão. Agora consigo focar em casos mais complexos.",
+              author: "Dra. Ana Carolina Silva",
+              role: "Sócia do escritório Silva & Advogados",
+              rating: 5
+            },
+            {
+              quote: "A precisão dos modelos e a facilidade de customização são impressionantes. Minha produtividade nunca foi tão alta.",
+              author: "Dr. Roberto Mendes",
+              role: "Advogado Autônomo - Direito Digital",
+              rating: 5
+            }
+          ].map((testimonial, index) => (
+            <div key={index} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="flex mb-4">
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <span key={i} className="text-yellow-400 text-xl">⭐</span>
+                ))}
+              </div>
+              <p className="text-gray-600 text-lg italic mb-6">"{testimonial.quote}"</p>
+              <div>
+                <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                <div className="text-gray-500 text-sm">{testimonial.role}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
