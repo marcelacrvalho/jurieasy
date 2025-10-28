@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
@@ -21,28 +22,28 @@ export default function LandingPage() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-8 md:mb-16">
               Por que <span className="text-primary-600">milhares de profissionais</span>
               <br className="hidden sm:block" />
-              confiam na JuriEasy?
+              confiam na Jurieasy?
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {[
                 {
-                  icon: '⚡',
+                  icon: './landing-rocket.svg',
                   title: 'Velocidade Impressionante',
                   description: 'De horas para minutos. Gere contratos profissionais em menos de 2 minutos'
                 },
                 {
-                  icon: '🔒',
+                  icon: './landing-lock.svg',
                   title: 'Segurança Jurídica',
                   description: 'Criptografia avançada e compliance com LGPD'
                 },
                 {
-                  icon: '⚖️',
+                  icon: './landing-layers.svg',
                   title: 'Precisão Técnica',
                   description: 'Modelos elaborados por especialistas em direito de diversas áreas'
                 },
                 {
-                  icon: '🔄',
+                  icon: './landing-sync.svg',
                   title: 'Atualizações Constantes',
                   description: 'Adequação automática às mudanças legislativas'
                 }
@@ -51,7 +52,15 @@ export default function LandingPage() {
                   key={index}
                   className="bg-gray-50 p-6 sm:p-8 rounded-xl border border-gray-200 hover:border-primary-300 transition-all duration-300 group hover:shadow-lg"
                 >
-                  <div className="text-2xl sm:text-3xl mb-4 text-gray-700">{feature.icon}</div>
+                  <div className="text-2xl sm:text-3xl mb-4 text-gray-700">
+                    <Image
+                      src={feature.icon}
+                      alt="Ícone de um foguete"
+                      width={44}
+                      height={44}
+                    />
+
+                  </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 group-hover:text-primary-700 transition-colors">
                     {feature.title}
                   </h3>
@@ -151,6 +160,23 @@ export default function LandingPage() {
               * Todos os planos incluem atualizações automáticas e segurança SSL 256-bit
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="video-section">
+        <div className="max-w-4xl mx-auto">
+          <video
+            src="/ui-questions.mp4"
+            width={800}
+            height={450}
+            controls
+            autoPlay
+            muted
+            loop
+            className="w-full"
+          >
+            Seu navegador não suporta o elemento de vídeo.
+          </video>
         </div>
       </section>
 
@@ -266,8 +292,8 @@ function Header() {
       }`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <nav className="flex justify-between items-center">
-          <div className={`text-xl font-bold transition-colors ${scrolled ? 'text-gray-900' : 'text-white'
-            }`}>JuriEasy</div>
+          <div className={`text-xl font-bold transition-colors text-[#108D2B]'
+            }`}>jurieasy</div>
           <button className={`px-6 py-2.5 rounded-full font-semibold transition-all duration-300 ${scrolled
             ? 'bg-blue-600 text-white hover:bg-primary-700'
             : 'bg-white text-gray-900 hover:bg-gray-100'
@@ -353,26 +379,10 @@ function Footer() {
 
           {/* Brand Column */}
           <div className="md:col-span-1">
-            <div className="text-2xl font-bold text-white mb-4">JuriEasy</div>
+            <div className="text-2xl font-bold text-white mb-4">Jurieasy</div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               Tecnologia e segurança jurídica para simplificar a criação de contratos e documentos legais.
             </p>
-            <div className="flex space-x-4">
-              {[
-                { name: 'LinkedIn', icon: '👔', url: '#' },
-                { name: 'Instagram', icon: '📷', url: '#' },
-                { name: 'YouTube', icon: '🎥', url: '#' }
-              ].map((social, index) => (
-                <a
-                  key={index}
-                  href={social.url}
-                  className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-600 transition-colors"
-                  aria-label={social.name}
-                >
-                  <span className="text-sm">{social.icon}</span>
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* TODO: criar página para cada item */}
@@ -454,7 +464,7 @@ function Footer() {
                 placeholder="seu.email@exemplo.com"
                 className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-full text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 flex-1 min-w-64"
               />
-              <button className="bg-primary-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap">
+              <button className="bg-red border-gray-700 text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap">
                 Assinar Newsletter
               </button>
             </div>
