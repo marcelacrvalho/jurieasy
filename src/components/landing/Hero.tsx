@@ -32,7 +32,10 @@ export default function Hero() {
                         <button className="bg-blue-600 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full font-semibold text-[16px] sm:text-[18px] hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
                             Criar meu primeiro contrato
                         </button>
-                        <button className="border-2 border-gray-400 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-semibold text-[14px] sm:text-[16px] hover:bg-white/10 transition-all duration-300">
+                        <button
+                            onClick={() => window.location.href = '/demonstration'}
+                            className="border-2 border-gray-400 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-semibold text-[14px] sm:text-[16px] hover:bg-white/10 transition-all duration-300"
+                        >
                             Ver demonstração
                         </button>
                     </div>
