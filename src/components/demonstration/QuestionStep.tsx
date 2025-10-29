@@ -17,7 +17,7 @@ export default function QuestionStep({ question, onAnswer, currentAnswer }: Ques
                         type="text"
                         value={currentAnswer || ''}
                         onChange={(e) => onAnswer(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black sm:text-lg"
                         placeholder={question.placeholder}
                         autoFocus
                     />
@@ -28,8 +28,8 @@ export default function QuestionStep({ question, onAnswer, currentAnswer }: Ques
                     <textarea
                         value={currentAnswer || ''}
                         onChange={(e) => onAnswer(e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg resize-none"
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black sm:text-lg resize-none"
                         placeholder={question.placeholder}
                         autoFocus
                     />
@@ -42,14 +42,16 @@ export default function QuestionStep({ question, onAnswer, currentAnswer }: Ques
                             <button
                                 key={option.value}
                                 onClick={() => onAnswer(option.value)}
-                                className={`w-full text-left px-6 py-4 border-2 rounded-xl transition-all duration-200 ${currentAnswer === option.value
-                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                className={`w-full text-left px-4 sm:px-6 py-3 sm:py-4 border-2 rounded-xl transition-all duration-200 ${currentAnswer === option.value
+                                    ? 'border-blue-500 bg-blue-500 text-white'
+                                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                                     }`}
                             >
-                                <div className="font-medium">{option.label}</div>
+                                <div className="font-medium text-sm sm:text-black">{option.label}</div>
                                 {option.description && (
-                                    <div className="text-sm text-gray-600 mt-1">{option.description}</div>
+                                    <div className={`text-xs sm:text-sm mt-1 ${currentAnswer === option.value ? 'text-blue-100' : 'text-gray-600'}`}>
+                                        {option.description}
+                                    </div>
                                 )}
                             </button>
                         ))}
@@ -60,7 +62,7 @@ export default function QuestionStep({ question, onAnswer, currentAnswer }: Ques
                 return (
                     <div className="space-y-3">
                         {question.options?.map((option) => (
-                            <label key={option.value} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <label key={option.value} className="flex items-center space-x-3 p-3 border border-gray-200 bg-white rounded-lg hover:bg-gray-50 cursor-pointer">
                                 <input
                                     type="radio"
                                     name={question.id}
@@ -70,9 +72,9 @@ export default function QuestionStep({ question, onAnswer, currentAnswer }: Ques
                                     className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                                 />
                                 <span className="flex-1">
-                                    <div className="font-medium">{option.label}</div>
+                                    <div className="font-medium text-gray-900 text-sm sm:text-base">{option.label}</div>
                                     {option.description && (
-                                        <div className="text-sm text-gray-600 mt-1">{option.description}</div>
+                                        <div className="text-xs sm:text-sm text-gray-600 mt-1">{option.description}</div>
                                     )}
                                 </span>
                             </label>
@@ -86,29 +88,31 @@ export default function QuestionStep({ question, onAnswer, currentAnswer }: Ques
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
             {/* Cabeçalho da Pergunta */}
             <div className="text-center">
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4 leading-tight">
                     {question.title}
                 </h1>
                 {question.description && (
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-sm sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
                         {question.description}
                     </p>
                 )}
             </div>
 
             {/* Input da Pergunta */}
-            <div className="max-w-md mx-auto w-full">
+            <div className="max-w-md mx-auto w-full px-2 sm:px-0">
                 {renderInput()}
             </div>
 
             {/* Ajuda/Observação */}
             {question.helpText && (
-                <div className="max-w-md mx-auto">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-sm text-blue-700">{question.helpText}</p>
+                <div className="max-w-md mx-auto px-2 sm:px-0">
+                    <div className="bg-blue-500/20 border border-blue-400 rounded-lg p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
+                            {question.helpText}
+                        </p>
                     </div>
                 </div>
             )}

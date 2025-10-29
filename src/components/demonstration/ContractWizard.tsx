@@ -1,10 +1,10 @@
 "use client";
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { contractQuestions } from '@/lib/contract-questions';
 import ProgressBar from './ProgressBar';
 import QuestionStep from './QuestionStep';
-
 
 export default function ContractWizard() {
     const [currentStep, setCurrentStep] = useState(0);
@@ -30,7 +30,13 @@ export default function ContractWizard() {
 
     const handleBack = () => {
         if (currentStep > 0) {
+            // Remove a resposta da pergunta atual ao voltar
+            const { [currentQuestion.id]: _, ...remainingAnswers } = answers;
+            setAnswers(remainingAnswers);
             setCurrentStep(prev => prev - 1);
+        } else {
+            // Se estiver na primeira pergunta, volta para a landing
+            window.history.back();
         }
     };
 
@@ -43,6 +49,9 @@ export default function ContractWizard() {
             // Aqui você integraria com sua API real
         }, 2000);
     };
+
+    // Adicione um console.log para debug
+    console.log('Current step:', currentStep, 'Answers:', answers);
 
     if (isGenerating) {
         return (
@@ -57,21 +66,32 @@ export default function ContractWizard() {
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            {/* Header */}
-            <header className="fixed top-0 w-full bg-white border-b border-gray-200 z-10">
-                <div className="max-w-2xl mx-auto px-4 py-4">
+        <div className="min-h-screen bg-gray-900 relative">
+            <div className="fixed inset-0 z-0">
+                <Image
+                    src='/bg-question-1.svg'
+                    alt="Ilustração de um globo"
+                    fill
+                    className="object-cover object-right opacity-40 md:opacity-50"
+                    priority
+                />
+            </div>
+
+            {/* Header - Acima da imagem */}
+            <header className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-10">
+                <div className="max-w-3xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <button
                             onClick={handleBack}
-                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={currentStep === 0}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 19l-7-7 7-7" />
                             </svg>
-                            Voltar
+                            {currentStep === 0 ? 'Início' : 'Voltar'}
                         </button>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-white">
                             {currentStep + 1} de {contractQuestions.length}
                         </div>
                     </div>
@@ -79,8 +99,8 @@ export default function ContractWizard() {
                 </div>
             </header>
 
-            {/* Conteúdo Principal */}
-            <main className="pt-24 pb-8">
+            {/* Conteúdo Principal - Acima da imagem */}
+            <main className="relative z-10 min-h-screen flex items-center justify-center">
                 <div className="max-w-2xl mx-auto px-4">
                     <QuestionStep
                         question={currentQuestion}
