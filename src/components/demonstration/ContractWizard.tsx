@@ -25,21 +25,18 @@ export default function ContractWizard() {
         if (currentStep < contractQuestions.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
-            // Última pergunta - gerar contrato
             generateContract();
         }
     };
 
-    const handleBack = () => {
-        console.log('Back button clicked, current step:', currentStep);
+    const handleBack = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
 
         if (currentStep > 0) {
-            const previousStep = currentStep - 1;
-            console.log('Going to step:', previousStep);
-            setCurrentStep(previousStep);
+            setCurrentStep(currentStep - 1);
         } else {
-            console.log('Going back to landing');
-            window.history.back();
+            window.location.href = '/';
         }
     };
 
@@ -60,9 +57,6 @@ export default function ContractWizard() {
             // Aqui você integraria com sua API real
         }, 2000);
     };
-
-    // Adicione um console.log para debug
-    console.log('Current step:', currentStep, 'Answers:', answers);
 
     if (isGenerating) {
         return (
@@ -88,17 +82,16 @@ export default function ContractWizard() {
                 />
             </div>
 
-            {/* Header - Acima da imagem */}
-            <header className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-10">
+            {/* Header */}
+            <header className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-50">
                 <div className="max-w-3xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <button
                             onClick={handleBack}
-                            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={currentStep === 0}
+                            className="flex items-center gap-2 text-gray-300 px-4 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 19l-7-7 7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                             {currentStep === 0 ? 'Início' : 'Voltar'}
                         </button>
