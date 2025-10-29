@@ -1,6 +1,8 @@
 "use client";
 
 import Image from 'next/image';
+import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 import { useState } from 'react';
 import { contractQuestions } from '@/lib/contract-questions';
 import ProgressBar from './ProgressBar';
@@ -29,13 +31,14 @@ export default function ContractWizard() {
     };
 
     const handleBack = () => {
+        console.log('Back button clicked, current step:', currentStep);
+
         if (currentStep > 0) {
-            // Remove a resposta da pergunta atual ao voltar
-            const { [currentQuestion.id]: _, ...remainingAnswers } = answers;
-            setAnswers(remainingAnswers);
-            setCurrentStep(prev => prev - 1);
+            const previousStep = currentStep - 1;
+            console.log('Going to step:', previousStep);
+            setCurrentStep(previousStep);
         } else {
-            // Se estiver na primeira pergunta, volta para a landing
+            console.log('Going back to landing');
             window.history.back();
         }
     };
@@ -45,7 +48,15 @@ export default function ContractWizard() {
         // Simulação de geração do contrato
         setTimeout(() => {
             setIsGenerating(false);
-            alert('Contrato gerado com sucesso! Em breve redirecionaremos para a visualização.');
+            toast.success('Contrato gerado com sucesso! 🎉. Em breve, redirecionaremos para a visualização.', {
+                icon: '✅',
+                style: {
+                    borderRadius: '10px',
+                    background: '#1f2937',
+                    color: '#fff',
+                },
+            });
+
             // Aqui você integraria com sua API real
         }, 2000);
     };
@@ -72,7 +83,7 @@ export default function ContractWizard() {
                     src='/bg-question-1.svg'
                     alt="Ilustração de um globo"
                     fill
-                    className="object-cover object-right opacity-40 md:opacity-50"
+                    className="object-cover object-right opacity-50"
                     priority
                 />
             </div>
@@ -99,14 +110,24 @@ export default function ContractWizard() {
                 </div>
             </header>
 
-            {/* Conteúdo Principal - Acima da imagem */}
             <main className="relative z-10 min-h-screen flex items-center justify-center">
                 <div className="max-w-2xl mx-auto px-4">
-                    <QuestionStep
-                        question={currentQuestion}
-                        onAnswer={handleAnswer}
-                        currentAnswer={answers[currentQuestion.id]}
-                    />
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentQuestion.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                        >
+                            <QuestionStep
+                                question={currentQuestion}
+                                onAnswer={handleAnswer}
+                                currentAnswer={answers[currentQuestion.id]}
+                            />
+                        </motion.div>
+                    </AnimatePresence>
+
                 </div>
             </main>
         </div>

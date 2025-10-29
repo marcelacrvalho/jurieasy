@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suravaram, Open_Sans } from 'next/font/google';
 import './globals.css';
+import { Toaster } from "react-hot-toast";
 
 const suravaram = Suravaram({
   subsets: ['latin'],
@@ -31,6 +32,18 @@ export default function RootLayout({
         className={`${suravaram.variable} ${openSans.variable} antialiased`}
       >
         {children}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "#333",
+              color: "#fff",
+              borderRadius: "8px",
+              padding: "12px 16px",
+            },
+          }}
+        />
       </body>
     </html>
   );
