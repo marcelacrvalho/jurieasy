@@ -19,7 +19,7 @@ export default function Header() {
             }`}>
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <nav className="flex justify-between items-center">
-                    <div className={`text-xl font-bold transition-colors text-[#108D2B]'
+                    <div className={`logo text-xl font-bold transition-colors text-[#108D2B]'
             }`}>jurieasy</div>
                     <button className={`px-6 py-2.5 rounded-full font-semibold transition-all duration-300 ${scrolled
                         ? 'bg-blue-600 text-white hover:bg-primary-700'

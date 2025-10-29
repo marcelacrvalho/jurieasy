@@ -36,3 +36,15 @@ body {
   font-weight: 700;
   color: #22BE44;
 }
+
+/* Animações suaves para transições entre perguntas */
+.fade-enter {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
