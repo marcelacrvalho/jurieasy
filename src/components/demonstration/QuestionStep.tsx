@@ -18,9 +18,9 @@ export default function QuestionStep({ question, onAnswer, currentAnswer, allAns
     // Aplica personalização
     const personalizedText = getPersonalizedText(question.id, allAnswers);
 
-    const finalTitle = personalizedText.title || question.title;
-    const finalDescription = personalizedText.description || question.description;
-    const finalPlaceholder = personalizedText.placeholder || question.placeholder;
+    const finalTitle = personalizedText != null ? personalizedText.title || question.title : '';
+    const finalDescription = personalizedText != null ? personalizedText.description || question.description : '';
+    const finalPlaceholder = personalizedText != null ? personalizedText.placeholder || question.placeholder : '';
 
     // Sincroniza o inputValue e foca no input quando a pergunta muda
     useEffect(() => {
