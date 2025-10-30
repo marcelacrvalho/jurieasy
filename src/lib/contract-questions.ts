@@ -12,6 +12,60 @@ export interface Question {
     }>;
 }
 
+// Função para personalizar textos baseado nas respostas
+export const getPersonalizedText = (questionId: string, answers: Record<string, any>) => {
+    const userName = answers.contractor_name?.split(' ')[0] || 'você';
+    const isPhysicalPerson = answers.contractor_type === 'physical';
+    const isLegalPerson = answers.contractor_type === 'legal';
+
+    switch (questionId) {
+        case 'contractor_document':
+            if (isPhysicalPerson) {
+                return {
+                    title: `Beleza! Qual seu CPF, ${userName}?`,
+                    description: 'Só os números do seu CPF, que a gente formata pra você',
+                    placeholder: 'Ex: 12345678900'
+                };
+            } else if (isLegalPerson) {
+                return {
+                    title: `Beleza! Qual o CNPJ da empresa?`,
+                    description: 'Só os números do CNPJ da empresa',
+                    placeholder: 'Ex: 12345678000190'
+                };
+            }
+            break;
+
+        case 'service_provider_name':
+            return {
+                title: `Agora, ${userName}, quem vai te ajudar com o serviço?`
+            };
+
+        case 'service_description':
+            return {
+                title: `Me explica direitinho, ${userName}: o que essa pessoa/empresa vai fazer pra você?`
+            };
+
+        case 'deadline':
+            return {
+                title: `E tem um prazo em mente, ${userName}?`
+            };
+
+        case 'jurisdiction':
+            return {
+                title: `Última pergunta, ${userName}! Se der algum pepino, onde resolve?`
+            };
+
+        case 'anything_else':
+            return {
+                title: `Antes de gerar seu contrato, ${userName}, tem mais alguma coisa que quer incluir?`
+            };
+
+        default:
+            return {};
+    }
+};
+
+// Perguntas base (sem personalização)
 export const contractQuestions: Question[] = [
     {
         id: 'contractor_name',
