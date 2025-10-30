@@ -17,6 +17,7 @@ export default function ContractWizard() {
     const progress = ((currentStep + 1) / contractQuestions.length) * 100;
 
     const handleAnswer = (answer: any) => {
+        console.log('Salvando resposta:', answer, 'para pergunta:', currentQuestion.id);
         setAnswers(prev => ({
             ...prev,
             [currentQuestion.id]: answer
@@ -32,17 +33,19 @@ export default function ContractWizard() {
     const handleBack = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        console.log('🎯 BOTÃO VOLTAR CLICADO!', currentStep);
 
         if (currentStep > 0) {
+            console.log('🔄 Indo para passo:', currentStep - 1);
             setCurrentStep(currentStep - 1);
         } else {
+            console.log('🏠 Voltando para home');
             window.location.href = '/';
         }
     };
 
     const generateContract = async () => {
         setIsGenerating(true);
-        // Simulação de geração do contrato
         setTimeout(() => {
             setIsGenerating(false);
             toast.success('Contrato gerado com sucesso! 🎉. Em breve, redirecionaremos para a visualização.', {
@@ -53,8 +56,7 @@ export default function ContractWizard() {
                     color: '#fff',
                 },
             });
-
-            // Aqui você integraria com sua API real
+            console.log('📄 Respostas finais para o contrato:', answers);
         }, 2000);
     };
 
@@ -82,13 +84,12 @@ export default function ContractWizard() {
                 />
             </div>
 
-            {/* Header */}
             <header className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-700 z-50">
                 <div className="max-w-3xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <button
                             onClick={handleBack}
-                            className="flex items-center gap-2 text-gray-300 px-4 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
+                            className="flex items-center gap-2 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors font-medium"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -116,6 +117,7 @@ export default function ContractWizard() {
                             <QuestionStep
                                 question={currentQuestion}
                                 onAnswer={handleAnswer}
+                                allAnswers={answers}
                                 currentAnswer={answers[currentQuestion.id]}
                             />
                         </motion.div>
