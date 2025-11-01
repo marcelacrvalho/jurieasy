@@ -3,10 +3,10 @@ export default function Testimonial() {
         <section className="py-20 bg-gray-50">
             <div className="max-w-4xl mx-auto px-4 sm:px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-4text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
                         O que nossos clientes dizem
-                    </h2>
-                    <p className="text-lg text-gray-600text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+                    </h1>
+                    <p className="text-3x1 text-gray-600 sm:text-lg text-gray-600 max-w-2xl mx-auto">
                         Profissionais que transformaram sua rotina jurídica
                     </p>
                 </div>

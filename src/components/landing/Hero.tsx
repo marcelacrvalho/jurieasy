@@ -1,47 +1,158 @@
-import Image from "next/image";
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export default function Hero() {
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    const slides = [
+        {
+            title: "Deixe a burocracia com a gente. Crie contratos inteligentes em minutos",
+            description: "Automatize seus documentos jurídicos com modelos prontos, sempre atualizados e revisados por especialistas",
+            cta: "Ver demonstração",
+            image: "/slide-1.svg",
+            mobileImage: "/slide-1.svg",
+            onClickPath: "/demonstration"
+        },
+        {
+            title: "Assine com validade jurídica, onde estiver",
+            description: "Envie, assine e compartilhe contratos de forma 100% digital — segura, rápida e integrada à sua rotina",
+            cta: "Experimentar agora",
+            image: "/landing-message.svg",
+            mobileImage: "/landing-message.svg",
+            onClickPath: "/signup" //TODO: adicionar as outras imagens do slide
+
+        },
+        {
+            title: "Modelos Profissionais para todo tipo de negócio",
+            description: "Tenha acesso a uma biblioteca completa de contratos e documentos prontos para uso — do freelancer à grande empresa",
+            cta: "Explorar Modelos",
+            image: "/landing-rocket.svg",
+            mobileImage: "/landing-rocket.svg",
+            onClickPath: "/signup"
+        }
+    ];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [slides.length]);
+
+    const nextSlide = () => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+    };
+
+    const prevSlide = () => {
+        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    };
+
     return (
-        <section className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col relative overflow-hidden">
+        <section className="relative h-screen min-h-[600px] bg-grey overflow-hidden">
+            {/* Slides */}
+            <div className="relative h-full w-full">
+                {slides.map((slide, index) => (
+                    <div
+                        key={index}
+                        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                            }`}
+                    >
+                        <div className="max-w-6xl mx-auto px-4 h-full flex items-center">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center w-full">
+                                {/* Conteúdo do texto - ORDEM INVERTIDA PARA MOBILE */}
+                                <div className="order-2 lg:order-1 text-center lg:text-left mt-8 lg:mt-0">
+                                    <h1 className="text-2xl font-bold text-white mb-3 sm:text-3xl sm:mb-4 md:text-4xl">
+                                        {slide.title}
+                                    </h1>
+                                    <p className="text-white mb-6 max-w-2xl sm:text-lg sm:mb-8 md:text-xl">
+                                        {slide.description}
+                                    </p>
+                                    <button onClick={() => window.location.href = slide.onClickPath!} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full text-base transition-colors duration-200 w-full sm:w-auto sm:py-4 sm:px-8 sm:text-lg">
+                                        {slide.cta}
+                                    </button>
+                                    <p className="text-sm text-gray-400 mt-4">
+                                        +5000 contratos criados automaticamente por profissionais e empresas.
+                                    </p>
+                                </div>
 
-            <div className="absolute right-0 bottom-0 z-0 h-screen opacity-20 md:opacity-100">
-                <Image
-                    src='/landing-vector.svg'
-                    alt="Ilustração de um globo"
-                    width={600}
-                    height={800}
-                    className="w-auto h-full object-cover object-right"
-                    priority
-                />
-            </div>
-
-            {/* Conteúdo principal acima da imagem */}
-            <div className="flex-1 flex items-center py-8 sm:py-16 relative z-10 pt-20 sm:pt-24">
-                <div className="max-w-6xl mx-auto text-center px-4 sm:px-6 w-full">
-                    <h1 className="text-[28px] sm:text-[42px] md:text-[56px] lg:text-[64px] font-bold text-white mb-6 sm:mb-8 leading-tight">
-                        Unimos a agilidade da tecnologia
-                        com a segurança de um escritório
-                    </h1>
-
-                    <p className="text-[16px] sm:text-[20px] text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
-                        Transforme documentos complexos em contratos impecáveis em minutos,
-                        com a confiabilidade que seu negócio exige
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8 sm:mb-16">
-                        <button className="bg-blue-600 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full font-semibold text-[16px] sm:text-[18px] hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                            Criar meu primeiro contrato
-                        </button>
-                        <button
-                            onClick={() => window.location.href = '/demonstration'}
-                            className="border-2 border-gray-400 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-semibold text-[14px] sm:text-[16px] hover:bg-white/10 transition-all duration-300"
-                        >
-                            Ver demonstração
-                        </button>
+                                {/* Imagem - ORDEM PRIMEIRA PARA MOBILE */}
+                                <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+                                    <Image
+                                        src={slide.image}
+                                        alt={slide.title}
+                                        width={450}
+                                        height={400}
+                                        className="w-4/5 h-auto max-w-[450px] sm:max-w-[400px] lg:w-full lg:max-w-[500px] rounded-2xl border border-white/40 shadow-xl"
+                                        priority={index === 0}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ))}
             </div>
 
+            {/* Controles de navegação - OCULTOS NO MOBILE */}
+            <button
+                onClick={prevSlide}
+                className="hidden sm:flex absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200 z-10"
+                aria-label="Slide anterior"
+            >
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <button
+                onClick={nextSlide}
+                className="hidden sm:flex absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200 z-10"
+                aria-label="Próximo slide"
+            >
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+
+            {/* Indicadores - MAIORES NO MOBILE */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
+                {slides.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setCurrentSlide(index)}
+                        className={`transition-all duration-200 ${index === currentSlide
+                            ? 'bg-blue-600 scale-110 w-4 h-4 sm:w-3 sm:h-3'
+                            : 'bg-gray-300 hover:bg-gray-400 w-3 h-3 sm:w-2 sm:h-2'
+                            } rounded-full`}
+                        aria-label={`Ir para slide ${index + 1}`}
+                    />
+                ))}
+            </div>
+
+            {/* Botões de navegação para mobile - NA PARTE INFERIOR */}
+            <div className="sm:hidden absolute bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
+                <button
+                    onClick={prevSlide}
+                    className="bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200"
+                    aria-label="Slide anterior"
+                >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button
+                    onClick={nextSlide}
+                    className="bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all duration-200"
+                    aria-label="Próximo slide"
+                >
+                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Gradiente decorativo - MAIS SUAVE NO MOBILE */}
+            <div className="absolute top-0 right-0 w-1/2 h-1/2 sm:w-1/3 sm:h-1/3 bg-blue-200/10 sm:bg-blue-200/20 rounded-full blur-2xl sm:blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-1/2 h-1/2 sm:w-1/3 sm:h-1/3 bg-blue-100/20 sm:bg-blue-100/30 rounded-full blur-2xl sm:blur-3xl translate-y-1/2 -translate-x-1/2"></div>
         </section>
     );
 }

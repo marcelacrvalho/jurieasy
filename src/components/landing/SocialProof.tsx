@@ -1,21 +1,28 @@
 export default function SocialProof() {
     return (
-        <>
-            <section className="py-16 bg-white border-t border-gray-100">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-                    <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-8">
-                        Confiado por mais de <span className="text-blue-500">5.000 profissionais</span> de diversas áreas
-                    </h3>
-                    <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-12 opacity-60">
-                        <div className="text-2xl font-bold text-gray-400">ADVOGADOS AUTONÔMOS</div>
-                        <div className="text-2xl font-bold text-gray-400">AGÊNCIAS DE MARKETING</div>
-                        <div className="text-2xl font-bold text-gray-400">ESCRITÓRIOS DE ADVOCACIA</div>
-                        <div className="text-2xl font-bold text-gray-400">STARTUPS</div>
-                        <div className="text-2xl font-bold text-gray-400">CLÍNICAS DE ESTÉTICA</div>
-                        <div className="text-2xl font-bold text-gray-400">FILMMAKERS</div>
-                    </div>
+        <section className="py-16 bg-gray-50">
+            <div className="max-w-6xl mx-auto px-4">
+                <div className="text-center mb-12">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                        Confiado por advogados e empresas que inovam
+                    </h1>
                 </div>
-            </section>
-        </>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-12 text-center">
+                    {[
+                        { number: "5000+", label: "Contratos gerados" },
+                        { number: "85%", label: "Tempo economizado" },
+                        { number: "4.9/5", label: "Avaliação dos usuários" },
+                        { number: "24/7", label: "Disponibilidade" }
+                    ].map((stat, index) => (
+                        <div key={index}>
+                            <div className="text-3xl font-bold text-blue-600">{stat.number}</div>
+                            <div className="text-gray-600 text-sm">{stat.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
     );
 }

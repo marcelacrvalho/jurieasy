@@ -25,9 +25,7 @@ export default function Benefits() {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                 >
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-8 md:mb-16">
-                        Por que <span className="text-primary-600">milhares de profissionais</span>
-                        <br className="hidden sm:block" />
-                        confiam na Jurieasy?
+                        Por que milhares de profissionais confiam na Jurieasy?
                     </h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
