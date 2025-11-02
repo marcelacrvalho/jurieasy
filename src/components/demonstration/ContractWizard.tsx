@@ -5,16 +5,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useState } from 'react';
 import { contractQuestions } from '@/lib/contract-questions';
+import { ContractData } from '@/lib/contract-template';
 import ProgressBar from './ProgressBar';
 import QuestionStep from './QuestionStep';
+import ContractPreview from './ContractPreview';
 
 export default function ContractWizard() {
     const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState<Record<string, any>>({});
     const [isGenerating, setIsGenerating] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
 
     const currentQuestion = contractQuestions[currentStep];
     const progress = ((currentStep + 1) / contractQuestions.length) * 100;
+
+    // Função para converter as respostas para ContractData
+    const convertToContractData = (answers: Record<string, any>): ContractData => {
+        return {
+            contractor_name: answers.contractor_name || '',
+            contractor_type: answers.contractor_type || '',
+            contractor_document: answers.contractor_document || '',
+            service_provider_name: answers.service_provider_name || '',
+            service_description: answers.service_description || '',
+            service_value: answers.service_value || '',
+            payment_method: answers.payment_method || '',
+            deadline: answers.deadline || '',
+            confidentiality: answers.confidentiality || '',
+            jurisdiction: answers.jurisdiction || '',
+            anything_else: answers.anything_else || ''
+        };
+    };
 
     const handleAnswer = (answer: any) => {
         console.log('Salvando resposta:', answer, 'para pergunta:', currentQuestion.id);
@@ -56,7 +76,7 @@ export default function ContractWizard() {
                     color: '#fff',
                 },
             });
-            console.log('📄 Respostas finais para o contrato:', answers);
+            setShowPreview(true);
         }, 2000);
     };
 
@@ -69,6 +89,21 @@ export default function ContractWizard() {
                     <p className="text-gray-600">Estamos preparando tudo para você</p>
                 </div>
             </div>
+        );
+    }
+
+    if (showPreview) {
+        const contractData = convertToContractData(answers);
+        return (
+            <ContractPreview
+                contractData={contractData}
+                onBack={() => setShowPreview(false)}
+                onGeneratePDF={() => {
+                    // Aqui você implementará a geração real do PDF
+                    alert('PDF gerado com sucesso!');
+                    // window.open('/api/generate-pdf', '_blank');
+                }}
+            />
         );
     }
 
@@ -122,7 +157,6 @@ export default function ContractWizard() {
                             />
                         </motion.div>
                     </AnimatePresence>
-
                 </div>
             </main>
         </div>
