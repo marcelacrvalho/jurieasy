@@ -17,26 +17,7 @@ export default function LandingPage() {
       <Header />
       <Hero />
       <Benefits />
-
-      <section className="video-section">
-        <div className="max-w-4xl mx-auto">
-          <video
-            src="/ui-questions.mp4"
-            width={800}
-            height={450}
-            controls
-            autoPlay
-            muted
-            loop
-            className="w-full"
-          >
-            Seu navegador não suporta o elemento de vídeo.
-          </video>
-        </div>
-      </section>
-
       <HowItWorks />
-
       <SocialProof />
       <Testimonial />
       <Prices />

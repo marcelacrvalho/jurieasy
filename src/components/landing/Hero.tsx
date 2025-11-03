@@ -58,17 +58,33 @@ export default function Hero() {
                     transition={{ delay: 0.6, duration: 0.8 }}
                     className="relative mt-20 sm:mt-24 w-full max-w-5xl px-4 flex justify-center"
                 >
-                    <div className="relative  bg-rgba(59,130,246,0.15),transparent_70%) rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl w-full">
-                        <Image
-                            src="/slide-1.svg"
-                            alt="Exemplo da plataforma Jurieasy"
-                            width={1000}
-                            height={600}
-                            className="rounded-xl w-full h-auto"
-                        />
+                    {/* Container para as duas imagens - sem moldura externa */}
+                    <div className="flex gap-5 w-full">
+                        {/* Primeira imagem - 60% (50% maior) */}
+                        <div className="flex-[3] relative">
+                            <Image
+                                src="/slide-1.svg"
+                                alt="Exemplo da plataforma Jurieasy"
+                                width={1000}
+                                height={600}
+                                className="rounded-xl w-full h-auto"
+                            />
+                            {/* Efeito glow sutil para a primeira imagem */}
+                            <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-blue-400/10 shadow-[0_0_20px_rgba(59,130,246,0.15)] pointer-events-none" />
+                        </div>
 
-                        {/* Efeito glow sutil */}
-                        <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-blue-400/10 shadow-[0_0_40px_rgba(59,130,246,0.2)] pointer-events-none" />
+                        {/* Segunda imagem - 40% */}
+                        <div className="flex-[2] relative">
+                            <Image
+                                src="/slide-2.svg"
+                                alt="Exemplo da plataforma Jurieasy"
+                                width={1000}
+                                height={600}
+                                className="rounded-xl w-full h-auto"
+                            />
+                            {/* Efeito glow sutil para a segunda imagem */}
+                            <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-blue-400/10 shadow-[0_0_20px_rgba(59,130,246,0.15)] pointer-events-none" />
+                        </div>
                     </div>
                 </motion.div>
             </div>
