@@ -19,7 +19,7 @@ export const getPersonalizedText = (questionId: string, answers: Record<string, 
     const isLegalPerson = answers.contractor_type === 'legal';
 
     switch (questionId) {
-        case 'contractor_document':
+        case 'contractor_document': // CORRIGIDO: era 'contractor_type'
             if (isPhysicalPerson) {
                 return {
                     title: `Beleza! Qual seu CPF, ${userName}?`,

@@ -62,7 +62,7 @@ export default function HowItWorks() {
                                     repeat: Infinity,
                                     ease: "easeInOut",
                                 }}
-                                className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
+                                className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
                             >
                                 <Image
                                     src={item.icon}

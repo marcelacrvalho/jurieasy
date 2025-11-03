@@ -1,16 +1,17 @@
 "use client";
 
-import { ContractData } from '@/lib/contract-template';
+import jsPDF from 'jspdf';
+import { ContractData, generateContractText } from '@/lib/contract-template';
 import { useState } from 'react';
 
-interface ContractPreviewProps {
+interface ContractDocumentProps {
     contractData: ContractData;
     onBack: () => void;
-    onGeneratePDF: () => void;
 }
 
-export default function ContractPreview({ contractData, onBack, onGeneratePDF }: ContractPreviewProps) {
+export default function ContractDocument({ contractData, onBack }: ContractDocumentProps) {
     const [editedData, setEditedData] = useState<ContractData>(contractData);
+    const [isEditing, setIsEditing] = useState(false);
 
     const handleFieldChange = (field: keyof ContractData, value: string) => {
         setEditedData(prev => ({
@@ -19,118 +20,205 @@ export default function ContractPreview({ contractData, onBack, onGeneratePDF }:
         }));
     };
 
-    const highlightText = (text: string, field: keyof ContractData) => (
-        <span
-            className="bg-yellow-200 px-1 rounded cursor-pointer hover:bg-yellow-300 transition-colors"
-            onClick={() => {
-                const newValue = prompt(`Editar ${field}:`, editedData[field] || '');
-                if (newValue !== null) {
-                    handleFieldChange(field, newValue);
-                }
-            }}
-            title="Clique para editar"
-        >
-            {text || `[${field.toUpperCase()}]`}
-        </span>
+    const handleDownload = () => {
+        const pdf = new jsPDF();
+
+        // Configurações iniciais
+        let yPosition = 15;
+        const lineHeight = 7;
+        const margin = 15;
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const maxWidth = pageWidth - (2 * margin);
+
+        // Título
+        pdf.setFontSize(14);
+        pdf.setFont('Arial', 'bold');
+        pdf.text('CONTRATO', pageWidth / 2, yPosition, { align: 'center' });
+
+        yPosition += 20;
+
+        // Corpo do texto
+        pdf.setFontSize(11);
+        pdf.setFont('Arial', 'normal');
+
+        const contractText = generateContractText(editedData);
+        const lines = pdf.splitTextToSize(contractText, maxWidth);
+
+        // Adicionar texto com controle de página
+        lines.forEach(line => {
+            if (yPosition > 270) { // Verifica se precisa de nova página
+                pdf.addPage();
+                yPosition = 15;
+            }
+
+            pdf.text(line, margin, yPosition);
+            yPosition += lineHeight;
+        });
+
+        // Rodapé
+        pdf.setFontSize(8);
+        pdf.setFont('Arial', 'italic');
+        pdf.text(
+            `Gerado em ${new Date().toLocaleDateString()}`,
+            pageWidth / 2,
+            290,
+            { align: 'center' }
+        );
+
+        pdf.save(`contrato-${editedData.contractor_name}-${new Date().getTime()}.pdf`);
+    };
+    const EditableField = ({ value, field, label }: { value: string, field: keyof ContractData, label: string }) => (
+        <div className="mb-2">
+            {isEditing ? (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {label}
+                    </label>
+                    {field === 'service_description' || field === 'anything_else' ? (
+                        <textarea
+                            value={value}
+                            onChange={(e) => handleFieldChange(field, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            rows={3}
+                        />
+                    ) : (
+                        <input
+                            type="text"
+                            value={value}
+                            onChange={(e) => handleFieldChange(field, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    )}
+                </div>
+            ) : (
+                <span className="bg-yellow-100 px-1 rounded">{value || `[${label}]`}</span>
+            )}
+        </div>
     );
 
-    const contractText = `
-DAS PARTES
-
-CONTRATADA: ${highlightText(editedData.service_provider_name, 'service_provider_name')}, pessoa jurídica de direito privado, inscrita no CNPJ n° [CNPJ DA CONTRATADA], com sede em [ENDEREÇO DA CONTRATADA], doravante denominado CONTRATADA.
-
-CONTRATANTE: ${highlightText(editedData.contractor_name, 'contractor_name')}, ${editedData.contractor_type === 'physical' ? 'pessoa física' : 'pessoa jurídica'} de direito privado, inscrita no ${editedData.contractor_type === 'physical' ? 'CPF' : 'CNPJ'} n° ${highlightText(editedData.contractor_document, 'contractor_document')}, com sede em [ENDEREÇO DO CONTRATANTE], doravante denominado CONTRATANTE.
-
-CLÁUSULA PRIMEIRA - DO OBJETO
-
-1.1 O presente contrato tem por objeto a prestação de serviços profissionais especializados em ${highlightText(editedData.service_description, 'service_description')} por parte da CONTRATADA.
-
-CLÁUSULA QUARTA - DOS SERVIÇOS
-
-4.1 A CONTRATADA prestará os serviços contratados para fins de ${highlightText(editedData.service_description, 'service_description')}.
-
-4.2 Os serviços terão início em [NÚMERO] dias corridos da assinatura do presente contrato, com prazo para término de ${highlightText(editedData.deadline, 'deadline')}.
-
-CLÁUSULA QUINTA - DO PREÇO E DAS CONDIÇÕES DE PAGAMENTO
-
-5.1 Pelo objeto deste contrato, a CONTRATANTE pagará à CONTRATADA o valor total de ${highlightText(editedData.service_value, 'service_value')}.
-
-CLÁUSULA DÉCIMA PRIMEIRA - DO FORO
-
-11.1 Para dirimir quaisquer controvérsias oriundas do presente contrato, as partes elegem o foro da Comarca de ${highlightText(editedData.jurisdiction, 'jurisdiction')}.
-
-${editedData.anything_else ? `
-CLÁUSULA DÉCIMA SEGUNDA - DISPOSIÇÕES ADICIONAIS
-
-12.1 ${highlightText(editedData.anything_else, 'anything_else')}
-` : ''}
-  `.trim();
+    const contractText = generateContractText(editedData);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-4">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-4xl mx-auto px-4">
                 {/* Header */}
-                <header className="flex justify-between items-center mb-6">
-                    <button
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Voltar
-                    </button>
-                    <h1 className="text-2xl font-bold">Prévia do Contrato</h1>
-                    <button
-                        onClick={onGeneratePDF}
-                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                    >
-                        📄 Gerar PDF
-                    </button>
+                <header className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 p-6 bg-white rounded-lg shadow-sm border">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={onBack}
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Voltar
+                        </button>
+                        <h1 className="text-2xl font-bold text-gray-900">Seu Contrato Pronto</h1>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${isEditing
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                }`}
+                        >
+                            {isEditing ? '✅ Salvar Edições' : '✏️ Editar Contrato'}
+                        </button>
+
+                        <button
+                            onClick={handleDownload}
+                            className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                        >
+                            📄 Baixar PDF
+                        </button>
+                    </div>
                 </header>
 
-                {/* Contrato */}
-                <div className="bg-white text-gray-900 rounded-lg p-6 sm:p-8 max-h-[80vh] overflow-y-auto">
+                {/* Painel de Edição Rápida */}
+                {isEditing && (
+                    <div className="mb-6 p-6 bg-white rounded-lg shadow-sm border">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Edição Rápida</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <EditableField
+                                value={editedData.contractor_name}
+                                field="contractor_name"
+                                label="Nome do Contratante"
+                            />
+                            <EditableField
+                                value={editedData.service_provider_name}
+                                field="service_provider_name"
+                                label="Nome da Contratada"
+                            />
+                            <EditableField
+                                value={editedData.contractor_document}
+                                field="contractor_document"
+                                label="CPF/CNPJ"
+                            />
+                            <EditableField
+                                value={editedData.service_value}
+                                field="service_value"
+                                label="Valor do Serviço"
+                            />
+                            <div className="md:col-span-2">
+                                <EditableField
+                                    value={editedData.service_description}
+                                    field="service_description"
+                                    label="Descrição do Serviço"
+                                />
+                            </div>
+                            <EditableField
+                                value={editedData.deadline}
+                                field="deadline"
+                                label="Prazo"
+                            />
+                            <EditableField
+                                value={editedData.jurisdiction}
+                                field="jurisdiction"
+                                label="Foro"
+                            />
+                            {editedData.anything_else && (
+                                <div className="md:col-span-2">
+                                    <EditableField
+                                        value={editedData.anything_else}
+                                        field="anything_else"
+                                        label="Observações Adicionais"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Documento do Contrato */}
+                <div className="bg-white rounded-lg shadow-lg border p-8">
                     <div className="prose prose-lg max-w-none">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h2>
-                            <p className="text-gray-600">Contrato gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+                        <div className="text-center mb-8 border-b pb-6">
+                            <h2 className="text-3xl font-bold text-gray-900 mb-2">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h2>
+                            <p className="text-gray-600">Documento gerado em {new Date().toLocaleDateString('pt-BR')}</p>
                         </div>
 
-                        <div className="whitespace-pre-line leading-relaxed text-sm sm:text-base">
+                        <div className="whitespace-pre-line leading-relaxed text-gray-800 text-sm sm:text-base font-serif">
                             {contractText.split('\n').map((paragraph, index) => (
                                 <p key={index} className="mb-4">
                                     {paragraph}
                                 </p>
                             ))}
                         </div>
-
-                        {/* Assinaturas */}
-                        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="text-center">
-                                <div className="border-t border-gray-300 mt-16 pt-4">
-                                    <p>___________________________________</p>
-                                    <p className="font-semibold">CONTRATADA</p>
-                                    <p className="text-sm text-gray-600">{editedData.service_provider_name}</p>
-                                </div>
-                            </div>
-
-                            <div className="text-center">
-                                <div className="border-t border-gray-300 mt-16 pt-4">
-                                    <p>___________________________________</p>
-                                    <p className="font-semibold">CONTRATANTE</p>
-                                    <p className="text-sm text-gray-600">{editedData.contractor_name}</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
                 {/* Instruções */}
-                <div className="mt-4 text-center">
-                    <p className="text-gray-400 text-sm">
-                        💡 <strong>Dica:</strong> Clique nos textos destacados em amarelo para editá-los antes de gerar o PDF.
-                    </p>
+                <div className="mt-6 text-center">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 inline-block">
+                        <p className="text-blue-800 text-sm">
+                            {isEditing
+                                ? "💡 Editando: Modifique os campos acima e clique em 'Salvar Edições'"
+                                : "💡 Clique em 'Editar Contrato' para personalizar ou 'Baixar PDF' para salvar"
+                            }
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

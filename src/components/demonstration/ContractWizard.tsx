@@ -3,12 +3,13 @@
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { contractQuestions } from "@/lib/contract-questions";
 import { ContractData } from "@/lib/contract-template";
 import ProgressBar from "./ProgressBar";
 import QuestionStep from "./QuestionStep";
 import ContractPreview from "./ContractPreview";
+import ContractDocument from "./ContractPreview";
 
 export default function ContractWizard() {
     const [currentStep, setCurrentStep] = useState(0);
@@ -19,31 +20,52 @@ export default function ContractWizard() {
     const currentQuestion = contractQuestions[currentStep];
     const progress = ((currentStep + 1) / contractQuestions.length) * 100;
 
-    const convertToContractData = (answers: Record<string, any>): ContractData => ({
-        contractor_name: answers.contractor_name || "",
-        contractor_type: answers.contractor_type || "",
-        contractor_document: answers.contractor_document || "",
-        service_provider_name: answers.service_provider_name || "",
-        service_description: answers.service_description || "",
-        service_value: answers.service_value || "",
-        payment_method: answers.payment_method || "",
-        deadline: answers.deadline || "",
-        confidentiality: answers.confidentiality || "",
-        jurisdiction: answers.jurisdiction || "",
-        anything_else: answers.anything_else || "",
-    });
+    // DEBUG: Monitorar as respostas
+    useEffect(() => {
+        console.log('📊 Respostas atualizadas:', answers);
+    }, [answers]);
+
+    const convertToContractData = (answers: Record<string, any>): ContractData => {
+        console.log('🔄 Convertendo para ContractData:', answers);
+        return {
+            contractor_name: answers.contractor_name || '',
+            contractor_type: answers.contractor_type || '',
+            contractor_document: answers.contractor_document || '',
+            service_provider_name: answers.service_provider_name || '',
+            service_description: answers.service_description || '',
+            service_value: answers.service_value || '',
+            payment_method: answers.payment_method || '',
+            deadline: answers.deadline || '',
+            confidentiality: answers.confidentiality || '',
+            jurisdiction: answers.jurisdiction || '',
+            anything_else: answers.anything_else || ''
+        };
+    };
 
     const handleAnswer = (answer: any) => {
-        setAnswers((prev) => ({
-            ...prev,
-            [currentQuestion.id]: answer,
-        }));
+        console.log('💾 Salvando resposta:', {
+            pergunta: currentQuestion.id,
+            resposta: answer
+        });
 
-        if (currentStep < contractQuestions.length - 1) {
-            setCurrentStep((prev) => prev + 1);
-        } else {
-            generateContract();
-        }
+        // Primeiro salva a resposta
+        setAnswers(prev => {
+            const newAnswers = {
+                ...prev,
+                [currentQuestion.id]: answer
+            };
+            console.log('✅ Novas respostas:', newAnswers);
+            return newAnswers;
+        });
+
+        // Depois avança para a próxima pergunta (com pequeno delay para garantir o state update)
+        setTimeout(() => {
+            if (currentStep < contractQuestions.length - 1) {
+                setCurrentStep(prev => prev + 1);
+            } else {
+                generateContract();
+            }
+        }, 100);
     };
 
     const handleBack = (e: React.MouseEvent) => {
@@ -58,9 +80,14 @@ export default function ContractWizard() {
     };
 
     const generateContract = async () => {
+        console.log('📄 Iniciando geração do contrato com respostas:', answers);
         setIsGenerating(true);
+
         setTimeout(() => {
             setIsGenerating(false);
+            console.log('🎉 Mostrando preview com dados:', answers);
+            setShowPreview(true);
+
             toast.success("Contrato gerado com sucesso! 🎉", {
                 icon: "✅",
                 style: {
@@ -69,7 +96,6 @@ export default function ContractWizard() {
                     color: "#fff",
                 },
             });
-            setShowPreview(true);
         }, 2000);
     };
 
@@ -85,13 +111,15 @@ export default function ContractWizard() {
         );
     }
 
+    // No ContractWizard.tsx, substitua esta parte:
     if (showPreview) {
         const contractData = convertToContractData(answers);
+        console.log('👀 Dados enviados para o documento:', contractData);
+
         return (
-            <ContractPreview
+            <ContractDocument
                 contractData={contractData}
                 onBack={() => setShowPreview(false)}
-                onGeneratePDF={() => alert("PDF gerado com sucesso!")}
             />
         );
     }
@@ -142,7 +170,7 @@ export default function ContractWizard() {
             </header>
 
             {/* Conteúdo principal */}
-            <main className="relative z-10 min-h-screen flex items-center justify-center">
+            <main className="relative z-10 min-h-screen flex items-center justify-center pt-20">
                 <div className="max-w-2xl mx-auto px-4 w-full">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -152,7 +180,7 @@ export default function ContractWizard() {
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.4, ease: "easeOut" }}
                         >
-                            <div className="bg-gray700 border border-[#134E4A]/40 backdrop-blur-md rounded-2xl shadow-2xl p-8 transition-all">
+                            <div className="bg-gray-800/80 border border-[#134E4A]/40 backdrop-blur-md rounded-2xl shadow-2xl p-6 sm:p-8 transition-all">
                                 <QuestionStep
                                     question={currentQuestion}
                                     onAnswer={handleAnswer}
