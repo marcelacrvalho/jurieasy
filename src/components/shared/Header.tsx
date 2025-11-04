@@ -23,7 +23,7 @@ export default function Header() {
                     <div className={`logo text-xl font-bold transition-colors text-[#108D2B]'
             }`}><Image
                             src='/icon.svg'
-                            alt='Ícone de um globo que representa a plataforma'
+                            alt='Ícone de um globo que representa a plataforma Jurieasy'
                             width={30}
                             height={30}
                         /></div>
