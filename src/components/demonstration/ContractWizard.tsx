@@ -47,16 +47,14 @@ export default function ContractWizard() {
         }));
 
         // avança pro próximo passo com pequeno delay (garante atualização de state)
-        setTimeout(() => {
-            if (currentStep < contractQuestions.length - 1) {
-                setCurrentStep((prev) => prev + 1);
-            } else {
-                generateContract();
-            }
-        }, 100);
+        if (currentStep < contractQuestions.length - 1) {
+            setCurrentStep((prev) => prev + 1);
+        } else {
+            generateContract();
+        }
+
     };
 
-    // Tipagem intencionalmente simples para evitar erros de import de 'React' em alguns setups
     const handleBack = (e: any) => {
         e?.preventDefault?.();
         e?.stopPropagation?.();
