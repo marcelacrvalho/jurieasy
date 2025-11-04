@@ -177,11 +177,11 @@ export default function QuestionStep({ question, onAnswer, currentAnswer, allAns
     return (
         <div className="space-y-6 sm:space-y-8">
             <div className="text-center">
-                <h1 className="text-xl font-bold text-white mb-3 leading-tight sm:text-2xl md:text-3xl sm:mb-4">
+                <h1 className="text-xl font-bold text-black mb-3 leading-tight sm:text-2xl md:text-3xl sm:mb-4">
                     {finalTitle}
                 </h1>
                 {finalDescription && (
-                    <p className="text-sm text-gray-300 max-w-3xl mx-auto leading-relaxed sm:text-base md:text-lg">
+                    <p className="text-sm text-gray-600 max-w-3xl mx-auto leading-relaxed sm:text-base md:text-lg">
                         {finalDescription}
                     </p>
                 )}
@@ -194,7 +194,7 @@ export default function QuestionStep({ question, onAnswer, currentAnswer, allAns
             {question.helpText && (
                 <div className="max-w-md mx-auto px-2 sm:px-0">
                     <div className="bg-blue-500/20 border border-blue-400 rounded-lg p-3 sm:p-4">
-                        <p className="text-xs text-blue-100 leading-relaxed sm:text-sm">
+                        <p className="text-xs text-gray-600 leading-relaxed sm:text-sm">
                             {question.helpText}
                         </p>
                     </div>
