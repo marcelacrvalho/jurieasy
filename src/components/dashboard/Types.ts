@@ -1,0 +1,33 @@
+import { JSX, ComponentType } from "react";
+import { LucideIcon } from "lucide-react";
+
+export interface ContractTemplate {
+    id: string;
+    title: string;
+    lastUsed?: string;
+    category: string;
+    description?: string;
+    icon?: JSX.Element;
+}
+
+export interface QuickAction {
+    icon: LucideIcon;
+    label: string;
+    color: string;
+    iconColor: string;
+    description: string;
+}
+
+export interface Metric {
+    icon: LucideIcon;
+    label: string;
+    value: string;
+    gradient: string;
+    bgGradient: string;
+    iconComponent: JSX.Element;
+}
+
+export interface TouchHandlers {
+    onTouchStart: (e: React.TouchEvent) => void;
+    onTouchEnd: (e: React.TouchEvent) => void;
+}
