@@ -5,9 +5,10 @@ interface MobileMenuProps extends TouchHandlers {
     isOpen: boolean;
     onClose: () => void;
     quickActions: QuickAction[];
+    onNewDocument: () => void;
 }
 
-export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart, onTouchEnd }: MobileMenuProps) {
+export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart, onTouchEnd, onNewDocument }: MobileMenuProps) {
     return (
         <div className={`fixed inset-0 z-50 lg:hidden transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
             }`}>
@@ -38,10 +39,16 @@ export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart
                         {quickActions.map((action) => (
                             <button
                                 key={action.label}
-                                className="w-full flex items-center gap-4 p-4 text-left bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all duration-200 active:scale-95"
+                                className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-100 rounded-2xl transition-all duration-200 active:scale-95"
+                                // No map dos quickActions no MobileMenu, adicione:
                                 onClick={() => {
-                                    console.log('Mobile action:', action.label);
-                                    onClose();
+                                    if (action.label === "Novo Contrato") {
+                                        onNewDocument();
+                                        onClose();
+                                    } else {
+                                        console.log('Mobile action:', action.label);
+                                        onClose();
+                                    }
                                 }}
                                 onTouchStart={onTouchStart}
                                 onTouchEnd={onTouchEnd}
@@ -57,7 +64,6 @@ export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart
                                         {action.description}
                                     </span>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
                             </button>
                         ))}
                     </div>

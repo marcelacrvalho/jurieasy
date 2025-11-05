@@ -81,7 +81,7 @@ export const quickActionsData: QuickAction[] = [
         label: "Favoritos",
         color: "from-amber-500 to-amber-600",
         iconColor: "text-white",
-        description: "Modelos mais usados"
+        description: "Seus preferidos"
     },
     {
         icon: User,

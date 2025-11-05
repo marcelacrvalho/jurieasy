@@ -31,3 +31,31 @@ export interface TouchHandlers {
     onTouchStart: (e: React.TouchEvent) => void;
     onTouchEnd: (e: React.TouchEvent) => void;
 }
+
+export interface DocumentOption {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    icon: JSX.Element;
+    isPopular?: boolean;
+}
+
+export interface DocumentModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onDocumentSelect: (document: DocumentOption) => void;
+}export interface DocumentOption {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    icon: JSX.Element;
+    isPopular?: boolean;
+}
+
+export interface DocumentModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onDocumentSelect: (document: DocumentOption) => void;
+}

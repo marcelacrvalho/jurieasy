@@ -4,13 +4,14 @@ import { useState } from "react";
 import { Zap } from "lucide-react";
 
 // Components
-import MetricsGrid from "@/components/dashboard/MetricsGrid";
+import MetricCard from "@/components/dashboard/MetricsGrid";
 import TemplateCard from "@/components/dashboard/TemplateCard";
 import FeaturedTemplateCard from "@/components/dashboard/FeaturedTemplateCard";
 import QuickActionButton from "@/components/dashboard/QuickActionButton";
 import StatusBanner from "@/components/dashboard/StatusBanner";
 import MobileMenu from "@/components/dashboard/MobileMenu";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DocumentModal from "@/components/dashboard/DocumentModal";
 
 // Data
 import {
@@ -20,8 +21,12 @@ import {
     metricsData
 } from "@/data/dashboardData";
 
+// Types
+import { DocumentOption } from "@/components/dashboard/Types";
+
 export default function Dashboard() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
 
     // Função para animações em mobile (touch)
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -35,7 +40,23 @@ export default function Dashboard() {
     };
 
     const handleQuickAction = (actionLabel: string) => {
-        console.log('Quick action:', actionLabel);
+        if (actionLabel === "Novo Contrato") {
+            setIsDocumentModalOpen(true);
+        } else {
+            console.log('Quick action:', actionLabel);
+        }
+    };
+
+    const handleDocumentSelect = (document: DocumentOption) => {
+        console.log('Documento selecionado:', document);
+        // Aqui você pode redirecionar para a página de criação do documento
+        // ou abrir um wizard de perguntas
+        // Exemplo: router.push(`/create-document/${document.id}`);
+        alert(`Iniciando criação de: ${document.title}`);
+
+        // Aqui você pode integrar com o seu fluxo de perguntas
+        // Por exemplo:
+        // startDocumentCreation(document.id);
     };
 
     return (
@@ -51,7 +72,7 @@ export default function Dashboard() {
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
                     {metricsData.map((metric, index) => (
-                        <MetricsGrid
+                        <MetricCard
                             key={metric.label}
                             metric={metric}
                             onTouchStart={handleTouchStart}
@@ -71,7 +92,7 @@ export default function Dashboard() {
                                     <p className="text-slate-600 text-sm mt-1">3 documentos em andamento</p>
                                 </div>
                                 <span className="text-xs font-medium bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">
-                                    3 itens {/*TODO: receber via parametro a quantidade de itens em andamento */}
+                                    3 itens
                                 </span>
                             </div>
 
@@ -135,13 +156,19 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Mobile Menu Component */}
             <MobileMenu
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
                 quickActions={quickActionsData}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
+                onNewDocument={() => setIsDocumentModalOpen(true)}
+            />
+
+            <DocumentModal
+                isOpen={isDocumentModalOpen}
+                onClose={() => setIsDocumentModalOpen(false)}
+                onDocumentSelect={handleDocumentSelect}
             />
         </div>
     );
