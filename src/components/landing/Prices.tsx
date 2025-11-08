@@ -18,6 +18,7 @@ export default function Prices() {
             features: [
                 "15 documentos/mês",
                 "Sua logo personalizada",
+                "Documentos salvos na nuvem",
                 "Suporte prioritário",
             ],
             button: "Assinar plano",
