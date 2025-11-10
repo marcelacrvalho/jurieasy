@@ -4,31 +4,51 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 export default function AuthPage() {
     const [isLoginMode, setIsLoginMode] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        password: "",
-    });
+    const [form, setForm] = useState({ name: "", email: "", password: "" });
+
+    useEffect(() => {
+        const plan = localStorage.getItem("selectedPlan");
+        if (plan) setSelectedPlan(plan);
+    }, []);
 
     const handleToggleMode = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsLoginMode((prev) => !prev);
     };
 
-    useEffect(() => {
-        const plan = localStorage.getItem("selectedPlan");
-        if (plan) {
-            setSelectedPlan(plan);
-        }
-    }, []);
+    // LOGIN GOOGLE — chama o backend
+    const loginWithGoogle = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                const { access_token } = tokenResponse;
+
+                // TODO: Enviar o token ao backend 
+                const res = await axios.post("http://localhost:5000/auth/google", {
+                    credential: access_token,
+                });
+
+                if (res.data.success) {
+                    localStorage.setItem("token", res.data.data.token);
+                    window.location.href = "/dashboard";
+                } else {
+                    alert("Erro: " + res.data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Falha na autenticação com Google.");
+            }
+        },
+        onError: () => alert("Erro ao autenticar com o Google"),
+    });
 
     return (
         <div className="flex min-h-screen flex-col lg:flex-row bg-white">
-            {/* Lado esquerdo - imagem */}
             <motion.div
                 initial={{ opacity: 0, x: -40 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -45,7 +65,6 @@ export default function AuthPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
             </motion.div>
 
-            {/* Lado direito - formulário */}
             <motion.div
                 initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -78,9 +97,7 @@ export default function AuthPage() {
                                     <input
                                         type="text"
                                         value={form.name}
-                                        onChange={(e) =>
-                                            setForm({ ...form, name: e.target.value })
-                                        }
+                                        onChange={(e) => setForm({ ...form, name: e.target.value })}
                                         className="mt-1 w-full rounded-full border border-gray-300 px-4 py-2 bg-white text-gray-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
                                         placeholder="Seu nome"
                                     />
@@ -95,9 +112,7 @@ export default function AuthPage() {
                             <input
                                 type="email"
                                 value={form.email}
-                                onChange={(e) =>
-                                    setForm({ ...form, email: e.target.value })
-                                }
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
                                 className="mt-1 w-full rounded-full border border-gray-300 px-4 py-2 bg-white text-gray-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
                                 placeholder="seu@email.com"
                             />
@@ -110,9 +125,7 @@ export default function AuthPage() {
                             <input
                                 type="password"
                                 value={form.password}
-                                onChange={(e) =>
-                                    setForm({ ...form, password: e.target.value })
-                                }
+                                onChange={(e) => setForm({ ...form, password: e.target.value })}
                                 className="mt-1 w-full rounded-full border border-gray-300 px-4 py-2 bg-white text-gray-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
                                 placeholder="********"
                             />
@@ -124,7 +137,7 @@ export default function AuthPage() {
                             transition={{ duration: 0.1 }}
                             type="submit"
                             onClick={(e) => {
-                                e.preventDefault(); // evita o reload do form
+                                e.preventDefault();
                                 if (isLoginMode) {
                                     window.location.href = "/dashboard";
                                 } else {
@@ -135,7 +148,6 @@ export default function AuthPage() {
                         >
                             {isLoginMode ? "Entrar" : "Criar conta"}
                         </motion.button>
-
                     </form>
 
                     <div className="flex items-center gap-3 my-6">
@@ -144,9 +156,11 @@ export default function AuthPage() {
                         <div className="flex-1 h-px bg-gray-200" />
                     </div>
 
+                    {/* BOTÃO GOOGLE */}
                     <button
                         type="button"
-                        className="w-full flex items-center text-gray-500 justify-center gap-2 border border-gray-300 py-2 rounded-full hover:bg-gray-100 transition font-medium shadow-sm"
+                        onClick={() => loginWithGoogle()}
+                        className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-full hover:bg-gray-100 transition font-medium shadow-sm text-gray-700"
                     >
                         <FcGoogle className="text-xl" />
                         Entrar com Google
