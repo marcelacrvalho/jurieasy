@@ -115,7 +115,7 @@ export default function ContractWizard() {
                 <div className=" inset-0 z-0 bg-blue-100">
                     <Image
                         src="/bg-question-1.svg"
-                        alt="Background"
+                        alt="Background em formato wireframe"
                         fill
                         className="object-cover object-center mix-blend-overlay"
                         priority

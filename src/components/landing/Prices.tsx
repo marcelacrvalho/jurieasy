@@ -111,6 +111,11 @@ export default function Prices() {
 
                             {/* Botão */}
                             <button
+                                onClick={() => {
+                                    // Salva o plano escolhido e redireciona para /auth
+                                    localStorage.setItem("selectedPlan", plan.name);
+                                    window.location.href = "/auth";
+                                }}
                                 className={`w-full py-3 rounded-full font-semibold transition-all duration-300 ${plan.popular
                                     ? "bg-blue-600 text-white hover:bg-blue-700"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"

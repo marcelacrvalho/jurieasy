@@ -8,7 +8,7 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import Prices from "@/components/landing/Prices";
 import SocialProof from "@/components/landing/SocialProof";
 import Testimonial from "@/components/landing/Testimonial";
-import Header from "@/components/shared/Header";
+import Header from "@/components/landing/Header";
 
 export default function LandingPage() {
   return (

@@ -40,7 +40,9 @@ export default function Hero() {
                     transition={{ delay: 0.4, duration: 0.6 }}
                     className="flex flex-col sm:flex-row gap-4 mt-8"
                 >
-                    <button className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
+                    <button
+                        onClick={() => (window.location.href = "/auth")}
+                        className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
                         Criar meu primeiro contrato
                     </button>
                     <button
