@@ -22,7 +22,7 @@ export default function LoginPage() {
                     className="relative hidden lg:flex lg:w-1/2 overflow-hidden"
                 >
                     <Image
-                        src="/image-auth.jpg"
+                        src="/auth-image.jpg"
                         alt="Profissional digitando em um notebook — Jurieasy"
                         fill
                         priority
