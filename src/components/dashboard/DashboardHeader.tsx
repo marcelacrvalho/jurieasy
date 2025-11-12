@@ -3,9 +3,10 @@ import { TouchHandlers } from "./Types";
 
 interface DashboardHeaderProps extends TouchHandlers {
     onMobileMenuOpen: () => void;
+    name: String
 }
 
-export default function DashboardHeader({ onMobileMenuOpen, onTouchStart, onTouchEnd }: DashboardHeaderProps) {
+export default function DashboardHeader({ onMobileMenuOpen, onTouchStart, onTouchEnd, name }: DashboardHeaderProps) {
     return (
         <div className="mb-8 sm:mb-12">
             <div className="flex items-center justify-between">
@@ -22,7 +23,7 @@ export default function DashboardHeader({ onMobileMenuOpen, onTouchStart, onTouc
 
                     <div>
                         <h1 className="text-2xl sm:text-4xl font-bold text-slate-900">
-                            Olá, Marcela {/*TODO: receber via param o nome do usuario*/}
+                            Olá, {name}
                         </h1>
                         <p className="text-slate-600 mt-2 text-sm sm:text-base max-w-2xl">
                             Continue de onde parou ou explore novos modelos

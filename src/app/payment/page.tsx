@@ -3,11 +3,16 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CreditCard, ArrowLeft } from "lucide-react";
+import { CreditCard, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { users } from '@/hooks/users';
+import LoadingAnimation from "@/components/shared/LoadingAnimation";
 
 export default function PaymentPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const { upgradePlan, error: apiError, clearError } = users();
 
     useEffect(() => {
         const plan = localStorage.getItem("selectedPlan");
@@ -16,8 +21,58 @@ export default function PaymentPage() {
         }
     }, []);
 
+    const clearSelectedPlan = () => {
+        localStorage.removeItem("selectedPlan");
+        setSelectedPlan(null);
+    };
+
+    const redirectToDashboard = () => {
+        clearSelectedPlan();
+        window.location.href = "/dashboard";
+    };
+
+    // TODO:processar pagamento com stripe
+    const handlePayment = async () => {
+        if (!selectedPlan) {
+            alert("Nenhum plano selecionado");
+            return;
+        }
+
+        setIsProcessing(true);
+        clearError();
+
+        try {
+            console.log("🔄 Iniciando processamento do pagamento...");
+            console.log("📋 Plano selecionado:", selectedPlan);
+            const token = localStorage.getItem('token');
+            console.log('🔐 Token no PaymentPage:', token);
+
+            // SIMULA PAGAMENTO BEM-SUCEDIDO
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const success = await upgradePlan(selectedPlan as 'free' | 'pro' | 'escritorio');
+
+            console.log("📊 Resultado do upgradePlan:", success);
+
+            if (success) {
+                clearSelectedPlan();
+                window.location.href = "/dashboard";
+            } else {
+                console.log("Erro ao atualizar plano:", apiError);
+                alert("Erro ao atualizar plano. Envie um e-mail para suporte@jurieasy.com ");
+            }
+
+        } catch (error) {
+            alert("Erro ao processar pagamento. Envie um e-mail para suporte@jurieasy.com");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <>
+            {isProcessing && <LoadingAnimation />}
+
             <div className="inset-0 z-0 bg-blue-300">
                 <Image
                     src="/bg-question-1.svg"
@@ -39,6 +94,7 @@ export default function PaymentPage() {
                     <Link
                         href="/auth"
                         className="absolute top-5 left-5 text-gray-500 hover:text-blue-600 transition"
+                        onClick={clearSelectedPlan}
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
@@ -64,12 +120,12 @@ export default function PaymentPage() {
                     {selectedPlan && (
                         <div className="border border-blue-100 bg-blue-50 rounded-xl p-4 mb-6 text-center">
                             <p className="text-gray-700 text-sm">Plano selecionado</p>
-                            <p className="text-blue-700 font-semibold text-lg">{selectedPlan}</p>
+                            <p className="text-blue-700 font-semibold text-lg capitalize">{selectedPlan == 'pro' ? 'Profissional' : 'Escritório'}</p>
                         </div>
                     )}
 
                     {/* Campos de pagamento */}
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Nome no cartão
@@ -78,6 +134,7 @@ export default function PaymentPage() {
                                 type="text"
                                 placeholder="Como aparece no cartão"
                                 className="w-full text-gray-800 border border-gray-300 rounded-full px-4 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                disabled={isProcessing}
                             />
                         </div>
 
@@ -90,6 +147,7 @@ export default function PaymentPage() {
                                 placeholder="0000 0000 0000 0000"
                                 maxLength={19}
                                 className="w-full text-gray-800 border border-gray-300 rounded-full px-4 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                disabled={isProcessing}
                             />
                         </div>
 
@@ -103,6 +161,7 @@ export default function PaymentPage() {
                                     placeholder="MM/AA"
                                     maxLength={5}
                                     className="w-full text-gray-800 border border-gray-300 rounded-full px-4 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    disabled={isProcessing}
                                 />
                             </div>
                             <div>
@@ -114,31 +173,35 @@ export default function PaymentPage() {
                                     placeholder="123"
                                     maxLength={4}
                                     className="w-full text-gray-800 border border-gray-300 rounded-full px-4 py-2 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    disabled={isProcessing}
                                 />
                             </div>
                         </div>
 
                         {/* Botão principal */}
                         <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.97 }}
+                            whileHover={{ scale: isProcessing ? 1 : 1.02 }}
+                            whileTap={{ scale: isProcessing ? 1 : 0.97 }}
                             transition={{ duration: 0.1 }}
-                            type="submit"
-                            onClick={() => {
-                                window.location.href = "/dashboard";
-                                localStorage.removeItem("selectedPlan");
-                            }} //TODO: integrar com stripe e salvar na API o novo usuario
-                            className="w-full bg-blue-700 text-white py-3 rounded-full font-medium shadow-sm hover:bg-blue-800 transition"
+                            onClick={handlePayment}
+                            disabled={isProcessing || !selectedPlan}
+                            className="w-full bg-blue-700 text-white py-3 rounded-full font-medium shadow-sm hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition relative"
                         >
-                            Confirmar pagamento
+                            {isProcessing ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin absolute left-4" />
+                                    Processando pagamento...
+                                </>
+                            ) : (
+                                'Confirmar pagamento'
+                            )}
                         </motion.button>
 
                         <button
                             type="button"
-                            onClick={() => { //TODO: salvar na API o novo usuario
-                                window.location.href = "/dashboard";
-                                localStorage.removeItem("selectedPlan");
-                            }} className="w-full border border-gray-300 text-gray-600 py-3 rounded-full font-medium hover:bg-gray-100 transition"
+                            onClick={redirectToDashboard}
+                            disabled={isProcessing}
+                            className="w-full border border-gray-300 text-gray-600 py-3 rounded-full font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
                             Pagar depois
                         </button>

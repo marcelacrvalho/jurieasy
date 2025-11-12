@@ -1,15 +1,6 @@
 import { JSX, ComponentType } from "react";
 import { LucideIcon } from "lucide-react";
 
-export interface ContractTemplate {
-    id: string;
-    title: string;
-    lastUsed?: string;
-    category: string;
-    description?: string;
-    icon?: JSX.Element;
-}
-
 export interface QuickAction {
     icon: LucideIcon;
     label: string;

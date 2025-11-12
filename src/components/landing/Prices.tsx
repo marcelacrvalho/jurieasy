@@ -5,6 +5,7 @@ export default function Prices() {
     const plans = [
         {
             name: "Individual",
+            label: "free",
             price: "Grátis",
             description: "Para avaliação da plataforma",
             features: ["1 documento/mês", "Suporte por e-mail"],
@@ -13,6 +14,8 @@ export default function Prices() {
         },
         {
             name: "Profissional",
+            label: "pro",
+
             price: "R$ 97",
             description: "Para uso regular",
             features: [
@@ -26,6 +29,8 @@ export default function Prices() {
         },
         {
             name: "Escritório",
+            label: "escritorio",
+
             price: "R$ 197",
             description: "Para equipes jurídicas",
             features: [
@@ -113,7 +118,7 @@ export default function Prices() {
                             <button
                                 onClick={() => {
                                     // Salva o plano escolhido e redireciona para /auth
-                                    localStorage.setItem("selectedPlan", plan.name);
+                                    localStorage.setItem("selectedPlan", plan.label);
                                     window.location.href = "/auth";
                                 }}
                                 className={`w-full py-3 rounded-full font-semibold transition-all duration-300 ${plan.popular

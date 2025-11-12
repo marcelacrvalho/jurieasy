@@ -1,8 +1,11 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Suravaram, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import GoogleProvider from "./providers/GoogleProvider";
+import { UserProvider } from "@/contexts/UserContext";
+import { UserDocumentProvider } from "@/contexts/UserDocumentContext";
 
 const suravaram = Suravaram({
   subsets: ["latin"],
@@ -30,22 +33,24 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className={`${suravaram.variable} ${openSans.variable} antialiased`}>
-        {/* ✅ Envolvemos toda a aplicação com o GoogleProvider */}
         <GoogleProvider>
-          {children}
+          <UserProvider>
+            <UserDocumentProvider>
+              {children}
 
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#333",
-                color: "#fff",
-                borderRadius: "8px",
-                padding: "12px 16px",
-              },
-            }}
-          />
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    borderRadius: "10px",
+                    background: "#2563EB",
+                    color: "#fff",
+                  },
+                }}
+              />
+            </UserDocumentProvider>
+          </UserProvider>
         </GoogleProvider>
       </body>
     </html>
