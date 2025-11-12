@@ -101,7 +101,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         }
     }, [setStats, setFetchingStats, setError]);
 
-    const getUserDocumentDraft = useCallback(async (userId: string, page: number = 1, limit: number = 20): Promise<UserDocument[]> => {
+    const getUserDocumentDraft = useCallback(async (userId: string, page: number = 1, limit: number = 10): Promise<UserDocument[]> => {
         setLoading(true);
         setError(null);
 
@@ -117,7 +117,6 @@ export const useUserDocuments = (): UserDocumentsReturn => {
             if (response.success && response.data) {
                 console.log('✅ Documentos em rascunho carregados com sucesso:', response.data.length);
 
-                // ✅ CORREÇÃO: Garantir que response.data é um array
                 const documentsData = Array.isArray(response.data) ? response.data : [];
 
                 // Se for página 1, substitui a lista. Se for paginação, adiciona aos existentes
@@ -141,7 +140,6 @@ export const useUserDocuments = (): UserDocumentsReturn => {
             setLoading(false);
         }
     }, [setDocuments, setLoading, setError]);
-
     const getUserDocuments = useCallback(async (filters?: DocumentFilters): Promise<UserDocument[]> => {
         setLoading(true);
         setError(null);

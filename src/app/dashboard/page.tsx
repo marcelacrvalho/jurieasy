@@ -14,7 +14,7 @@ import QuickActionButton from "@/components/dashboard/QuickActionButton";
 import StatusBanner from "@/components/dashboard/StatusBanner";
 import MobileMenu from "@/components/dashboard/MobileMenu";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DocumentModal from "@/components/dashboard/DocumentModal";
+import DocumentManagerModal from "@/components/dashboard/DocumentManagerModal";
 
 import { quickActionsData } from "@/data/dashboardData";
 
@@ -26,14 +26,13 @@ import { UserDocument } from "@/types/userDocument";
 export default function Dashboard() {
     const { user, isLoading } = useUserContext();
     const { stats, isFetchingStats } = useUserDocumentContext();
-    const { userDocuments, getUserDocumentDraft } = useUserDocuments();
-
+    const { userDocuments, getUserDocumentDraft, getUserDocumentStats } = useUserDocuments();
 
     const { getUserProfile } = users();
-    const { getUserDocumentStats } = useUserDocuments();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+    const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
 
     useEffect(() => {
         const loadUserProfile = async () => {
@@ -68,6 +67,13 @@ export default function Dashboard() {
             getUserDocumentDraft(user.id, 1, 10);
         }
     }, [getUserDocumentDraft, user?.id]);
+
+    // ✅ Adicione esta função para lidar com a seleção de rascunhos
+    const handleDraftSelect = (document: UserDocument) => {
+        console.log('Rascunho selecionado:', document);
+        // Aqui você redireciona para a edição do documento
+        alert(`Continuando edição de: ${document.documentId?.title || 'Documento sem título'}`);
+    };
 
     // Função para animações em mobile (touch)
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -114,6 +120,8 @@ export default function Dashboard() {
             </div>
         );
     }
+
+    const recentDocuments = userDocuments.slice(-4).reverse();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-6 sm:py-10">
@@ -188,25 +196,51 @@ export default function Dashboard() {
                         {/* Continue Working Section */}
                         <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Continuar de onde parou</h2>
-                                    <p className="text-slate-600 text-sm mt-1">{userDocuments.length} documentos em andamento</p>
+                                <button
+                                    onClick={() => setIsDraftsModalOpen(true)}
+                                    className="text-left hover:opacity-80 transition-opacity cursor-pointer group"
+                                >
+                                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                        Continuar de onde parou
+                                    </h2>
+                                    <p className="text-slate-600 text-sm mt-1">
+                                        {userDocuments.length} documento{userDocuments.length !== 1 ? 's' : ''} em andamento
+                                    </p>
+                                </button>
 
+                                <div className="flex gap-2">
+                                    {userDocuments.length > 4 && (
+                                        <button
+                                            onClick={() => setIsDraftsModalOpen(true)}
+                                            className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+                                        >
+                                            Ver todos
+                                        </button>
+                                    )}
                                 </div>
-                                <span className="text-xs font-medium bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">
-                                    {userDocuments.length}
-                                </span>
                             </div>
 
                             <div className="space-y-4">
-                                {userDocuments.map((document: UserDocument) => (
-                                    <DocumentTemplateCard
-                                        key={document._id}
-                                        document={document}
-                                        onTouchStart={handleTouchStart}
-                                        onTouchEnd={handleTouchEnd}
-                                    />
-                                ))}
+                                {recentDocuments.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <p className="text-slate-500">Nenhum documento em andamento</p>
+                                        <button
+                                            onClick={() => setIsDocumentModalOpen(true)}
+                                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                        >
+                                            Criar Primeiro Documento
+                                        </button>
+                                    </div>
+                                ) : (
+                                    recentDocuments.map((document: UserDocument) => (
+                                        <DocumentTemplateCard
+                                            key={document._id}
+                                            document={document}
+                                            onTouchStart={handleTouchStart}
+                                            onTouchEnd={handleTouchEnd}
+                                        />
+                                    ))
+                                )}
                             </div>
                         </section>
 
@@ -257,6 +291,25 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            <DocumentManagerModal
+                isOpen={isDraftsModalOpen}
+                onClose={() => setIsDraftsModalOpen(false)}
+                mode="drafts"
+                userDocuments={userDocuments}
+                onDraftSelect={handleDraftSelect}
+                userId={user?.id}
+                title="Continuar de onde parou"
+                description="Selecione um documento para continuar editando"
+            />
+
+            {/* Modal para Criar Novo Documento */}
+            <DocumentManagerModal
+                isOpen={isDocumentModalOpen}
+                onClose={() => setIsDocumentModalOpen(false)}
+                mode="create"
+                onDocumentSelect={handleDocumentSelect}
+            />
+
             <MobileMenu
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
@@ -264,12 +317,6 @@ export default function Dashboard() {
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onNewDocument={() => setIsDocumentModalOpen(true)}
-            />
-
-            <DocumentModal
-                isOpen={isDocumentModalOpen}
-                onClose={() => setIsDocumentModalOpen(false)}
-                onDocumentSelect={handleDocumentSelect}
             />
         </div>
     );

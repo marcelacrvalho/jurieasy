@@ -1,18 +1,6 @@
 import { UserDocument } from '@/types/userDocument';
 import { TouchHandlers } from "./Types";
-import {
-    LucideProps,
-    FileText,
-    House,
-    HouseHeart,
-    Store,
-    ShoppingCart,
-    Construction,
-    Users,
-    BrickWall,
-    Scale
-} from 'lucide-react';
-import { ForwardRefExoticComponent } from 'react';
+import { getIconByCategory } from '@/utils/documentCategoriesIcons';
 
 interface DocumentTemplateCardProps extends TouchHandlers {
     document: UserDocument;
@@ -23,21 +11,7 @@ export default function DocumentTemplateCard({ document, onTouchStart, onTouchEn
     const documentTitle = template?.title || 'Documento sem título';
     const documentCategory = template?.category || 'Sem categoria';
 
-    const getIconByCategory = (category: string) => {
-        const icons: { [key: string]: ForwardRefExoticComponent<Omit<LucideProps, "ref">> } = {
-            'civil': Scale,
-            'trabalhista': Construction,
-            'penal': BrickWall,
-            'empresarial': Store,
-            'consumidor': ShoppingCart,
-            'família': HouseHeart,
-            'imobiliario': House,
-            'sucessões': Users
-        };
-        return icons[category.toLowerCase()] || FileText;
-    };
-
-    const Icon = getIconByCategory(documentCategory);
+    const IconComponent = getIconByCategory(documentCategory);
 
     return (
         <div
@@ -60,7 +34,7 @@ export default function DocumentTemplateCard({ document, onTouchStart, onTouchEn
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center 
                 transition-transform duration-300 flex-shrink-0 shadow-sm 
                 active:scale-110 lg:group-hover:scale-110">
-                    <Icon className="w-5 h-5 text-white transition-colors" />
+                    <IconComponent className="w-5 h-5 text-white transition-colors" />
                 </div>
 
                 <div className="min-w-0 flex-1">
