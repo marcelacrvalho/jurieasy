@@ -38,6 +38,11 @@ export function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
                                     Popular
                                 </span>
                             )}
+
+                            <span className="flex items-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full w-fit">
+                                <Clock className="w-3 h-3" />
+                                {document.estimatedCompletionTime} minutos
+                            </span>
                         </div>
 
                         {/* Descrição */}
@@ -83,22 +88,24 @@ export function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
                             {documentTitle}
                         </h3>
 
-                        {/* Categoria */}
-                        <p className="text-slate-600 text-xs sm:text-sm mb-3">
-                            {documentCategory.charAt(0).toUpperCase() + documentCategory.slice(1)}
-                        </p>
-
-                        {/* Rodapé */}
+                        {/* Data */}
                         <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0">
                             <span className="text-xs text-slate-500 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {document.updatedAt ?
-                                    `Editado ${new Date(document.updatedAt).toLocaleDateString('pt-BR')}` :
+                                    `Editado pela última vez em ${new Date(document.updatedAt).toLocaleDateString('pt-BR')}` :
                                     'Sem data'
                                 }
                             </span>
-                            <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1">
-                                Continuar <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+
+                            {/* Categoria e Rodapé*/}
+                            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0">
+                                <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded-full w-fit">
+                                    {documentCategory.charAt(0).toUpperCase() + documentCategory.slice(1)}
+                                </span>
+                                <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1 justify-end">
+                                    Continuar <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                                </div>
                             </div>
                         </div>
                     </div>

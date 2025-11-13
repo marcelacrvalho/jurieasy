@@ -9,7 +9,6 @@ import toast from "react-hot-toast";
 
 // Components
 import MetricCard from "@/components/dashboard/MetricsGrid";
-import DocumentTemplateCard from "@/components/dashboard/DocumentTemplateCard";
 import QuickActionButton from "@/components/dashboard/QuickActionButton";
 import StatusBanner from "@/components/dashboard/StatusBanner";
 import MobileMenu from "@/components/dashboard/MobileMenu";
@@ -272,18 +271,18 @@ export default function Dashboard() {
                                     </div>
                                 ) : (
                                     recentDocuments.map((document: UserDocument) => (
-                                        <DocumentTemplateCard
+                                        <DocumentCard
                                             key={document._id}
-                                            document={document}
-                                            onTouchStart={handleTouchStart}
-                                            onTouchEnd={handleTouchEnd}
-                                        />
+                                            item={document}
+                                            mode={"drafts"}
+                                            onSelect={function (item: Document | UserDocument): void {
+                                                throw new Error("Function not implemented.");
+                                            }} />
                                     ))
                                 )}
                             </div>
                         </section>
 
-                        {/* Featured Templates Section */}
                         {/* Featured Templates Section */}
                         <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
