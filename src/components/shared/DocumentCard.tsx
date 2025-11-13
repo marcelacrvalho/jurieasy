@@ -1,0 +1,110 @@
+import { UserDocument } from "@/types/userDocument";
+import { Document } from "@/types/document";
+import { getIconByCategory } from "@/utils/documentCategoriesIcons";
+import { ChevronRight, Clock, Plus, Star } from "lucide-react";
+
+interface DocumentCardProps {
+    item: Document | UserDocument;
+    mode: 'create' | 'drafts';
+    onSelect: (item: Document | UserDocument) => void;
+}
+
+export function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
+    if (mode === 'create') {
+        const document = item as Document;
+        const IconComponent = getIconByCategory(document.category);
+
+        return (
+            <div
+                className="group relative p-4 sm:p-6 border border-slate-200 rounded-xl sm:rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
+                onClick={() => onSelect(document)}
+            >
+                <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Ícone */}
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+
+                    {/* Conteúdo */}
+                    <div className="flex-1 min-w-0">
+                        {/* Cabeçalho com título e badge popular */}
+                        <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-2">
+                            <h3 className="font-semibold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2 xs:line-clamp-1">
+                                {document.title}
+                            </h3>
+                            {document.isPopular && (
+                                <span className="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full w-fit">
+                                    <Star className="w-3 h-3 fill-amber-500" />
+                                    Popular
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Descrição */}
+                        <p className="text-slate-600 text-xs sm:text-sm mb-3 line-clamp-2">
+                            {document.description}
+                        </p>
+
+                        {/* Rodapé */}
+                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0">
+                            <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded-full w-fit">
+                                {document.category.charAt(0).toUpperCase() + document.category.slice(1)}
+                            </span>
+                            <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center justify-end gap-1">
+                                Criar <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-xl sm:rounded-2xl transition-opacity duration-300 -z-10" />
+            </div>
+        );
+    } else {
+        const document = item as UserDocument;
+        const documentTitle = document.documentId?.title || 'Documento sem título';
+        const documentCategory = document.documentId?.category || 'Sem categoria';
+        const IconComponent = getIconByCategory(documentCategory);
+
+        return (
+            <div
+                className="group relative p-4 sm:p-6 border border-slate-200 rounded-xl sm:rounded-2xl hover:border-green-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
+                onClick={() => onSelect(document)}
+            >
+                <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Ícone */}
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+
+                    {/* Conteúdo */}
+                    <div className="flex-1 min-w-0">
+                        {/* Título */}
+                        <h3 className="font-semibold text-slate-900 text-base sm:text-lg leading-tight mb-2 line-clamp-2">
+                            {documentTitle}
+                        </h3>
+
+                        {/* Categoria */}
+                        <p className="text-slate-600 text-xs sm:text-sm mb-3">
+                            {documentCategory.charAt(0).toUpperCase() + documentCategory.slice(1)}
+                        </p>
+
+                        {/* Rodapé */}
+                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0">
+                            <span className="text-xs text-slate-500 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {document.updatedAt ?
+                                    `Editado ${new Date(document.updatedAt).toLocaleDateString('pt-BR')}` :
+                                    'Sem data'
+                                }
+                            </span>
+                            <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1">
+                                Continuar <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-xl sm:rounded-2xl transition-opacity duration-300 -z-10" />
+            </div>
+        );
+    }
+}

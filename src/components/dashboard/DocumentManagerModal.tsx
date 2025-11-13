@@ -1,130 +1,30 @@
-// components/dashboard/DocumentManagerModal.tsx
 "use client";
 
 import {
     X,
     Search,
-    Star,
-    FileText,
-    Briefcase,
-    Home,
-    User,
-    Building,
-    Scale,
-    Zap,
     ChevronDown,
-    Clock,
-    Edit,
     ChevronLeft,
     ChevronRight,
-    Plus
+    FileText
 } from "lucide-react";
-import { DocumentOption } from "../dashboard/Types";
 import { useState, useEffect } from "react";
 import { UserDocument } from "@/types/userDocument";
-import { getIconByCategory } from "@/utils/documentCategoriesIcons";
-
+import { Document } from "@/types/document";
+import { DocumentCard } from "../shared/DocumentCard";
 
 interface DocumentManagerModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onDocumentSelect?: (document: DocumentOption) => void;
+    onDocumentSelect?: (document: Document) => void;
     onDraftSelect?: (document: UserDocument) => void;
     mode: 'create' | 'drafts';
     userDocuments?: UserDocument[];
+    documents?: Document[];
     title?: string;
     description?: string;
     userId?: string;
 }
-
-// Dados dos documentos disponíveis
-const documentOptions: DocumentOption[] = [
-    {
-        id: "1",
-        title: "Contrato de Prestação de Serviços",
-        description: "Ideal para freelancers e empresas que prestam serviços",
-        category: "Trabalhista",
-        icon: <FileText className="w-6 h-6" />,
-        isPopular: true
-    },
-    {
-        id: "2",
-        title: "Compra e Venda",
-        description: "Para transações comerciais de produtos e mercadorias",
-        category: "Civil",
-        icon: <Briefcase className="w-6 h-6" />
-    },
-    {
-        id: "3",
-        title: "Locação Residencial",
-        description: "Contrato completo para aluguel de imóveis residenciais",
-        category: "Imobiliário",
-        icon: <Home className="w-6 h-6" />
-    },
-    {
-        id: "4",
-        title: "Procuração Geral",
-        description: "Delegue poderes específicos para outra pessoa",
-        category: "Jurídico",
-        icon: <User className="w-6 h-6" />
-    },
-    {
-        id: "5",
-        title: "Contrato Societário",
-        description: "Para constituição e organização de sociedades",
-        category: "Empresarial",
-        icon: <Building className="w-6 h-6" />
-    },
-    {
-        id: "6",
-        title: "Pensão Socioafetiva",
-        description: "Regulamentação de pensão alimentícia",
-        category: "Familiar",
-        icon: <Scale className="w-6 h-6" />
-    },
-    {
-        id: "7",
-        title: "Termo de Confidencialidade",
-        description: "Proteja informações sensíveis da sua empresa",
-        category: "Empresarial",
-        icon: <Zap className="w-6 h-6" />
-    },
-    {
-        id: "8",
-        title: "Contrato de Trabalho",
-        description: "Modelo completo para contratação de funcionários",
-        category: "Trabalhista",
-        icon: <FileText className="w-6 h-6" />
-    },
-    {
-        id: "9",
-        title: "Contrato de Parceria",
-        description: "Para estabelecimento de parcerias comerciais",
-        category: "Empresarial",
-        icon: <Building className="w-6 h-6" />
-    },
-    {
-        id: "10",
-        title: "Termo de Uso",
-        description: "Para sites, aplicativos e serviços digitais",
-        category: "Jurídico",
-        icon: <FileText className="w-6 h-6" />
-    },
-    {
-        id: "11",
-        title: "Contrato de Prestação de Serviços TI",
-        description: "Especializado para serviços de tecnologia",
-        category: "Trabalhista",
-        icon: <Zap className="w-6 h-6" />
-    },
-    {
-        id: "12",
-        title: "Contrato de Confidencialidade",
-        description: "Proteja informações confidenciais da sua empresa",
-        category: "Empresarial",
-        icon: <Scale className="w-6 h-6" />
-    }
-];
 
 const categories = [
     "Todos",
@@ -143,6 +43,7 @@ export default function DocumentManagerModal({
     onDraftSelect,
     mode,
     userDocuments = [],
+    documents = [],
     title,
     description
 }: DocumentManagerModalProps) {
@@ -165,7 +66,8 @@ export default function DocumentManagerModal({
     // Filtrar documentos baseado no modo
     const getFilteredItems = () => {
         if (mode === 'create') {
-            return documentOptions.filter(document => {
+            // ✅ Agora usa os documentos reais da API
+            return documents.filter(document => {
                 const matchesSearch = document.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     document.description.toLowerCase().includes(searchTerm.toLowerCase());
                 const matchesCategory = selectedCategory === "Todos" || document.category === selectedCategory;
@@ -193,9 +95,9 @@ export default function DocumentManagerModal({
     // Calcular total de páginas
     const totalPages = Math.ceil(allFilteredItems.length / itemsPerPage);
 
-    const handleItemSelect = (item: DocumentOption | UserDocument) => {
+    const handleItemSelect = (item: Document | UserDocument) => {
         if (mode === 'create' && onDocumentSelect) {
-            onDocumentSelect(item as DocumentOption);
+            onDocumentSelect(item as Document);
         } else if (mode === 'drafts' && onDraftSelect) {
             onDraftSelect(item as UserDocument);
         }
@@ -310,7 +212,7 @@ export default function DocumentManagerModal({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {currentItems.map((item) => (
                                     <DocumentCard
-                                        key={mode === 'create' ? (item as DocumentOption).id : (item as UserDocument)._id}
+                                        key={mode === 'create' ? (item as Document)._id : (item as UserDocument)._id}
                                         item={item}
                                         mode={mode}
                                         onSelect={handleItemSelect}
@@ -334,7 +236,7 @@ export default function DocumentManagerModal({
                                             disabled={currentPage === 1}
                                             className="p-2 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            <ChevronLeft className="w-4 h-4" />
+                                            <ChevronLeft className="w-4 h-4 text-gray-600" />
                                         </button>
 
                                         {/* Números das páginas */}
@@ -379,7 +281,7 @@ export default function DocumentManagerModal({
                                             disabled={currentPage === totalPages}
                                             className="p-2 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            <ChevronRight className="w-4 h-4" />
+                                            <ChevronRight className="w-4 h-4 text-gray-600" />
                                         </button>
                                     </div>
                                 </div>
@@ -403,103 +305,4 @@ export default function DocumentManagerModal({
             </div>
         </div>
     );
-}
-
-// Componente interno para o card
-interface DocumentCardProps {
-    item: DocumentOption | UserDocument;
-    mode: 'create' | 'drafts';
-    onSelect: (item: DocumentOption | UserDocument) => void;
-}
-
-// Componente interno para o card - VERSÃO COM UTILS
-interface DocumentCardProps {
-    item: DocumentOption | UserDocument;
-    mode: 'create' | 'drafts';
-    onSelect: (item: DocumentOption | UserDocument) => void;
-}
-
-function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
-    // ✅ Agora usando a função importada do utils
-    // Remove a função local getIconByCategory daqui
-
-    if (mode === 'create') {
-        const document = item as DocumentOption;
-        const IconComponent = getIconByCategory(document.category); // ✅ Usando a função importada
-
-        return (
-            <div
-                className="group relative p-6 border border-slate-200 rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
-                onClick={() => onSelect(document)}
-            >
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <IconComponent className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-slate-900 text-lg leading-tight">
-                                {document.title}
-                            </h3>
-                            {document.isPopular && (
-                                <span className="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">
-                                    <Star className="w-3 h-3 fill-amber-500" />
-                                    Popular
-                                </span>
-                            )}
-                        </div>
-                        <p className="text-slate-600 text-sm mb-3 line-clamp-2">
-                            {document.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded-full">
-                                {document.category}
-                            </span>
-                            <div className="text-blue-600 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1">
-                                Criar <Plus className="w-4 h-4" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300 -z-10" />
-            </div>
-        );
-    } else {
-        const document = item as UserDocument;
-        const documentTitle = document.documentId?.title || 'Documento sem título';
-        const documentCategory = document.documentId?.category || 'Sem categoria';
-        const IconComponent = getIconByCategory(documentCategory);
-
-        return (
-            <div
-                className="group relative p-6 border border-slate-200 rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
-                onClick={() => onSelect(document)}
-            >
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <IconComponent className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-slate-900 text-lg leading-tight mb-2">
-                            {documentTitle}
-                        </h3>
-                        <p className="text-slate-600 text-sm mb-3">
-                            {documentCategory.charAt(0).toUpperCase() + documentCategory.slice(1)}
-                        </p>
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-500 flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {document.updatedAt ? `Editado ${new Date(document.updatedAt).toLocaleDateString()}` : 'Sem data'}
-                            </span>
-                            <div className="text-blue-600 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1">
-                                Continuar <ChevronRight className="w-4 h-4" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300 -z-10" />
-            </div>
-        );
-    }
 }

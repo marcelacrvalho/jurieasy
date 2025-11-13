@@ -2,13 +2,13 @@ import {
     Scale,
     Construction,
     BrickWall,
-    Store,
     ShoppingCart,
     HouseHeart,
     House,
     Users,
     FileText,
-    LucideProps
+    LucideProps,
+    Building
 } from 'lucide-react';
 import { ForwardRefExoticComponent } from 'react';
 
@@ -17,7 +17,7 @@ export const getIconByCategory = (category: string): ForwardRefExoticComponent<O
         'civil': Scale,
         'trabalhista': Construction,
         'penal': BrickWall,
-        'empresarial': Store,
+        'empresarial': Building,
         'consumidor': ShoppingCart,
         'família': HouseHeart,
         'imobiliário': House,

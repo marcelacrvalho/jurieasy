@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, CheckCircle, File, FilePen, FileText, Pencil, TrendingUp, Zap } from "lucide-react";
+import { Check, CheckCircle, File, FilePen, FileText, Pencil, Zap } from "lucide-react";
 import { useUserContext } from '@/contexts/UserContext';
 import { useUserDocumentContext } from '@/contexts/UserDocumentContext';
 import { users } from '@/hooks/users';
@@ -18,15 +18,18 @@ import DocumentManagerModal from "@/components/dashboard/DocumentManagerModal";
 
 import { quickActionsData } from "@/data/dashboardData";
 
-import { DocumentOption } from "@/components/dashboard/Types";
 import { useUserDocuments } from "@/hooks/userDocuments";
+import { useDocuments } from "@/hooks/document";
 import React from "react";
 import { UserDocument } from "@/types/userDocument";
+import { Document } from "@/types/document";
+import { DocumentCard } from "@/components/shared/DocumentCard";
 
 export default function Dashboard() {
     const { user, isLoading } = useUserContext();
     const { stats, isFetchingStats } = useUserDocumentContext();
     const { userDocuments, getUserDocumentDraft, getUserDocumentStats } = useUserDocuments();
+    const { documents, getDocuments, isLoadingDocuments } = useDocuments();
 
     const { getUserProfile } = users();
 
@@ -68,10 +71,27 @@ export default function Dashboard() {
         }
     }, [getUserDocumentDraft, user?.id]);
 
-    // ✅ Adicione esta função para lidar com a seleção de rascunhos
+    // ✅ NOVO useEffect para carregar os documentos da API
+    useEffect(() => {
+        const loadDocuments = async () => {
+            try {
+                // Carrega os documentos mais populares ou todos, você pode ajustar os filtros
+                await getDocuments({
+                    page: 1,
+                    limit: 20,
+                    sortBy: 'updatedAt',
+                    sortOrder: 'asc'
+                });
+            } catch (error) {
+                console.error('💥 Erro ao carregar documentos:', error);
+            }
+        };
+
+        loadDocuments();
+    }, [getDocuments]);
+
     const handleDraftSelect = (document: UserDocument) => {
-        console.log('Rascunho selecionado:', document);
-        // Aqui você redireciona para a edição do documento
+        // TODO: redireciona para a edição do documento (pagina de perguntas)
         alert(`Continuando edição de: ${document.documentId?.title || 'Documento sem título'}`);
     };
 
@@ -94,10 +114,29 @@ export default function Dashboard() {
         }
     };
 
-    const handleDocumentSelect = (document: DocumentOption) => {
-        console.log('Documento selecionado:', document);
+    // No seu Dashboard, substitua a função handleDocumentSelect:
+    const handleDocumentSelect = (document: Document) => {
+        console.log('📄 Documento selecionado:', document);
+
+        // Aqui você inicia a criação do documento real
+        // Pode ser: redirecionar para página de criação, abrir outro modal, etc.
+
+        // TODO: Redirecionar para página de criação
+        // router.push(`/documents/create/${document._id}`);
+
+        // Exemplo 2: Abrir modal de criação com o documento selecionado
+        // openDocumentCreationModal(document);
+
+        // Exemplo 3: Mostrar alerta (temporário)
         alert(`Iniciando criação de: ${document.title}`);
+
+        // Exemplo 4: Criar um UserDocument (rascunho) automaticamente
+        // createUserDocumentDraft(document._id);
+
+        // TODO: Implementar a lógica de criação real aqui
     };
+
+    const featuredDocuments = documents.slice(-4).reverse();
 
     if (isLoading) {
         return (
@@ -245,6 +284,7 @@ export default function Dashboard() {
                         </section>
 
                         {/* Featured Templates Section */}
+                        {/* Featured Templates Section */}
                         <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
@@ -257,16 +297,46 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {documents.map((template) => (
-                                    <FeaturedTemplateCard
-                                        key={template._id}
-                                        template={template}
-                                        onTouchStart={handleTouchStart}
-                                        onTouchEnd={handleTouchEnd}
-                                    />
-                                ))}
-                            </div>*/}
+                            {/* ✅ CORREÇÃO: Use um componente de card individual */}
+                            {isLoadingDocuments ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {[...Array(4)].map((_, index) => (
+                                        <div key={index} className="bg-white border border-slate-200 rounded-2xl p-6 animate-pulse">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 bg-slate-200 rounded-xl"></div>
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                                    <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                                                    <div className="h-3 bg-slate-200 rounded w-2/3"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : featuredDocuments.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                                    {featuredDocuments.map((document: Document) => (
+                                        <DocumentCard
+                                            key={document._id}
+                                            item={document}
+                                            mode={"create"}
+                                            onSelect={function (item: Document | UserDocument): void {
+                                                throw new Error("Function not implemented.");
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-slate-500">Nenhum modelo disponível</p>
+                                    <button
+                                        onClick={() => setIsDocumentModalOpen(true)}
+                                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        Explorar Modelos
+                                    </button>
+                                </div>
+                            )}
                         </section>
                     </div>
 
@@ -305,6 +375,7 @@ export default function Dashboard() {
             {/* Modal para Criar Novo Documento */}
             <DocumentManagerModal
                 isOpen={isDocumentModalOpen}
+                documents={documents}
                 onClose={() => setIsDocumentModalOpen(false)}
                 mode="create"
                 onDocumentSelect={handleDocumentSelect}

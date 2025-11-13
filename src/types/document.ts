@@ -1,83 +1,92 @@
-import { ApiResponse, PaginatedResponse } from './api';
-
-// Interfaces para validação
-export interface ValidationRules {
-    pattern?: string;
-    min?: number;
-    max?: number;
-    required?: boolean;
-}
-
-// Interfaces para variáveis do Document
-export interface DocumentVariable {
-    id: string;
-    name: string;
-    label: string;
-    type: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'email' | 'tel';
-    required: boolean;
-    options: string[];
-    placeholder?: string;
-    description?: string;
-    validation?: ValidationRules;
-    defaultValue?: string;
-}
-
-// Interfaces para questões (questionário)
-export interface DocumentQuestion {
-    id: string;
-    variableId: string;
-    order: number;
-    text: string;
-    type: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'email' | 'tel';
-    options: string[];
-}
-
-// Interface principal do Document
 export interface Document {
     _id: string;
     title: string;
     description: string;
     category: string;
-    icon: string;
-    DocumentText: string;
-    variables: DocumentVariable[];
-    questions: DocumentQuestion[];
+    content: string;
+    questions?: Question[];
     tags: string[];
-    isPopular: boolean;
     isActive: boolean;
-    estimatedCompletionTime: number;
-    difficulty: 'beginner' | 'intermediate' | 'advanced';
-    jurisdiction: string;
-    legalReferences: string[];
+    isPopular: boolean;
     usageCount: number;
-    successRate: number;
-    averageCompletionTime: number;
+    estimatedCompletionTime: number;
     version: string;
+    icon?: string;
     createdAt: string;
     updatedAt: string;
 }
 
-export type DocumentsListResponse = PaginatedResponse<Document>;
-
-export type DocumentResponse = ApiResponse<Document>;
-
-export type DocumentsArrayResponse = ApiResponse<Document[]>;
+export interface Question {
+    id: string;
+    question: string;
+    type: 'text' | 'select' | 'radio' | 'checkbox' | 'date';
+    options?: string[];
+    required: boolean;
+    placeholder?: string;
+}
 
 export interface DocumentFilters {
     category?: string;
-    difficulty?: string;
-    search?: string;
-    tags?: string[];
     isPopular?: boolean;
-    jurisdiction?: string;
-}
-
-// Parâmetros para listagem com paginação
-export interface DocumentListParams {
+    search?: string;
     page?: number;
     limit?: number;
-    category?: string;
-    search?: string;
-    sortBy?: 'title' | 'createdAt' | 'usageCount' | 'difficulty';
+    sortBy?: string;
     sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginationInfo {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+}
+
+// ✅ CORRIGIDO: data é opcional para consistência com ApiResponse
+export interface DocumentsResponse {
+    success: boolean;
+    data?: Document[]; // ✅ Tornado opcional
+    pagination?: PaginationInfo; // ✅ Tornado opcional
+    cached?: boolean;
+    error?: string;
+}
+
+// ✅ CORRIGIDO: data é opcional
+export interface DocumentResponse {
+    success: boolean;
+    data?: Document; // ✅ Tornado opcional
+    error?: string;
+}
+
+// ✅ CORRIGIDO: data é opcional
+export interface CategoriesResponse {
+    success: boolean;
+    data?: string[]; // ✅ Tornado opcional
+    error?: string;
+}
+
+export interface CreateDocumentData {
+    title: string;
+    description: string;
+    category: string;
+    content: string;
+    questions?: Question[];
+    tags?: string[];
+    isPopular?: boolean;
+    estimatedCompletionTime?: number;
+    version?: string;
+    icon?: string;
+}
+
+export interface UpdateDocumentData {
+    title?: string;
+    description?: string;
+    category?: string;
+    content?: string;
+    questions?: Question[];
+    tags?: string[];
+    isPopular?: boolean;
+    estimatedCompletionTime?: number;
+    version?: string;
+    icon?: string;
 }
