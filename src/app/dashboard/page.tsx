@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { Check, CheckCircle, File, FilePen, FileText, Pencil, Zap } from "lucide-react";
 import { useUserContext } from '@/contexts/UserContext';
 import { useUserDocumentContext } from '@/contexts/UserDocumentContext';
-import { users } from '@/hooks/users';
+import { useUsers } from '@/hooks/users';
+import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast";
 
 // Components
@@ -14,6 +15,7 @@ import StatusBanner from "@/components/dashboard/StatusBanner";
 import MobileMenu from "@/components/dashboard/MobileMenu";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DocumentManagerModal from "@/components/dashboard/DocumentManagerModal";
+import DocumentCreationModal from "@/components/dashboard/DocumentCreationModal";
 
 import { quickActionsData } from "@/data/dashboardData";
 
@@ -23,81 +25,143 @@ import React from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { DocumentCard } from "@/components/shared/DocumentCard";
+import LoadingAnimation from "@/components/shared/LoadingAnimation";
+import { tokenManager } from '@/lib/token-manager';
 
 export default function Dashboard() {
-    const { user, isLoading } = useUserContext();
+    const router = useRouter();
+    const { user, isLoading: isUserLoading, isAuthenticated, loadUserProfile } = useUserContext();
     const { stats, isFetchingStats } = useUserDocumentContext();
     const { userDocuments, getUserDocumentDraft, getUserDocumentStats } = useUserDocuments();
     const { documents, getDocuments, isLoadingDocuments } = useDocuments();
 
-    const { getUserProfile } = users();
-
+    // States
+    const [selectedTemplate, setSelectedTemplate] = useState<Document | null>(null);
+    const [selectedDraft, setSelectedDraft] = useState<UserDocument | null>(null);
+    const [isCreationModalOpen, setIsCreationModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
     const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+    // Authentication check
     useEffect(() => {
-        const loadUserProfile = async () => {
-            try {
-                await getUserProfile();
-            } catch (error) {
-                console.error('💥 Erro ao carregar perfil:', error);
+        const checkAuthentication = async () => {
+            console.log('🔐 Dashboard - Verificando autenticação:', {
+                tokenManager: tokenManager.hasToken() ? 'PRESENTE' : 'AUSENTE',
+                userContext: user ? 'PRESENTE' : 'AUSENTE',
+                isAuthenticated: isAuthenticated ? 'SIM' : 'NÃO'
+            });
+
+            if (!tokenManager.hasToken()) {
+                console.log('🚫 Sem token no tokenManager - Redirecionando para /auth');
+                router.push('/auth');
+                return;
             }
+
+            if (tokenManager.hasToken() && !user) {
+                console.log('🔄 Token presente mas usuário não carregado - Carregando perfil...');
+                try {
+                    await loadUserProfile();
+                } catch (error) {
+                    console.error('❌ Erro ao carregar perfil:', error);
+                    tokenManager.clearToken();
+                    router.push('/auth');
+                    return;
+                }
+            }
+
+            setIsCheckingAuth(false);
         };
 
-        loadUserProfile();
-    }, [getUserProfile]);
+        checkAuthentication();
+    }, [user, isAuthenticated, router, loadUserProfile]);
 
+    // Loading transition
     useEffect(() => {
-        const loadUserDocumentsStats = async () => {
-            if (!user?.id) return;
+        if (!isCheckingAuth) {
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+            }, 300);
 
-            try {
-                await getUserDocumentStats(user.id);
-            } catch (error) {
-                toast.error("Erro ao tentar carregar as estatísticas", {
-                    icon: "⚠️"
-                });
-            }
-        };
-
-        loadUserDocumentsStats();
-    }, [getUserDocumentStats, user?.id]);
-
-    useEffect(() => {
-        if (user?.id) {
-            getUserDocumentDraft(user.id, 1, 10);
+            return () => clearTimeout(timer);
         }
-    }, [getUserDocumentDraft, user?.id]);
+    }, [isCheckingAuth]);
 
-    // ✅ NOVO useEffect para carregar os documentos da API
+    // Load dashboard data
     useEffect(() => {
-        const loadDocuments = async () => {
-            try {
-                // Carrega os documentos mais populares ou todos, você pode ajustar os filtros
-                await getDocuments({
-                    page: 1,
-                    limit: 20,
-                    sortBy: 'updatedAt',
-                    sortOrder: 'asc'
-                });
-            } catch (error) {
-                console.error('💥 Erro ao carregar documentos:', error);
-            }
-        };
+        if (!isLoading && user?.id && isAuthenticated) {
+            getUserDocumentStats(user.id).catch(error => {
+                console.error('Erro ao carregar estatísticas:', error);
+                toast.error('Erro ao carregar estatísticas');
+            });
 
-        loadDocuments();
-    }, [getDocuments]);
+            getUserDocumentDraft(user.id, 1, 10).catch(error => {
+                console.error('Erro ao carregar rascunhos:', error);
+                toast.error('Erro ao carregar documentos em andamento');
+            });
 
-    const handleDraftSelect = (document: UserDocument) => {
-        // TODO: redireciona para a edição do documento (pagina de perguntas)
-        alert(`Continuando edição de: ${document.documentId?.title || 'Documento sem título'}`);
+            getDocuments({
+                page: 1,
+                limit: 20,
+                sortBy: 'updatedAt',
+                sortOrder: 'desc'
+            }).catch(error => {
+                console.error('Erro ao carregar documentos:', error);
+                toast.error('Erro ao carregar modelos');
+            });
+        }
+    }, [isLoading, getUserDocumentStats, getUserDocumentDraft, getDocuments, user?.id, isAuthenticated]);
+
+    // Handlers
+    const handleCloseCreationModal = () => {
+        setIsCreationModalOpen(false);
+        setSelectedTemplate(null);
+        setSelectedDraft(null);
     };
 
-    // Função para animações em mobile (touch)
+    const handleItemSelect = (item: Document | UserDocument) => {
+        if ('documentId' in item) {
+            // É UserDocument (rascunho) - CONTINUA RASCUNHO
+            const userDocument = item as UserDocument;
+            console.log('📝 Continuando rascunho:', userDocument);
+            setIsDraftsModalOpen(false);
+            setSelectedDraft(userDocument);
+            setIsCreationModalOpen(true);
+            toast.success(`Continuando: ${userDocument.documentId?.title || 'Documento sem título'}`);
+        } else {
+            // É Document (template) - NOVO DOCUMENTO
+            const document = item as Document;
+            console.log('📄 Template selecionado:', document);
+            setIsDocumentModalOpen(false);
+            setSelectedTemplate(document);
+            setIsCreationModalOpen(true);
+            toast.success(`Iniciando: ${document.title}`);
+        }
+    };
+
+    const handleDocumentCreated = (userDocument: UserDocument) => {
+        console.log('🎉 Documento processado com sucesso:', userDocument);
+
+        if (selectedDraft) {
+            toast.success('Rascunho atualizado!');
+        } else {
+            toast.success('Documento criado com sucesso!');
+        }
+
+        if (user?.id) {
+            getUserDocumentDraft(user.id, 1, 10).catch(console.error);
+            getUserDocumentStats(user.id).catch(console.error);
+        }
+
+        handleCloseCreationModal();
+    };
+
     const handleTouchStart = (e: React.TouchEvent) => {
         const target = e.currentTarget as HTMLElement;
         target.style.transform = 'scale(0.98)';
+        target.style.transition = 'transform 0.1s ease';
     };
 
     const handleTouchEnd = (e: React.TouchEvent) => {
@@ -109,61 +173,61 @@ export default function Dashboard() {
         if (actionLabel === "Novo Contrato") {
             setIsDocumentModalOpen(true);
         } else {
-            console.log('Quick action:', actionLabel);
+            toast.success(`Ação: ${actionLabel}`);
         }
     };
 
-    // No seu Dashboard, substitua a função handleDocumentSelect:
-    const handleDocumentSelect = (document: Document) => {
-        console.log('📄 Documento selecionado:', document);
-
-        // Aqui você inicia a criação do documento real
-        // Pode ser: redirecionar para página de criação, abrir outro modal, etc.
-
-        // TODO: Redirecionar para página de criação
-        // router.push(`/documents/create/${document._id}`);
-
-        // Exemplo 2: Abrir modal de criação com o documento selecionado
-        // openDocumentCreationModal(document);
-
-        // Exemplo 3: Mostrar alerta (temporário)
-        alert(`Iniciando criação de: ${document.title}`);
-
-        // Exemplo 4: Criar um UserDocument (rascunho) automaticamente
-        // createUserDocumentDraft(document._id);
-
-        // TODO: Implementar a lógica de criação real aqui
-    };
-
-    const featuredDocuments = documents.slice(-4).reverse();
+    // Loading states
+    if (isCheckingAuth || isUserLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+                <div className="text-center">
+                    <LoadingAnimation />
+                    <p className="mt-4 text-slate-600">Verificando autenticação...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-slate-600">Carregando...</p>
+                    <div className="mx-auto mb-6">
+                        <LoadingAnimation />
+                    </div>
+                    <h2 className="text-xl font-semibold text-slate-800">Carregando dashboard...</h2>
+                    <p className="text-slate-600 mt-2">Aguarde alguns instantes</p>
                 </div>
             </div>
         );
     }
 
-    if (!user) {
+    if (!user || !isAuthenticated) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-4">Usuário não encontrado</h2>
-                    <p className="text-slate-600">Faça login para acessar o dashboard</p>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-4">Acesso não autorizado</h2>
+                    <p className="text-slate-600 mb-4">Faça login para acessar o dashboard</p>
+                    <button
+                        onClick={() => router.push('/auth')}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Fazer Login
+                    </button>
                 </div>
             </div>
         );
     }
 
-    const recentDocuments = userDocuments.slice(-4).reverse();
+    // Data for display
+    const recentDocuments = userDocuments.slice(0, 4);
+    const featuredDocuments = documents.slice(0, 4);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-6 sm:py-10">
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                {/* Header */}
                 <DashboardHeader
                     name={user.name}
                     onMobileMenuOpen={() => setIsMobileMenuOpen(true)}
@@ -171,9 +235,9 @@ export default function Dashboard() {
                     onTouchEnd={handleTouchEnd}
                 />
 
-                {/* Metrics Grid com stats */}
+                {/* Metrics Grid */}
                 <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
-                    {stats && (
+                    {stats && !isFetchingStats ? (
                         <>
                             <MetricCard
                                 metric={{
@@ -214,24 +278,21 @@ export default function Dashboard() {
                                 onTouchEnd={handleTouchEnd}
                             />
                         </>
-                    )}
-
-                    {/* Loading state */}
-                    {isFetchingStats && (
-                        <>
-                            {[...Array(3)].map((_, index) => (
-                                <div key={index} className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 animate-pulse">
-                                    <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
-                                    <div className="h-8 bg-slate-200 rounded w-1/3"></div>
-                                </div>
-                            ))}
-                        </>
+                    ) : (
+                        // Loading state para métricas
+                        [...Array(3)].map((_, index) => (
+                            <div key={index} className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 animate-pulse">
+                                <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
+                                <div className="h-8 bg-slate-200 rounded w-1/3"></div>
+                            </div>
+                        ))
                     )}
                 </div>
 
+                {/* Main Content */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-                        {/* Continue Working Section */}
+                        {/* Drafts Section */}
                         <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <button
@@ -246,27 +307,26 @@ export default function Dashboard() {
                                     </p>
                                 </button>
 
-                                <div className="flex gap-2">
-                                    {userDocuments.length > 4 && (
-                                        <button
-                                            onClick={() => setIsDraftsModalOpen(true)}
-                                            className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
-                                        >
-                                            Ver todos
-                                        </button>
-                                    )}
-                                </div>
+                                {userDocuments.length > 4 && (
+                                    <button
+                                        onClick={() => setIsDraftsModalOpen(true)}
+                                        className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+                                    >
+                                        Ver todos
+                                    </button>
+                                )}
                             </div>
 
                             <div className="space-y-4">
                                 {recentDocuments.length === 0 ? (
                                     <div className="text-center py-8">
-                                        <p className="text-slate-500">Nenhum documento em andamento</p>
+                                        <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                        <p className="text-slate-500 mb-4">Nenhum documento em andamento</p>
                                         <button
                                             onClick={() => setIsDocumentModalOpen(true)}
-                                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                                         >
-                                            Criar Primeiro Documento
+                                            Criar primeiro documento
                                         </button>
                                     </div>
                                 ) : (
@@ -274,10 +334,9 @@ export default function Dashboard() {
                                         <DocumentCard
                                             key={document._id}
                                             item={document}
-                                            mode={"drafts"}
-                                            onSelect={function (item: Document | UserDocument): void {
-                                                throw new Error("Function not implemented.");
-                                            }} />
+                                            mode="drafts"
+                                            onSelect={handleItemSelect}
+                                        />
                                     ))
                                 )}
                             </div>
@@ -296,7 +355,6 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* ✅ CORREÇÃO: Use um componente de card individual */}
                             {isLoadingDocuments ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {[...Array(4)].map((_, index) => (
@@ -318,19 +376,18 @@ export default function Dashboard() {
                                         <DocumentCard
                                             key={document._id}
                                             item={document}
-                                            mode={"create"}
-                                            onSelect={function (item: Document | UserDocument): void {
-                                                throw new Error("Function not implemented.");
-                                            }}
+                                            mode="create"
+                                            onSelect={handleItemSelect}
                                         />
                                     ))}
                                 </div>
                             ) : (
                                 <div className="text-center py-8">
-                                    <p className="text-slate-500">Nenhum modelo disponível</p>
+                                    <File className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                    <p className="text-slate-500 mb-4">Nenhum modelo disponível</p>
                                     <button
                                         onClick={() => setIsDocumentModalOpen(true)}
-                                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                     >
                                         Explorar Modelos
                                     </button>
@@ -339,6 +396,7 @@ export default function Dashboard() {
                         </section>
                     </div>
 
+                    {/* Sidebar */}
                     <aside className="hidden lg:block space-y-6 sm:space-y-8">
                         {/* Quick Actions */}
                         <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
@@ -360,24 +418,32 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* Modals */}
             <DocumentManagerModal
                 isOpen={isDraftsModalOpen}
                 onClose={() => setIsDraftsModalOpen(false)}
                 mode="drafts"
                 userDocuments={userDocuments}
-                onDraftSelect={handleDraftSelect}
+                onDraftSelect={handleItemSelect}
                 userId={user?.id}
                 title="Continuar de onde parou"
                 description="Selecione um documento para continuar editando"
             />
 
-            {/* Modal para Criar Novo Documento */}
             <DocumentManagerModal
                 isOpen={isDocumentModalOpen}
                 documents={documents}
                 onClose={() => setIsDocumentModalOpen(false)}
                 mode="create"
-                onDocumentSelect={handleDocumentSelect}
+                onDocumentSelect={handleItemSelect}
+            />
+
+            <DocumentCreationModal
+                isOpen={isCreationModalOpen}
+                onClose={handleCloseCreationModal}
+                document={selectedTemplate}
+                userDocument={selectedDraft}
+                onDocumentCreated={handleDocumentCreated}
             />
 
             <MobileMenu

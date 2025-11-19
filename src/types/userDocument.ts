@@ -60,9 +60,9 @@ export type UserDocumentsListResponse = PaginatedResponse<UserDocument>;
 // Response para lista SEM paginação
 export type UserDocumentsArrayResponse = ApiResponse<UserDocument[]>;
 
-// Parâmetros para criar/atualizar documento
 export interface CreateDocumentData {
-    templateId: string;
+    documentId: string;
+    userId?: string;
     answers?: UserAnswers;
     status?: DocumentStatus;
     currentStep?: number;

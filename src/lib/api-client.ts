@@ -1,72 +1,91 @@
-import { ApiResponse, PaginatedResponse } from '@/types/api';
+import { tokenManager } from './token-manager';
 
-export class ApiClient {
-    private baseURL: string;
-
-    constructor(baseURL: string) {
-        this.baseURL = baseURL; // TODO: add baseURL e NEXT_PUBLIC_API_URL ao .env
-    }
-
-    async request<T = any>(
-        endpoint: string,
-        options: RequestInit = {}
-    ): Promise<ApiResponse<T>> {
-        const token = localStorage.getItem('token');
-
-        const defaultHeaders = {
+const apiClient = {
+    async get(url: string, options?: { headers?: Record<string, string> }) {
+        const token = await tokenManager.getToken();
+        const headers: HeadersInit = {
             'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
+            ...options?.headers
         };
 
-        const response = await fetch(`${this.baseURL}${endpoint}`, {
-            ...options,
-            headers: {
-                ...defaultHeaders,
-                ...options.headers,
-            },
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        console.log('🔐 GET:', url, token ? 'COM token' : 'SEM token');
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
+            method: 'GET',
+            headers,
         });
 
-        return response.json();
-    }
+        return await response.json();
+    },
 
-    async getPaginated<T = any>(
-        endpoint: string,
-        page: number = 1,
-        limit: number = 10
-    ): Promise<PaginatedResponse<T>> {
-        const queryParams = new URLSearchParams({
-            page: page.toString(),
-            limit: limit.toString(),
-        });
+    async post(url: string, body?: any, options?: { headers?: Record<string, string> }) {
+        const token = await tokenManager.getToken();
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        };
 
-        const url = `${endpoint}?${queryParams}`;
-        const response = await this.request<T[]>(url);
-        return response as PaginatedResponse<T>;
-    }
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
-    async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint);
-    }
+        console.log('🔐 POST:', url, token ? 'COM token' : 'SEM token');
 
-    async post<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
             method: 'POST',
-            body: data ? JSON.stringify(data) : undefined,
+            headers,
+            body: body ? JSON.stringify(body) : undefined,
         });
-    }
 
-    async put<T = any>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, {
+        return await response.json();
+    },
+
+    async put(url: string, body?: any, options?: { headers?: Record<string, string> }) {
+        const token = await tokenManager.getToken();
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        console.log('🔐 PUT:', url, token ? 'COM token' : 'SEM token');
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
             method: 'PUT',
-            body: data ? JSON.stringify(data) : undefined,
+            headers,
+            body: body ? JSON.stringify(body) : undefined,
         });
-    }
 
-    async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, {
+        return await response.json();
+    },
+
+    async delete(url: string, options?: { headers?: Record<string, string> }) {
+        const token = await tokenManager.getToken();
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        console.log('🔐 DELETE:', url, token ? 'COM token' : 'SEM token');
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
             method: 'DELETE',
+            headers,
         });
-    }
-}
 
-export const apiClient = new ApiClient(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
+        return await response.json();
+    },
+};
+
+export { apiClient };

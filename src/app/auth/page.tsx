@@ -1,14 +1,18 @@
+// app/auth/page.tsx
 "use client";
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
-import { users } from '@/hooks/users';
+import { useUsers } from '@/hooks/users';
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
+import { tokenManager } from '@/lib/token-manager'; // ✅ Import do tokenManager
 
 export default function AuthPage() {
+    const router = useRouter();
     const [isLoginMode, setIsLoginMode] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -24,7 +28,29 @@ export default function AuthPage() {
         isLoggingIn,
         error,
         clearError
-    } = users();
+    } = useUsers();
+
+    // ✅ CORREÇÃO: Verificar se já está autenticado ao carregar a página
+    useEffect(() => {
+        const checkExistingAuth = async () => {
+            console.log('🔐 AuthPage: Verificando autenticação existente...');
+
+            // ✅ VERIFICA NO TOKEN MANAGER (fonte da verdade)
+            if (tokenManager.hasToken()) {
+                console.log('✅ Usuário já autenticado, redirecionando para dashboard...');
+                router.push('/dashboard');
+                return;
+            }
+
+            // ✅ SE TEM USER MAS NÃO TEM TOKEN, LIMPA O CONTEXTO (estado inconsistente)
+            if (user && !tokenManager.hasToken()) {
+                console.log('⚠️ Estado inconsistente: user sem token, limpando...');
+                // Isso será tratado pelo hook useUsers/logout
+            }
+        };
+
+        checkExistingAuth();
+    }, [user, router]);
 
     // Carrega o plano selecionado do localStorage
     useEffect(() => {
@@ -34,29 +60,38 @@ export default function AuthPage() {
         }
     }, []);
 
-    // Redirecionamento após autenticação bem-sucedida
+    // ✅ CORREÇÃO: Redirecionamento melhorado
     useEffect(() => {
-        if (user) {
-            const redirect = async () => {
+        if (user && tokenManager.hasToken()) {
+            console.log('🔄 Auth: Usuário autenticado, redirecionando...', {
+                shouldRedirectToPayment,
+                isGoogleAuth,
+                selectedPlan,
+                user: user.name
+            });
+
+            // Pequeno delay para melhor UX
+            const redirectTimer = setTimeout(() => {
                 // Para registro com email + plano → payment
                 if (shouldRedirectToPayment) {
-                    console.log("Redirecionando para pagamento com plano:", selectedPlan);
-                    window.location.href = "/payment";
+                    console.log("💰 Redirecionando para pagamento com plano:", selectedPlan);
+                    router.push("/payment");
                 }
                 // Para registro com Google + plano → payment
                 else if (isGoogleAuth && selectedPlan) {
-                    console.log("Redirecionando Google auth para pagamento com plano:", selectedPlan);
-                    window.location.href = "/payment";
+                    console.log("💰 Redirecionando Google auth para pagamento com plano:", selectedPlan);
+                    router.push("/payment");
                 }
                 // Caso contrário → dashboard
                 else {
-                    console.log("Redirecionando para dashboard");
-                    window.location.href = "/dashboard";
+                    console.log("🏠 Redirecionando para dashboard");
+                    router.push("/dashboard");
                 }
-            };
-            redirect();
+            }, 500);
+
+            return () => clearTimeout(redirectTimer);
         }
-    }, [user, shouldRedirectToPayment, isGoogleAuth, selectedPlan]);
+    }, [user, shouldRedirectToPayment, isGoogleAuth, selectedPlan, router]);
 
     const handleToggleMode = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -65,73 +100,100 @@ export default function AuthPage() {
         setForm({ name: "", email: "", password: "" });
     };
 
+    // ✅ CORREÇÃO: Função de auth com email melhorada
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         clearError();
-        setIsGoogleAuth(false); // Não é autenticação Google
+        setIsGoogleAuth(false);
 
-        if (isLoginMode) {
-            const success = await login({
-                email: form.email,
-                password: form.password
-            });
+        // ✅ VALIDAÇÃO BÁSICA
+        if (!form.email || !form.password) {
+            clearError(); // Usa o clearError do hook
+            return;
+        }
 
-            if (success) {
-                console.log("Login com email realizado com sucesso!");
-                // Login sempre vai para dashboard
-            }
-        } else {
-            const success = await registerEmail({
-                name: form.name,
-                email: form.email,
-                password: form.password
-            });
+        if (!isLoginMode && !form.name) {
+            clearError();
+            return;
+        }
 
-            if (success) {
-                // Se tem plano selecionado, marca para redirecionar para pagamento
-                if (selectedPlan) {
-                    console.log("Registro com plano, preparando redirecionamento para pagamento");
-                    setShouldRedirectToPayment(true);
+        try {
+            if (isLoginMode) {
+                const success = await login({
+                    email: form.email,
+                    password: form.password
+                });
+
+                if (success) {
+                    console.log("✅ Login com email realizado com sucesso!");
+                    // O redirecionamento será tratado no useEffect
                 }
-                // Se não tem plano, o useEffect vai redirecionar para dashboard
+            } else {
+                const success = await registerEmail({
+                    name: form.name,
+                    email: form.email,
+                    password: form.password
+                });
+
+                if (success) {
+                    console.log("✅ Registro com email realizado com sucesso!");
+
+                    // Se tem plano selecionado, marca para redirecionar para pagamento
+                    if (selectedPlan) {
+                        console.log("📋 Registro com plano, preparando redirecionamento para pagamento");
+                        setShouldRedirectToPayment(true);
+                    }
+                    // Se não tem plano, o useEffect vai redirecionar para dashboard
+                }
             }
+        } catch (error) {
+            console.error("❌ Erro na autenticação:", error);
+            // O erro será tratado pelo hook
         }
     };
 
+    // ✅ CORREÇÃO: Função Google melhorada
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             try {
                 const { access_token } = tokenResponse;
-                setIsGoogleAuth(true); // Marca como autenticação Google
+                setIsGoogleAuth(true);
+                clearError();
 
                 if (!access_token) {
-                    alert("Access Token não recebido do Google");
+                    console.error("❌ Access Token não recebido do Google");
                     return;
                 }
 
+                console.log("🔐 Iniciando autenticação Google...");
                 const success = await registerGoogle(access_token);
 
                 if (success) {
-                    console.log("Login Google realizado com sucesso!");
+                    console.log("✅ Login Google realizado com sucesso!");
                     // O redirecionamento será tratado no useEffect
-                    // Se selectedPlan existe, vai para payment, senão para dashboard
+
+                    // Se tem plano selecionado, marca para redirecionar para pagamento
+                    if (selectedPlan) {
+                        console.log("📋 Google auth com plano, preparando redirecionamento para pagamento");
+                        setShouldRedirectToPayment(true);
+                    }
                 }
             } catch (err) {
-                console.error("Erro no login Google:", err);
-                alert("Falha na autenticação com Google.");
+                console.error("❌ Erro no login Google:", err);
                 setIsGoogleAuth(false);
             }
         },
         onError: (error) => {
-            console.error("Erro Google OAuth:", error);
-            alert("Erro ao autenticar com o Google");
+            console.error("❌ Erro Google OAuth:", error);
             setIsGoogleAuth(false);
         },
         scope: 'openid profile email',
     });
 
-    // Verifica se há alguma operação em andamento
+    // ✅ CORREÇÃO: Loading states mais precisos
     const isLoading = isRegistering || isLoggingIn;
+    const isFormLoading = isLoading && !isGoogleAuth;
+    const isGoogleLoading = isLoading && isGoogleAuth;
 
     // Textos dinâmicos baseados no contexto
     const getAuthButtonText = () => {
@@ -145,11 +207,24 @@ export default function AuthPage() {
     };
 
     const getLoadingMessage = () => {
+        if (isGoogleLoading) return "Autenticando com Google...";
         if (isRegistering) {
             return selectedPlan ? "Preparando pagamento..." : "Criando sua conta...";
         }
         return "Entrando...";
     };
+
+    // ✅ CORREÇÃO: Se já está autenticado, mostra loading até redirecionar
+    if (user && tokenManager.hasToken()) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-white">
+                <div className="text-center">
+                    <LoadingAnimation />
+                    <p className="mt-4 text-slate-600">Redirecionando...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col lg:flex-row bg-white">
@@ -243,6 +318,17 @@ export default function AuthPage() {
                         {isLoginMode ? "Bem-vindo de volta" : "Crie sua conta"}
                     </h1>
 
+                    {/* ✅ Exibir erro se houver */}
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                        >
+                            {error}
+                        </motion.div>
+                    )}
+
                     <form onSubmit={handleEmailAuth} className="space-y-4">
                         <AnimatePresence mode="wait">
                             {!isLoginMode && (
@@ -308,7 +394,7 @@ export default function AuthPage() {
                             disabled={isLoading}
                             className="w-full bg-blue-700 text-white py-2 rounded-full hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition font-medium shadow-sm relative"
                         >
-                            {isLoading && (
+                            {isFormLoading && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -333,11 +419,11 @@ export default function AuthPage() {
                                 </motion.div>
                             )}
 
-                            <span className={isLoading ? "opacity-0" : "opacity-100"}>
+                            <span className={isFormLoading ? "opacity-0" : "opacity-100"}>
                                 {getAuthButtonText()}
                             </span>
 
-                            {isLoading && (
+                            {isFormLoading && (
                                 <span className="absolute inset-0 flex items-center justify-center">
                                     {getAuthButtonText()}
                                 </span>
@@ -357,7 +443,7 @@ export default function AuthPage() {
                         disabled={isLoading}
                         className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium shadow-sm text-gray-700 relative"
                     >
-                        {isLoading && (
+                        {isGoogleLoading && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -383,11 +469,11 @@ export default function AuthPage() {
                         )}
 
                         <FcGoogle className="text-xl" />
-                        <span className={isLoading ? "opacity-0" : "opacity-100"}>
+                        <span className={isGoogleLoading ? "opacity-0" : "opacity-100"}>
                             {selectedPlan && !isLoginMode ? "Cadastrar com Google" : "Entrar com Google"}
                         </span>
 
-                        {isLoading && (
+                        {isGoogleLoading && (
                             <span className="absolute inset-0 flex items-center justify-center">
                                 Processando...
                             </span>
@@ -396,13 +482,14 @@ export default function AuthPage() {
 
                     <p className="text-sm text-gray-600 text-center mt-6">
                         {isLoginMode ? "Ainda não tem uma conta?" : "Já tem uma conta?"}{" "}
-                        <a
-                            href="#"
+                        <button
+                            type="button"
                             onClick={handleToggleMode}
-                            className="text-blue-700 hover:underline"
+                            className="text-blue-700 hover:underline bg-transparent border-none cursor-pointer"
+                            disabled={isLoading}
                         >
                             {isLoginMode ? "Crie agora" : "Faça login"}
-                        </a>
+                        </button>
                     </p>
                 </motion.div>
             </motion.div>

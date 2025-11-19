@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { contractQuestions } from "@/lib/contract-questions";
 import { ContractData } from "@/lib/contract-template";
-import ProgressBar from "./ProgressBar";
 import QuestionStep from "./QuestionStep";
 import ContractDocument from "./ContractPreview";
 
@@ -154,9 +153,7 @@ export default function ContractWizard() {
                     </div>
 
                     {/* barra de progresso */}
-                    <div className="mt-3">
-                        <ProgressBar progress={progress} />
-                    </div>
+
                 </div>
             </header>
 

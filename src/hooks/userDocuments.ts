@@ -217,13 +217,24 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         try {
             console.log('🆕 Criando documento...', data);
 
-            const response: UserDocumentResponse = await apiClient.post('/user-documents', data);
+            // ✅ CORREÇÃO: Inclui userId automaticamente do contexto
+            const requestData = {
+                ...data,
+                userId: data.userId || user?.id // ✅ Usa o userId do contexto se não foi fornecido
+            };
+
+            if (!requestData.userId) {
+                setError('Usuário não autenticado');
+                return null;
+            }
+
+            const response: UserDocumentResponse = await apiClient.post('/user-documents', requestData);
 
             console.log('📨 Resposta da criação:', response);
 
             if (response.success && response.data) {
                 const newDocument = response.data;
-                setDocuments((prev: any) => [newDocument, ...prev]);
+                setDocuments((prev: UserDocument[]) => [newDocument, ...prev]);
                 return newDocument;
 
             } else {
@@ -238,7 +249,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         } finally {
             setCreating(false);
         }
-    }, [setDocuments, setCreating, setError]);
+    }, [setDocuments, setCreating, setError, user?.id]); // ✅ Adicione user?.id nas dependências
 
     const updateDocument = useCallback(async (documentId: string, data: UpdateDocumentData): Promise<UserDocument | null> => {
         setUpdating(true);

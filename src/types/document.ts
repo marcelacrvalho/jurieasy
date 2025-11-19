@@ -1,10 +1,11 @@
+// types/document.ts
 export interface Document {
     _id: string;
     title: string;
     description: string;
     category: string;
     content: string;
-    questions?: Question[];
+    variables?: Variable[]; // ✅ Mude de Question[] para Variable[]
     tags: string[];
     isActive: boolean;
     isPopular: boolean;
@@ -16,13 +17,32 @@ export interface Document {
     updatedAt: string;
 }
 
+export interface Variable {
+    id: string;
+    name: string;
+    label: string;
+    type: 'text' | 'textarea' | 'select' | 'date' | 'number';
+    required: boolean;
+    options?: string[];
+    placeholder?: string;
+    description?: string;
+    defaultValue?: any;
+    validation?: {
+        pattern?: string;
+        min?: number;
+        max?: number;
+    };
+}
+
+// Mantenha o Question separado para o wizard
 export interface Question {
     id: string;
     question: string;
-    type: 'text' | 'select' | 'radio' | 'checkbox' | 'date';
+    type: 'text' | 'select' | 'radio' | 'checkbox' | 'date' | 'textarea' | 'number';
     options?: string[];
     required: boolean;
     placeholder?: string;
+    description?: string;
 }
 
 export interface DocumentFilters {
@@ -42,26 +62,23 @@ export interface PaginationInfo {
     pages: number;
 }
 
-// ✅ CORRIGIDO: data é opcional para consistência com ApiResponse
 export interface DocumentsResponse {
     success: boolean;
-    data?: Document[]; // ✅ Tornado opcional
-    pagination?: PaginationInfo; // ✅ Tornado opcional
+    data?: Document[];
+    pagination?: PaginationInfo;
     cached?: boolean;
     error?: string;
 }
 
-// ✅ CORRIGIDO: data é opcional
 export interface DocumentResponse {
     success: boolean;
-    data?: Document; // ✅ Tornado opcional
+    data?: Document;
     error?: string;
 }
 
-// ✅ CORRIGIDO: data é opcional
 export interface CategoriesResponse {
     success: boolean;
-    data?: string[]; // ✅ Tornado opcional
+    data?: string[];
     error?: string;
 }
 
@@ -70,7 +87,7 @@ export interface CreateDocumentData {
     description: string;
     category: string;
     content: string;
-    questions?: Question[];
+    variables?: Question[];
     tags?: string[];
     isPopular?: boolean;
     estimatedCompletionTime?: number;
@@ -83,7 +100,7 @@ export interface UpdateDocumentData {
     description?: string;
     category?: string;
     content?: string;
-    questions?: Question[];
+    variables?: Question[];
     tags?: string[];
     isPopular?: boolean;
     estimatedCompletionTime?: number;

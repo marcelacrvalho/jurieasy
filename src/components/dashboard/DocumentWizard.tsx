@@ -1,0 +1,316 @@
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
+import { useDocuments } from "@/hooks/document";
+import { useUserDocuments } from "@/hooks/userDocuments";
+import { useUserContext } from "@/contexts/UserContext";
+import { Document } from "@/types/document";
+import { UserDocument } from "@/types/userDocument";
+import QuestionStep from "./QuestionStep";
+import DocumentPreview from "./DocumentPreview";
+import React from "react";
+import LoadingAnimation from "../shared/LoadingAnimation";
+
+interface DocumentWizardProps {
+    documentTemplate?: Document;
+    userDocument?: UserDocument;
+    onComplete?: (userDocument: UserDocument) => void;
+    onCancel?: () => void;
+    onProgressUpdate?: (progress: { currentStep: number; totalSteps: number; progress: number }) => void;
+    onSaveDraft?: (draftData: { answers: Record<string, any>; currentStep: number }) => void;
+}
+
+export default function DocumentWizard({
+    documentTemplate,
+    userDocument,
+    onComplete,
+    onCancel,
+    onProgressUpdate,
+    onSaveDraft
+}: DocumentWizardProps) {
+
+    const { user } = useUserContext();
+    const { getDocument } = useDocuments();
+    const { createDocument, updateDocument } = useUserDocuments();
+
+    const [currentStep, setCurrentStep] = useState(0);
+    const [answers, setAnswers] = useState<Record<string, any>>({});
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+    const [template, setTemplate] = useState<Document | null>(documentTemplate || null);
+    const [currentUserDocument, setCurrentUserDocument] = useState<UserDocument | null>(userDocument || null);
+
+    // Load template if needed
+    useEffect(() => {
+        if (userDocument?.documentId?._id && !template) {
+            loadTemplate(userDocument.documentId._id);
+        }
+    }, [userDocument, template]);
+
+    const loadTemplate = async (documentId: string) => {
+        try {
+            const document = await getDocument(documentId);
+            if (document) setTemplate(document);
+        } catch (error) {
+            console.error('Erro ao carregar template:', error);
+            toast.error('Erro ao carregar template do documento');
+        }
+    };
+
+    useEffect(() => {
+        if (userDocument?.answers) {
+            setAnswers(userDocument.answers);
+            setCurrentStep(userDocument.currentStep || 0);
+        }
+    }, [userDocument]);
+
+    const questions = React.useMemo(() => {
+        if (!template) return [];
+        if (template.variables && template.variables.length > 0) {
+            return template.variables.map(variable => ({
+                id: variable.id,
+                question: variable.label,
+                type: variable.type as any,
+                options: variable.options || [],
+                required: variable.required !== false,
+                placeholder: variable.placeholder,
+                description: variable.description
+            }));
+        }
+        return [];
+    }, [template]);
+
+    const currentQuestion = questions[currentStep];
+    const progress = questions.length > 0 ? ((currentStep + 1) / questions.length) * 100 : 0;
+
+    useEffect(() => {
+        if (onProgressUpdate && questions.length > 0) {
+            onProgressUpdate({
+                currentStep: currentStep + 1,
+                totalSteps: questions.length,
+                progress: progress
+            });
+        }
+    }, [currentStep, questions.length]);
+
+    const handleAnswer = async (answer: any) => {
+        const newAnswers = { ...answers, [currentQuestion.id]: answer };
+        setAnswers(newAnswers);
+
+        if (currentUserDocument) {
+            await saveProgress(newAnswers, currentStep);
+        }
+
+        if (currentStep < questions.length - 1) {
+            setCurrentStep(prev => prev + 1);
+        } else {
+            await generateDocument(newAnswers);
+        }
+    };
+
+    const saveProgress = async (currentAnswers: Record<string, any>, step: number) => {
+        if (!currentUserDocument) return;
+
+        try {
+            await updateDocument(currentUserDocument._id, {
+                answers: currentAnswers,
+                currentStep: step,
+                status: 'in_progress'
+            });
+        } catch (error) {
+            console.error("Erro ao salvar rascunho:", error);
+        }
+    };
+
+    const generateDocument = async (finalAnswers: Record<string, any>) => {
+        if (!template || !user) {
+            toast.error("Dados insuficientes para gerar documento");
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            let result: UserDocument | null = null;
+
+            if (currentUserDocument) {
+                result = await updateDocument(currentUserDocument._id, {
+                    answers: finalAnswers,
+                    status: "completed",
+                    currentStep: questions.length,
+                    shouldSave: true
+                });
+            } else {
+                result = await createDocument({
+                    documentId: template._id,
+                    answers: finalAnswers,
+                    status: "completed",
+                    currentStep: questions.length,
+                    shouldSave: true,
+                    isPublic: false,
+                });
+            }
+
+            if (result) {
+                setCurrentUserDocument(result);
+                setShowPreview(true);
+                toast.success("Documento gerado com sucesso! 🎉");
+                if (onComplete) onComplete(result);
+            }
+
+        } catch (error) {
+            console.error("Erro ao gerar documento:", error);
+            toast.error("Erro ao gerar documento");
+        }
+
+        setIsGenerating(false);
+    };
+
+    const handleBack = () => {
+        if (currentStep > 0) {
+            setCurrentStep(prev => prev - 1);
+        } else if (onCancel) onCancel();
+    };
+
+    const handleSaveDraft = async () => {
+        if (!template || !user) return;
+
+        try {
+            let result: UserDocument | null = null;
+
+            if (currentUserDocument) {
+                result = await updateDocument(currentUserDocument._id, {
+                    answers,
+                    currentStep,
+                    status: 'draft'
+                });
+            } else {
+                const documentData = {
+                    documentId: template._id,
+                    answers,
+                    status: 'draft' as const,
+                    currentStep,
+                    totalSteps: questions.length,
+                    shouldSave: true,
+                    isPublic: false,
+                };
+
+                result = await createDocument(documentData);
+            }
+
+            if (result) {
+                toast.success('Rascunho salvo com sucesso! 📝');
+                if (onCancel) onCancel();
+            }
+        } catch (error) {
+            console.error('Erro ao salvar rascunho:', error);
+            toast.error('Erro ao salvar rascunho');
+        }
+    };
+
+    useEffect(() => {
+        // Salva draft automaticamente quando answers mudam (com debounce)
+        const timeoutId = setTimeout(() => {
+            if (onSaveDraft && Object.keys(answers).length > 0) {
+                onSaveDraft({
+                    answers,
+                    currentStep
+                });
+            }
+        }, 1000); // Debounce de 1 segundo
+
+        return () => clearTimeout(timeoutId);
+    }, [answers, currentStep, onSaveDraft]);
+
+    // LOADING PAGE -------------------------
+    if (isGenerating) {
+        return (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="text-center">
+                    <div className="mx-auto mb-6">
+                        <LoadingAnimation />
+                    </div>
+
+                    <h2 className="text-2xl font-bold">Gerando seu documento...</h2>
+                    <p className="text-gray-600 mt-2">Aguarde alguns instantes</p>
+                </div>
+            </div>
+        );
+    }
+
+    // PREVIEW PAGE -------------------------
+    if (showPreview && currentUserDocument && template) {
+        return (
+            <DocumentPreview
+                userDocument={currentUserDocument}
+                template={template}
+                onBack={() => setShowPreview(false)}
+                onSave={() => onCancel && onCancel()}
+            />
+        );
+    }
+
+    if (!template) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-blue-50">
+                <p className="text-gray-700">Carregando template...</p>
+            </div>
+        );
+    }
+
+    if (questions.length === 0) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-blue-50">
+                <div className="text-center">
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">Template sem questões</h2>
+                    <button
+                        onClick={onCancel}
+                        className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // MAIN UI -------------------------
+    return (
+        <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 text-gray-900">
+
+            {/* MAIN CONTENT */}
+            <main className="py-10 flex justify-center px-4">
+                <div className="max-w-2xl w-full">
+
+                    {/* TITLE */}
+                    <div className="text-center mb-10">
+                        <p className="text-gray-700 mt-2 text-sm">
+                            {template.description}
+                        </p>
+                    </div>
+
+                    {/* QUESTION CARD */}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentQuestion.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-white/70 backdrop-blur-xl border border-blue-100 shadow-xl rounded-3xl p-8"
+                        >
+                            <QuestionStep
+                                question={currentQuestion}
+                                onAnswer={handleAnswer}
+                                currentAnswer={answers[currentQuestion.id]}
+                                allAnswers={answers}
+                            />
+                        </motion.div>
+                    </AnimatePresence>
+
+                </div>
+            </main>
+        </div>
+    );
+}

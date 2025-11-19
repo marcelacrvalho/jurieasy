@@ -7,22 +7,26 @@ export default function Prices() {
             name: "Individual",
             label: "free",
             price: "Grátis",
-            description: "Para avaliação da plataforma",
-            features: ["1 documento/mês", "Suporte por e-mail"],
+            description: "Para conhecer a plataforma",
+            features: [
+                "3 documentos/mês",
+                "Editor inteligente",
+                "Suporte por e-mail"
+            ],
             button: "Começar agora",
             popular: false,
         },
         {
             name: "Profissional",
             label: "pro",
-
-            price: "R$ 97",
-            description: "Para uso regular",
+            price: "R$ 47",
+            description: "Para uso profissional individual",
             features: [
-                "15 documentos/mês",
-                "Sua logo personalizada",
-                "Documentos salvos na nuvem",
-                "Suporte prioritário",
+                "30 documentos/mês",
+                "Logo personalizada",
+                "Documentos na nuvem",
+                "Exportar PDF e Word",
+                "Suporte prioritário"
             ],
             button: "Assinar plano",
             popular: true,
@@ -30,21 +34,24 @@ export default function Prices() {
         {
             name: "Escritório",
             label: "escritorio",
-
-            price: "R$ 197",
-            description: "Para equipes jurídicas",
+            price: "R$ 119",
+            description: "Para equipes jurídicas e alto volume",
             features: [
                 "Documentos ilimitados",
                 "Logo personalizada",
-                "Múltiplos usuários",
+                "Documentos na nuvem",
+                "Exportar PDF e Word",
+                "Até 20 usuários no mesmo plano",
+                "Fluxo de aprovação",
+                "Painel administrativo",
                 "Integração com DocuSign e GOV BR",
-                "Documentos salvos na nuvem",
-                "Suporte dedicado",
+                "Suporte dedicado"
             ],
             button: "Assinar plano",
             popular: false,
         },
     ];
+
 
     return (
         <section className="relative py-24 bg-white overflow-hidden">
@@ -52,7 +59,6 @@ export default function Prices() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_70%)]" />
 
             <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
-                {/* Título e subtítulo */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}

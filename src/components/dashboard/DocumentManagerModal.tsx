@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { DocumentCard } from "../shared/DocumentCard";
+import DocumentWizard from "./DocumentWizard";
 
 interface DocumentManagerModalProps {
     isOpen: boolean;
@@ -95,15 +96,17 @@ export default function DocumentManagerModal({
     // Calcular total de páginas
     const totalPages = Math.ceil(allFilteredItems.length / itemsPerPage);
 
-    const handleItemSelect = (item: Document | UserDocument) => {
+    const handleItemSelect = async (item: Document | UserDocument) => {
         if (mode === 'create' && onDocumentSelect) {
-            onDocumentSelect(item as Document);
+            const document = item as Document;
+            setSelectedDocument(document);
+            setShowWizard(true);
         } else if (mode === 'drafts' && onDraftSelect) {
-            onDraftSelect(item as UserDocument);
+            const draft = item as UserDocument;
+            setSelectedDraft(draft);
+            setShowWizard(true);
         }
-        onClose();
     };
-
     // Funções de paginação
     const goToNextPage = () => {
         if (currentPage < totalPages) {
@@ -138,6 +141,35 @@ export default function DocumentManagerModal({
     const { title: modalTitle, description: modalDescription } = getDefaultTitles();
 
     if (!isOpen) return null;
+
+    const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+    const [selectedDraft, setSelectedDraft] = useState<UserDocument | null>(null);
+    const [showWizard, setShowWizard] = useState(false);
+
+    // Adicione este retorno condicional no início do componente:
+    if (showWizard && (selectedDocument || selectedDraft)) {
+        return (
+            <DocumentWizard
+                documentTemplate={selectedDocument || undefined}
+                userDocument={selectedDraft || undefined}
+                onComplete={(userDocument) => {
+                    setShowWizard(false);
+                    setSelectedDocument(null);
+                    setSelectedDraft(null);
+                    onClose();
+                    // Opcional: chamar callback de sucesso
+                    if (onDocumentSelect && selectedDocument) {
+                        onDocumentSelect(selectedDocument);
+                    }
+                }}
+                onCancel={() => {
+                    setShowWizard(false);
+                    setSelectedDocument(null);
+                    setSelectedDraft(null);
+                }}
+            />
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
