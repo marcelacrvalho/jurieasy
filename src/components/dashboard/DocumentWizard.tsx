@@ -134,19 +134,24 @@ export default function DocumentWizard({
         try {
             let result: UserDocument | null = null;
 
+            // ✅ CORREÇÃO: Calcular totalSteps baseado no template.variables.length
+            const totalSteps = template.variables?.length || 0;
+
             if (currentUserDocument) {
                 result = await updateDocument(currentUserDocument._id, {
                     answers: finalAnswers,
-                    status: "completed",
+                    status: "draft",
                     currentStep: questions.length,
+                    totalSteps: totalSteps, // ✅ ADICIONAR totalSteps
                     shouldSave: true
                 });
             } else {
                 result = await createDocument({
                     documentId: template._id,
                     answers: finalAnswers,
-                    status: "completed",
+                    status: "draft",
                     currentStep: questions.length,
+                    totalSteps: totalSteps,
                     shouldSave: true,
                     isPublic: false,
                 });
@@ -155,8 +160,7 @@ export default function DocumentWizard({
             if (result) {
                 setCurrentUserDocument(result);
                 setShowPreview(true);
-                toast.success("Documento gerado com sucesso! 🎉");
-                if (onComplete) onComplete(result);
+                console.log("✅ Preview do documento gerado com sucesso!");
             }
 
         } catch (error) {
@@ -166,7 +170,6 @@ export default function DocumentWizard({
 
         setIsGenerating(false);
     };
-
     const handleBack = () => {
         if (currentStep > 0) {
             setCurrentStep(prev => prev - 1);
@@ -179,10 +182,14 @@ export default function DocumentWizard({
         try {
             let result: UserDocument | null = null;
 
+            // ✅ CORREÇÃO: Calcular totalSteps baseado no template.variables.length
+            const totalSteps = template.variables?.length || 0;
+
             if (currentUserDocument) {
                 result = await updateDocument(currentUserDocument._id, {
                     answers,
                     currentStep,
+                    totalSteps: totalSteps, // ✅ ADICIONAR totalSteps
                     status: 'draft'
                 });
             } else {
@@ -191,7 +198,7 @@ export default function DocumentWizard({
                     answers,
                     status: 'draft' as const,
                     currentStep,
-                    totalSteps: questions.length,
+                    totalSteps: totalSteps, // ✅ JÁ ESTÁ CORRETO AQUI
                     shouldSave: true,
                     isPublic: false,
                 };
@@ -207,6 +214,13 @@ export default function DocumentWizard({
             console.error('Erro ao salvar rascunho:', error);
             toast.error('Erro ao salvar rascunho');
         }
+    };
+    // CORREÇÃO: Nova função para quando o documento é realmente concluído na preview
+    const handleDocumentComplete = (completedDocument: UserDocument) => {
+        setCurrentUserDocument(completedDocument);
+        toast.success("Documento concluído com sucesso! 🎉");
+        if (onComplete) onComplete(completedDocument);
+        if (onCancel) onCancel();
     };
 
     useEffect(() => {
@@ -246,7 +260,7 @@ export default function DocumentWizard({
                 userDocument={currentUserDocument}
                 template={template}
                 onBack={() => setShowPreview(false)}
-                onSave={() => onCancel && onCancel()}
+                onSave={() => handleDocumentComplete(currentUserDocument)}
             />
         );
     }
@@ -279,12 +293,56 @@ export default function DocumentWizard({
     return (
         <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 text-gray-900">
 
+            {/* HEADER COM PROGRESSO */}
+            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-blue-200 shadow-sm">
+                <div className="max-w-4xl mx-auto px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleBack}
+                                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                {currentStep === 0 ? 'Cancelar' : 'Voltar'}
+                            </button>
+
+                            <div className="text-sm text-gray-600">
+                                Passo {currentStep + 1} de {questions.length}
+                            </div>
+                        </div>
+
+                        {/* BARRA DE PROGRESSO */}
+                        <div className="flex-1 max-w-xs">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* BOTÃO SALVAR RASCUNHO */}
+                        <button
+                            onClick={handleSaveDraft}
+                            className="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                            Salvar Rascunho
+                        </button>
+                    </div>
+                </div>
+            </header>
+
             {/* MAIN CONTENT */}
             <main className="py-10 flex justify-center px-4">
                 <div className="max-w-2xl w-full">
 
                     {/* TITLE */}
                     <div className="text-center mb-10">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            {template.title}
+                        </h1>
                         <p className="text-gray-700 mt-2 text-sm">
                             {template.description}
                         </p>

@@ -70,7 +70,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                 disabled={isDownloading}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
-                                {isDownloading ? 'Baixando...' : 'Baixar Documento'}
+                                {isDownloading ? 'Baixando...' : 'Baixar'}
                             </button>
                             <button
                                 onClick={onSave}

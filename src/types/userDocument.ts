@@ -66,6 +66,7 @@ export interface CreateDocumentData {
     answers?: UserAnswers;
     status?: DocumentStatus;
     currentStep?: number;
+    totalSteps?: number;
     shouldSave?: boolean;
     isPublic?: boolean;
 }
@@ -74,11 +75,11 @@ export interface UpdateDocumentData {
     answers?: UserAnswers;
     status?: DocumentStatus;
     currentStep?: number;
+    totalSteps?: number;
     shouldSave?: boolean;
     isPublic?: boolean;
     lastAccessedAt?: string;
 }
-
 // Filtros para listagem de documentos
 export interface DocumentFilters {
     status?: DocumentStatus;

@@ -155,33 +155,7 @@ export default function DocumentCreationModal({
                                 </button>
                             </div>
 
-                            {/* ProgressBar no header do modal */}
-                            {progressInfo && (
-                                <div className="px-4 py-4 bg-white border-b border-slate-100">
-                                    <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
-                                        <span>
-                                            {progressInfo.currentStep} de {progressInfo.totalSteps}
-                                        </span>
-                                        <span>
-                                            {Math.round(progressInfo.progress)}% completo
-                                        </span>
-                                    </div>
 
-                                    {/* Stroke-line dos steps */}
-                                    <div className="relative w-full h-2 mt-1">
-                                        {/* Linha de fundo */}
-                                        <div className="absolute inset-0 bg-slate-200 rounded-full" />
-
-                                        {/* Linha de progresso */}
-                                        <motion.div
-                                            className="absolute inset-0 bg-blue-600 rounded-full"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${progressInfo.progress}%` }}
-                                            transition={{ duration: 0.3 }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         {/* Conteúdo - DocumentWizard */}

@@ -27,6 +27,7 @@ import { Document } from "@/types/document";
 import { DocumentCard } from "@/components/shared/DocumentCard";
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager';
+import ContinueDraftsModal from "@/components/dashboard/ContinueDaftsModal";
 
 export default function Dashboard() {
     const router = useRouter();
@@ -306,15 +307,6 @@ export default function Dashboard() {
                                         {userDocuments.length} documento{userDocuments.length !== 1 ? 's' : ''} em andamento
                                     </p>
                                 </button>
-
-                                {userDocuments.length > 4 && (
-                                    <button
-                                        onClick={() => setIsDraftsModalOpen(true)}
-                                        className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
-                                    >
-                                        Ver todos
-                                    </button>
-                                )}
                             </div>
 
                             <div className="space-y-4">
@@ -419,15 +411,10 @@ export default function Dashboard() {
             </div>
 
             {/* Modals */}
-            <DocumentManagerModal
+            <ContinueDraftsModal
                 isOpen={isDraftsModalOpen}
                 onClose={() => setIsDraftsModalOpen(false)}
-                mode="drafts"
-                userDocuments={userDocuments}
                 onDraftSelect={handleItemSelect}
-                userId={user?.id}
-                title="Continuar de onde parou"
-                description="Selecione um documento para continuar editando"
             />
 
             <DocumentManagerModal
