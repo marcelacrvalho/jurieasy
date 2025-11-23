@@ -140,6 +140,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
             setLoading(false);
         }
     }, [setDocuments, setLoading, setError]);
+
     const getUserDocuments = useCallback(async (filters?: DocumentFilters): Promise<UserDocument[]> => {
         setLoading(true);
         setError(null);

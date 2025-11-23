@@ -166,7 +166,6 @@ export default function DocumentCreationModal({
                                 onComplete={handleWizardComplete}
                                 onCancel={handleWizardCancel}
                                 onProgressUpdate={handleProgressUpdate}
-                                onSaveDraft={handleSaveDraft}
                             />
                         </div>
                     </motion.div>

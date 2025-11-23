@@ -45,28 +45,20 @@ export default function Dashboard() {
     const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [showDraftsModal, setShowDraftsModal] = useState(false);
 
     // Authentication check
     useEffect(() => {
         const checkAuthentication = async () => {
-            console.log('🔐 Dashboard - Verificando autenticação:', {
-                tokenManager: tokenManager.hasToken() ? 'PRESENTE' : 'AUSENTE',
-                userContext: user ? 'PRESENTE' : 'AUSENTE',
-                isAuthenticated: isAuthenticated ? 'SIM' : 'NÃO'
-            });
-
             if (!tokenManager.hasToken()) {
-                console.log('🚫 Sem token no tokenManager - Redirecionando para /auth');
                 router.push('/auth');
                 return;
             }
 
             if (tokenManager.hasToken() && !user) {
-                console.log('🔄 Token presente mas usuário não carregado - Carregando perfil...');
                 try {
                     await loadUserProfile();
                 } catch (error) {
-                    console.error('❌ Erro ao carregar perfil:', error);
                     tokenManager.clearToken();
                     router.push('/auth');
                     return;
@@ -109,7 +101,6 @@ export default function Dashboard() {
                 sortBy: 'updatedAt',
                 sortOrder: 'desc'
             }).catch(error => {
-                console.error('Erro ao carregar documentos:', error);
                 toast.error('Erro ao carregar modelos');
             });
         }
@@ -122,29 +113,35 @@ export default function Dashboard() {
         setSelectedDraft(null);
     };
 
+    // NO SEU DASHBOARD, MODIFIQUE A FUNÇÃO handleItemSelect:
+
     const handleItemSelect = (item: Document | UserDocument) => {
         if ('documentId' in item) {
             // É UserDocument (rascunho) - CONTINUA RASCUNHO
             const userDocument = item as UserDocument;
-            console.log('📝 Continuando rascunho:', userDocument);
             setIsDraftsModalOpen(false);
-            setSelectedDraft(userDocument);
-            setIsCreationModalOpen(true);
+
+            setTimeout(() => {
+                setSelectedDraft(userDocument);
+                setIsCreationModalOpen(true);
+            }, 100);
+
             toast.success(`Continuando: ${userDocument.documentId?.title || 'Documento sem título'}`);
         } else {
-            // É Document (template) - NOVO DOCUMENTO
             const document = item as Document;
-            console.log('📄 Template selecionado:', document);
+
             setIsDocumentModalOpen(false);
-            setSelectedTemplate(document);
-            setIsCreationModalOpen(true);
+
+            setTimeout(() => {
+                setSelectedTemplate(document);
+                setIsCreationModalOpen(true);
+            }, 100);
+
             toast.success(`Iniciando: ${document.title}`);
         }
     };
 
     const handleDocumentCreated = (userDocument: UserDocument) => {
-        console.log('🎉 Documento processado com sucesso:', userDocument);
-
         if (selectedDraft) {
             toast.success('Rascunho atualizado!');
         } else {
@@ -413,8 +410,8 @@ export default function Dashboard() {
             {/* Modals */}
             <ContinueDraftsModal
                 isOpen={isDraftsModalOpen}
-                onClose={() => setIsDraftsModalOpen(false)}
                 onDraftSelect={handleItemSelect}
+                onClose={() => setIsDraftsModalOpen(false)}
             />
 
             <DocumentManagerModal

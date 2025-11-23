@@ -106,7 +106,7 @@ export function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
             >
                 <div className="flex items-start gap-3 sm:gap-4">
                     {/* Ícone */}
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600  rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                         <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
 

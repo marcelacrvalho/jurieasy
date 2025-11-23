@@ -11,14 +11,14 @@ import { getIconByCategory } from "@/utils/documentCategoriesIcons";
 
 interface ContinueDraftsModalProps {
     isOpen: boolean;
-    onClose: () => void;
     onDraftSelect: (draft: UserDocument) => void;
+    onClose: () => void; // ✅ NOVA PROP PARA FECHAR O MODAL
 }
 
 export default function ContinueDraftsModal({
     isOpen,
-    onClose,
-    onDraftSelect
+    onDraftSelect,
+    onClose
 }: ContinueDraftsModalProps) {
     const { user } = useUserContext();
     const { userDocuments, getUserDocumentDraft, isLoadingUserDocument } = useUserDocuments();
@@ -47,7 +47,11 @@ export default function ContinueDraftsModal({
 
     const handleDraftSelect = (draft: UserDocument) => {
         onDraftSelect(draft);
-        onClose();
+    };
+
+    const handleClose = () => {
+        setSearchTerm(""); // Limpa a busca
+        onClose(); // Fecha o modal
     };
 
     const formatDate = (dateString: string) => {
@@ -56,7 +60,6 @@ export default function ContinueDraftsModal({
             month: '2-digit'
         });
     };
-
 
     const getProgressPercentage = (draft: UserDocument) => {
         if (!draft.currentStep || !draft.totalSteps) return 0;
@@ -97,12 +100,14 @@ export default function ContinueDraftsModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm z-[9999] overflow-hidden p-0 sm:p-4"
+                    onClick={handleClose} // ✅ AGORA FECHA CORRETAMENTE
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         className="bg-white w-full h-full sm:h-[95vh] sm:max-w-4xl sm:rounded-2xl flex flex-col overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
                         <div className="flex-shrink-0 bg-white border-b border-slate-200">
@@ -118,8 +123,9 @@ export default function ContinueDraftsModal({
                                     </div>
                                 </div>
                                 <button
-                                    onClick={onClose}
+                                    onClick={handleClose} // ✅ FECHA CORRETAMENTE
                                     className="p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0 ml-2 group"
+                                    aria-label="Fechar modal"
                                 >
                                     <X className="w-5 h-5 text-slate-600 group-hover:scale-110 transition-transform duration-200" />
                                 </button>
@@ -176,7 +182,7 @@ export default function ContinueDraftsModal({
                                             >
                                                 <div className="flex items-start gap-3 sm:gap-4 max-w-full">
                                                     {/* Ícone com gradiente igual ao DocumentCard */}
-                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                                                         <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                                     </div>
 
@@ -189,7 +195,6 @@ export default function ContinueDraftsModal({
 
                                                             {/* Badges */}
                                                             <div className="flex items-center gap-2 flex-wrap">
-
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(draft.status)} whitespace-nowrap`}>
                                                                     {getStatusText(draft.status)}
                                                                 </span>
@@ -238,7 +243,6 @@ export default function ContinueDraftsModal({
                                                     </div>
                                                 </div>
 
-                                                {/* Background gradient no hover - igual ao DocumentCard */}
                                                 <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-xl sm:rounded-2xl transition-opacity duration-300 -z-10" />
                                             </motion.div>
                                         );
@@ -253,12 +257,6 @@ export default function ContinueDraftsModal({
                                 <p className="text-xs sm:text-sm text-slate-600 truncate flex-1 mr-2">
                                     {filteredDrafts.length} de {userDocuments.length} documento{userDocuments.length !== 1 ? 's' : ''} mostrado{filteredDrafts.length !== 1 ? 's' : ''}
                                 </p>
-                                <button
-                                    onClick={onClose}
-                                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-all duration-200 text-sm sm:text-base whitespace-nowrap flex-shrink-0"
-                                >
-                                    Fechar
-                                </button>
                             </div>
                         </div>
                     </motion.div>

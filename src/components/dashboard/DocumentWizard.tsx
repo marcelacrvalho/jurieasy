@@ -19,7 +19,6 @@ interface DocumentWizardProps {
     onComplete?: (userDocument: UserDocument) => void;
     onCancel?: () => void;
     onProgressUpdate?: (progress: { currentStep: number; totalSteps: number; progress: number }) => void;
-    onSaveDraft?: (draftData: { answers: Record<string, any>; currentStep: number }) => void;
 }
 
 export default function DocumentWizard({
@@ -28,7 +27,6 @@ export default function DocumentWizard({
     onComplete,
     onCancel,
     onProgressUpdate,
-    onSaveDraft
 }: DocumentWizardProps) {
 
     const { user } = useUserContext();
@@ -99,10 +97,6 @@ export default function DocumentWizard({
         const newAnswers = { ...answers, [currentQuestion.id]: answer };
         setAnswers(newAnswers);
 
-        if (currentUserDocument) {
-            await saveProgress(newAnswers, currentStep);
-        }
-
         if (currentStep < questions.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
@@ -114,9 +108,12 @@ export default function DocumentWizard({
         if (!currentUserDocument) return;
 
         try {
+            const totalSteps = template?.variables?.length || questions.length || 0;
+
             await updateDocument(currentUserDocument._id, {
                 answers: currentAnswers,
                 currentStep: step,
+                totalSteps: totalSteps, // ✅ MANTER TOTAL STEPS ATUALIZADO
                 status: 'in_progress'
             });
         } catch (error) {
@@ -134,42 +131,63 @@ export default function DocumentWizard({
         try {
             let result: UserDocument | null = null;
 
-            // ✅ CORREÇÃO: Calcular totalSteps baseado no template.variables.length
-            const totalSteps = template.variables?.length || 0;
+            // ✅ CORREÇÃO: CALCULAR TOTAL STEPS CORRETAMENTE
+            const totalSteps = template.variables?.length || questions.length || 0;
+
+            console.log('📊 Calculando totalSteps:', {
+                templateVariables: template.variables?.length,
+                questionsLength: questions.length,
+                totalStepsCalculated: totalSteps
+            });
+
+            // ✅ VERIFICAÇÃO DE DADOS ANTES DE ENVIAR
+            console.log('📤 Dados sendo enviados:', {
+                templateId: template._id,
+                userId: user.id,
+                answersCount: Object.keys(finalAnswers).length,
+                totalSteps
+            });
 
             if (currentUserDocument) {
                 result = await updateDocument(currentUserDocument._id, {
                     answers: finalAnswers,
                     status: "draft",
-                    currentStep: questions.length,
-                    totalSteps: totalSteps, // ✅ ADICIONAR totalSteps
+                    currentStep: questions.length, // ✅ ÚLTIMO PASSO COMPLETADO
+                    totalSteps: totalSteps,
                     shouldSave: true
                 });
             } else {
-                result = await createDocument({
+                const documentData = {
                     documentId: template._id,
                     answers: finalAnswers,
-                    status: "draft",
-                    currentStep: questions.length,
+                    status: "draft" as const,
+                    currentStep: questions.length, // ✅ ÚLTIMO PASSO COMPLETADO
                     totalSteps: totalSteps,
                     shouldSave: true,
                     isPublic: false,
-                });
+                    userId: user.id,
+                };
+
+                console.log('🆕 Criando novo documento:', documentData);
+                result = await createDocument(documentData);
             }
 
             if (result) {
                 setCurrentUserDocument(result);
                 setShowPreview(true);
                 console.log("✅ Preview do documento gerado com sucesso!");
+            } else {
+                toast.error("Falha ao gerar documento");
             }
 
         } catch (error) {
-            console.error("Erro ao gerar documento:", error);
-            toast.error("Erro ao gerar documento");
+            console.error("❌ Erro ao gerar documento:", error);
+            toast.error("Erro ao conectar com o servidor. Verifique se a API está rodando.");
+        } finally {
+            setIsGenerating(false);
         }
-
-        setIsGenerating(false);
     };
+
     const handleBack = () => {
         if (currentStep > 0) {
             setCurrentStep(prev => prev - 1);
@@ -181,15 +199,16 @@ export default function DocumentWizard({
 
         try {
             let result: UserDocument | null = null;
+            const totalSteps = template.variables?.length || questions.length || 0;
 
-            // ✅ CORREÇÃO: Calcular totalSteps baseado no template.variables.length
-            const totalSteps = template.variables?.length || 0;
+            console.log('💾 SALVAMENTO MANUAL - Botão "Salvar Rascunho" clicado');
 
             if (currentUserDocument) {
+                // ✅ SALVA APENAS QUANDO O USUÁRIO CLICA NO BOTÃO
                 result = await updateDocument(currentUserDocument._id, {
                     answers,
                     currentStep,
-                    totalSteps: totalSteps, // ✅ ADICIONAR totalSteps
+                    totalSteps: totalSteps,
                     status: 'draft'
                 });
             } else {
@@ -198,23 +217,25 @@ export default function DocumentWizard({
                     answers,
                     status: 'draft' as const,
                     currentStep,
-                    totalSteps: totalSteps, // ✅ JÁ ESTÁ CORRETO AQUI
+                    totalSteps: totalSteps,
                     shouldSave: true,
                     isPublic: false,
+                    userId: user.id,
                 };
 
                 result = await createDocument(documentData);
             }
 
             if (result) {
+                setCurrentUserDocument(result);
                 toast.success('Rascunho salvo com sucesso! 📝');
-                if (onCancel) onCancel();
             }
         } catch (error) {
             console.error('Erro ao salvar rascunho:', error);
             toast.error('Erro ao salvar rascunho');
         }
     };
+
     // CORREÇÃO: Nova função para quando o documento é realmente concluído na preview
     const handleDocumentComplete = (completedDocument: UserDocument) => {
         setCurrentUserDocument(completedDocument);
@@ -224,18 +245,15 @@ export default function DocumentWizard({
     };
 
     useEffect(() => {
-        // Salva draft automaticamente quando answers mudam (com debounce)
+        // ✅ CORREÇÃO: Usar saveProgress em vez de onSaveDraft
         const timeoutId = setTimeout(() => {
-            if (onSaveDraft && Object.keys(answers).length > 0) {
-                onSaveDraft({
-                    answers,
-                    currentStep
-                });
+            if (currentUserDocument && Object.keys(answers).length > 0) {
+                saveProgress(answers, currentStep);
             }
         }, 1000); // Debounce de 1 segundo
 
         return () => clearTimeout(timeoutId);
-    }, [answers, currentStep, onSaveDraft]);
+    }, [answers, currentStep, currentUserDocument]);
 
     // LOADING PAGE -------------------------
     if (isGenerating) {

@@ -4,8 +4,8 @@ export interface Document {
     title: string;
     description: string;
     category: string;
-    content: string;
-    variables?: Variable[]; // ✅ Mude de Question[] para Variable[]
+    templateText: string; // ✅ MUDAR de 'content' para 'templateText'
+    variables?: Variable[];
     tags: string[];
     isActive: boolean;
     isPopular: boolean;
@@ -15,6 +15,13 @@ export interface Document {
     icon?: string;
     createdAt: string;
     updatedAt: string;
+    // Outros campos que a API retorna
+    difficulty?: string;
+    jurisdiction?: string;
+    legalReferences?: string[];
+    successRate?: number;
+    averageCompletionTime?: number;
+    questions?: any[]; // Se necessário
 }
 
 export interface Variable {
@@ -86,8 +93,8 @@ export interface CreateDocumentData {
     title: string;
     description: string;
     category: string;
-    content: string;
-    variables?: Question[];
+    templateText: string; // ✅ MUDAR aqui também
+    variables?: Variable[]; // ✅ MUDAR de Question[] para Variable[]
     tags?: string[];
     isPopular?: boolean;
     estimatedCompletionTime?: number;
@@ -99,8 +106,8 @@ export interface UpdateDocumentData {
     title?: string;
     description?: string;
     category?: string;
-    content?: string;
-    variables?: Question[];
+    templateText?: string; // ✅ MUDAR aqui também
+    variables?: Variable[]; // ✅ MUDAR de Question[] para Variable[]
     tags?: string[];
     isPopular?: boolean;
     estimatedCompletionTime?: number;
