@@ -17,7 +17,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DocumentManagerModal from "@/components/dashboard/DocumentManagerModal";
 import DocumentCreationModal from "@/components/dashboard/DocumentCreationModal";
 
-import { quickActionsData } from "@/data/dashboardData";
+import { quickActionsData } from "@/data/quickActionData";
 
 import { useUserDocuments } from "@/hooks/userDocuments";
 import { useDocuments } from "@/hooks/document";
@@ -28,6 +28,7 @@ import { DocumentCard } from "@/components/shared/DocumentCard";
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager';
 import ContinueDraftsModal from "@/components/dashboard/ContinueDaftsModal";
+import CompletedDocumentsModal from "@/components/dashboard/CompletedDocumentsModal";
 
 export default function Dashboard() {
     const router = useRouter();
@@ -45,7 +46,8 @@ export default function Dashboard() {
     const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-    const [showDraftsModal, setShowDraftsModal] = useState(false);
+    const [isMyDocumentsModalOpen, setIsMyDocumentsModalOpen] = useState(false);
+
 
     // Authentication check
     useEffect(() => {
@@ -170,6 +172,8 @@ export default function Dashboard() {
     const handleQuickAction = (actionLabel: string) => {
         if (actionLabel === "Novo Contrato") {
             setIsDocumentModalOpen(true);
+        } else if (actionLabel === "Meus Documentos") {
+            setIsMyDocumentsModalOpen(true);
         } else {
             toast.success(`Ação: ${actionLabel}`);
         }
@@ -428,6 +432,11 @@ export default function Dashboard() {
                 document={selectedTemplate}
                 userDocument={selectedDraft}
                 onDocumentCreated={handleDocumentCreated}
+            />
+
+            <CompletedDocumentsModal
+                isOpen={isMyDocumentsModalOpen}
+                onClose={() => setIsMyDocumentsModalOpen(false)}
             />
 
             <MobileMenu

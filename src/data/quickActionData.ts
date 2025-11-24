@@ -1,11 +1,7 @@
 import {
-    FileText, Plus, Folder, Star, User, TrendingUp,
-    Clock, RefreshCw, Zap, Shield, Briefcase,
-    Building, Home, Scale,
-    FilePen
+    Plus, Folder, Star, User,
 } from "lucide-react";
-import { QuickAction, Metric } from "@/components/dashboard/Types";
-import React from "react";
+import { QuickAction } from "@/components/dashboard/Types";
 
 export const quickActionsData: QuickAction[] = [
     {

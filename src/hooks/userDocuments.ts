@@ -32,6 +32,7 @@ interface UserDocumentsReturn {
     // Document operations
     getUserDocuments: (filters?: DocumentFilters) => Promise<UserDocument[]>;
     getUserDocumentDraft: (userId: string, page?: number, limit?: number) => Promise<UserDocument[]>;
+    getUserCompletedDocuments: (userId: string, page?: number, limit?: number) => Promise<UserDocument[]>;
     getUserDocument: (documentId: string) => Promise<UserDocument | null>;
     createDocument: (data: CreateDocumentData) => Promise<UserDocument | null>;
     updateDocument: (documentId: string, data: UpdateDocumentData) => Promise<UserDocument | null>;
@@ -140,6 +141,32 @@ export const useUserDocuments = (): UserDocumentsReturn => {
             setLoading(false);
         }
     }, [setDocuments, setLoading, setError]);
+
+    // No arquivo do hook, adicione:
+
+    const getUserCompletedDocuments = useCallback(async (userId: string, page: number = 1, limit: number = 20): Promise<UserDocument[]> => {
+        setLoading(true);
+        setError(null);
+
+        try {
+
+            const response: UserDocumentsArrayResponse = await apiClient.get(
+                `/user-documents/${userId}/completed?page=${page}&limit=${limit}`
+            );
+
+            if (response.success && response.data) {
+                return Array.isArray(response.data) ? response.data : [];
+            } else {
+                setError(response.error || 'Erro ao carregar documentos completados');
+                return [];
+            }
+        } catch (err) {
+            setError('Erro de conexão');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, [setLoading, setError]);
 
     const getUserDocuments = useCallback(async (filters?: DocumentFilters): Promise<UserDocument[]> => {
         setLoading(true);
@@ -343,6 +370,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         // Document operations
         getUserDocuments,
         getUserDocumentDraft,
+        getUserCompletedDocuments,
         getUserDocument,
         createDocument,
         updateDocument,

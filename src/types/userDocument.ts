@@ -1,9 +1,5 @@
-// types/document.ts
 import { ApiResponse, PaginatedResponse } from './api';
 
-// Interfaces para Documentos do Usuário
-
-// Informações básicas do documento template
 export interface DocumentTemplateInfo {
     _id: string;
     title: string;
@@ -12,18 +8,14 @@ export interface DocumentTemplateInfo {
     estimatedCompletionTime: number;
 }
 
-// Status possíveis do documento
 export type DocumentStatus = 'draft' | 'in_progress' | 'completed' | 'archived' | 'cancelled';
 
-// Tipo de usuário
 export type UserType = 'user' | 'admin' | 'team_member';
 
-// Respostas do usuário (dinâmicas, baseadas no template)
 export interface UserAnswers {
     [key: string]: string | number | boolean | null;
 }
 
-// Informações de compartilhamento
 export interface SharedWithUser {
     userId: string;
     email: string;
@@ -31,7 +23,6 @@ export interface SharedWithUser {
     sharedAt: string;
 }
 
-// Interface principal do Documento do Usuário
 export interface UserDocument {
     _id: string;
     userId: string;
@@ -39,6 +30,7 @@ export interface UserDocument {
     documentId: DocumentTemplateInfo;
     answers: UserAnswers;
     status: DocumentStatus;
+    generatedText?: string;
     currentStep: number;
     totalSteps: number;
     documentVersion: string;
@@ -69,6 +61,7 @@ export interface CreateDocumentData {
     totalSteps?: number;
     shouldSave?: boolean;
     isPublic?: boolean;
+    generatedText?: string;
 }
 
 export interface UpdateDocumentData {
@@ -79,8 +72,9 @@ export interface UpdateDocumentData {
     shouldSave?: boolean;
     isPublic?: boolean;
     lastAccessedAt?: string;
+    generatedText?: string;
 }
-// Filtros para listagem de documentos
+
 export interface DocumentFilters {
     status?: DocumentStatus;
     category?: string;

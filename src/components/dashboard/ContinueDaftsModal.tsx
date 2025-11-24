@@ -54,8 +54,8 @@ export default function ContinueDraftsModal({
     };
 
     const handleClose = () => {
-        setSearchTerm(""); // Limpa a busca
-        onClose(); // Fecha o modal
+        setSearchTerm("");
+        onClose();
     };
 
     return (

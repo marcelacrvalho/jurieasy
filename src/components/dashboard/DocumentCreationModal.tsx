@@ -69,7 +69,7 @@ export default function DocumentCreationModal({
                 const documentData = {
                     documentId: document._id,
                     answers: currentDraftData.answers,
-                    status: 'draft' as const,
+                    status: 'in_progress' as const,
                     currentStep: currentDraftData.currentStep,
                     totalSteps: progressInfo?.totalSteps || 0,
                     shouldSave: true,
@@ -96,7 +96,7 @@ export default function DocumentCreationModal({
                 const result = await updateDocument(userDocument._id, {
                     answers: currentDraftData.answers,
                     currentStep: currentDraftData.currentStep,
-                    status: 'draft'
+                    status: 'in_progress'
                 });
 
                 if (result) {

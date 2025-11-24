@@ -112,11 +112,15 @@ export default function DocumentWizard({
         try {
             const totalSteps = template?.variables?.length || questions.length || 0;
 
+            // ✅ GERAR TEXTO PARCIAL PARA O PROGRESSO
+            const generatedText = generateDocumentText(template!, currentAnswers);
+
             await updateDocument(currentUserDocument._id, {
                 answers: currentAnswers,
                 currentStep: step,
-                totalSteps: totalSteps, // ✅ MANTER TOTAL STEPS ATUALIZADO
-                status: 'in_progress'
+                totalSteps: totalSteps,
+                status: 'in_progress',
+                generatedText: generatedText // ✅ AGORA ENVIA O TEXTO GERADO
             });
         } catch (error) {
             console.error("Erro ao salvar rascunho:", error);
@@ -132,52 +136,40 @@ export default function DocumentWizard({
         setIsGenerating(true);
         try {
             let result: UserDocument | null = null;
-
-            // ✅ CORREÇÃO: CALCULAR TOTAL STEPS CORRETAMENTE
             const totalSteps = template.variables?.length || questions.length || 0;
 
-            console.log('📊 Calculando totalSteps:', {
-                templateVariables: template.variables?.length,
-                questionsLength: questions.length,
-                totalStepsCalculated: totalSteps
-            });
-
-            // ✅ VERIFICAÇÃO DE DADOS ANTES DE ENVIAR
-            console.log('📤 Dados sendo enviados:', {
-                templateId: template._id,
-                userId: user.id,
-                answersCount: Object.keys(finalAnswers).length,
-                totalSteps
-            });
+            // ✅ GERAR O TEXTO DO DOCUMENTO ANTES DE ENVIAR
+            const generatedText = generateDocumentText(template, finalAnswers);
 
             if (currentUserDocument) {
                 result = await updateDocument(currentUserDocument._id, {
                     answers: finalAnswers,
-                    status: "draft",
-                    currentStep: questions.length, // ✅ ÚLTIMO PASSO COMPLETADO
+                    status: "completed",
+                    currentStep: questions.length,
                     totalSteps: totalSteps,
-                    shouldSave: true
+                    shouldSave: true,
+                    generatedText: generatedText // ✅ ENVIA O TEXTO GERADO
                 });
             } else {
                 const documentData = {
                     documentId: template._id,
                     answers: finalAnswers,
-                    status: "draft" as const,
-                    currentStep: questions.length, // ✅ ÚLTIMO PASSO COMPLETADO
+                    status: "completed" as const,
+                    currentStep: questions.length,
                     totalSteps: totalSteps,
                     shouldSave: true,
                     isPublic: false,
                     userId: user.id,
+                    generatedText: generatedText // ✅ ENVIA O TEXTO GERADO
                 };
 
-                console.log('🆕 Criando novo documento:', documentData);
+                console.log('🆕 Criando novo documento com generatedText:', documentData);
                 result = await createDocument(documentData);
             }
 
             if (result) {
                 setCurrentUserDocument(result);
                 setShowPreview(true);
-                console.log("✅ Preview do documento gerado com sucesso!");
             } else {
                 toast.error("Falha ao gerar documento");
             }
@@ -188,6 +180,100 @@ export default function DocumentWizard({
         } finally {
             setIsGenerating(false);
         }
+    };
+
+    // Função para gerar o texto do documento (igual ao do DocumentPreview)
+    const generateDocumentText = (template: Document, answers: Record<string, any>): string => {
+        // Funções auxiliares (as mesmas do DocumentPreview)
+        const criarDataLocal = (ano: number, mes: number, dia: number): Date => {
+            return new Date(ano, mes - 1, dia);
+        };
+
+        const formatarDataABNT = (dataString: string) => {
+            if (!dataString) return "Não informado";
+            try {
+                if (dataString.includes(' de ')) {
+                    return dataString;
+                }
+                let data: Date;
+                if (dataString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const [ano, mes, dia] = dataString.split('-').map(Number);
+                    data = criarDataLocal(ano, mes, dia);
+                } else {
+                    data = new Date(dataString);
+                }
+                if (isNaN(data.getTime())) {
+                    return dataString;
+                }
+                const options: Intl.DateTimeFormatOptions = {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                };
+                return data.toLocaleDateString('pt-BR', options);
+            } catch {
+                return dataString;
+            }
+        };
+
+        const capitalizarNomeProprio = (texto: string) => {
+            if (!texto) return texto;
+            const palavrasMinusculas = ["de", "da", "do", "das", "dos", "e", "em", "por", "para", "com", "sem", "sob", "sobre", "entre", "a", "o"];
+            return texto
+                .toLowerCase()
+                .split(" ")
+                .map((palavra, index) =>
+                    index > 0 && palavrasMinusculas.includes(palavra)
+                        ? palavra
+                        : palavra.charAt(0).toUpperCase() + palavra.slice(1)
+                )
+                .join(" ");
+        };
+
+        const capitalizarLocal = (texto: string) => {
+            if (!texto) return texto;
+            const especiais = {
+                "do": "do", "da": "da", "de": "de", "dos": "dos", "das": "das",
+                "são": "São", "santo": "Santo", "santa": "Santa", "rio": "Rio",
+                "nova": "Nova", "novo": "Novo"
+            };
+            return texto
+                .toLowerCase()
+                .split(" ")
+                .map((p) => especiais[p as keyof typeof especiais] || p.charAt(0).toUpperCase() + p.slice(1))
+                .join(" ");
+        };
+
+        // Gerar o texto do documento
+        let text = template.templateText || "";
+
+        if (!text) {
+            text = `\n\n\t\t${template.title.toUpperCase()}\n\n`;
+            template.variables?.forEach((variable) => {
+                let value = answers[variable.id] || "Não informado";
+                let formattedValue = String(value);
+
+                if (variable.type === "date") formattedValue = formatarDataABNT(formattedValue);
+                if (variable.label.toLowerCase().includes("nome")) formattedValue = capitalizarNomeProprio(formattedValue);
+                if (variable.label.toLowerCase().includes("cidade")) formattedValue = capitalizarLocal(formattedValue);
+
+                text += `${variable.label}: ${formattedValue}\n`;
+            });
+            text += `\n\nDocumento gerado em ${new Date().toLocaleDateString("pt-BR")}\n`;
+        } else {
+            Object.entries(answers).forEach(([key, value]) => {
+                const placeholder = `{{${key}}}`;
+                let formattedValue = String(value || "");
+
+                if (key.includes("data")) formattedValue = formatarDataABNT(formattedValue);
+                if (key.includes("nome")) formattedValue = capitalizarNomeProprio(formattedValue);
+                if (key.includes("cidade")) formattedValue = capitalizarLocal(formattedValue);
+
+                text = text.replace(new RegExp(placeholder, "g"), formattedValue);
+            });
+        }
+
+        return text;
     };
 
     const handleBack = () => {
@@ -206,26 +292,30 @@ export default function DocumentWizard({
             let result: UserDocument | null = null;
             const totalSteps = template.variables?.length || questions.length || 0;
 
-            console.log('💾 SALVAMENTO MANUAL - Botão "Salvar Rascunho" clicado');
+            // ✅ GERAR TEXTO PARCIAL PARA O RASCUNHO
+            const generatedText = generateDocumentText(template, answers);
+
+            console.log('💾 SALVAMENTO MANUAL - Gerando texto para rascunho');
 
             if (currentUserDocument) {
-                // ✅ SALVA APENAS QUANDO O USUÁRIO CLICA NO BOTÃO
                 result = await updateDocument(currentUserDocument._id, {
                     answers,
                     currentStep,
                     totalSteps: totalSteps,
-                    status: 'draft'
+                    status: 'in_progress',
+                    generatedText: generatedText // ✅ AGORA ENVIA O TEXTO GERADO
                 });
             } else {
                 const documentData = {
                     documentId: template._id,
                     answers,
-                    status: 'draft' as const,
+                    status: 'in_progress' as const,
                     currentStep,
                     totalSteps: totalSteps,
                     shouldSave: true,
                     isPublic: false,
                     userId: user.id,
+                    generatedText: generatedText // ✅ AGORA ENVIA O TEXTO GERADO
                 };
 
                 result = await createDocument(documentData);

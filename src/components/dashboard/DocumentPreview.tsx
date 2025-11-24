@@ -205,6 +205,12 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
     };
 
     const documentText = useMemo(() => {
+        // ✅ PRIMEIRO: Tenta usar o generatedText salvo no banco
+        if (userDocument.generatedText) {
+            return userDocument.generatedText;
+        }
+
+        // ✅ FALLBACK: Gera o texto se não existir no banco (para documentos antigos)
         let text = template.templateText || "";
 
         if (!text) {
@@ -215,7 +221,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 let f = String(value);
 
                 if (variable.type === "date") f = formatarDataABNT(f);
-
                 if (variable.label.toLowerCase().includes("nome")) f = capitalizarNomeProprio(f);
                 if (variable.label.toLowerCase().includes("cidade")) f = capitalizarLocal(f);
 
@@ -237,7 +242,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         }
 
         return text;
-    }, [template.templateText, template.variables, editingAnswers]);
+    }, [userDocument.generatedText, template.templateText, template.variables, editingAnswers]); // ✅ Adicione userDocument.generatedText nas dependências
 
     // ✅ FUNÇÃO: Gerar PDF em formato ABNT
     const generatePDF = async (content: string, title: string, filename: string) => {
@@ -524,7 +529,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                     onClick={() => handleDownload('pdf')}
                                     disabled={isDownloading}
                                     className="px-4 py-2 rounded-xl text-white font-medium
-                    bg-gradient-to-r from-slate-500 to-slate-600
+                    bg-slate-600
                     hover:from-slate-600 hover:to-slate-700
                     disabled:opacity-50
                     transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
@@ -547,7 +552,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                     onClick={() => handleDownload('doc')}
                                     disabled={isDownloading}
                                     className="px-4 py-2 rounded-xl text-white font-medium
-                    bg-gradient-to-r from-blue-500 to-blue-600
+                    bg-blue-600
                     hover:from-blue-600 hover:to-blue-700
                     disabled:opacity-50
                     transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
