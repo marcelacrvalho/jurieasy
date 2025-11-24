@@ -1,18 +1,19 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FileText, Clock, Search, ChevronRight } from "lucide-react";
+import { X, FileText, Clock, Search } from "lucide-react";
 import { UserDocument } from "@/types/userDocument";
+import { Document } from "@/types/document";
 import { useState, useEffect } from "react";
 import { useUserDocuments } from "@/hooks/userDocuments";
 import { useUserContext } from "@/contexts/UserContext";
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
-import { getIconByCategory } from "@/utils/documentCategoriesIcons";
+import { DocumentCard } from "@/components/shared/DocumentCard";
 
 interface ContinueDraftsModalProps {
     isOpen: boolean;
     onDraftSelect: (draft: UserDocument) => void;
-    onClose: () => void; // ✅ NOVA PROP PARA FECHAR O MODAL
+    onClose: () => void;
 }
 
 export default function ContinueDraftsModal({
@@ -45,51 +46,16 @@ export default function ContinueDraftsModal({
         }
     }, [searchTerm, userDocuments]);
 
-    const handleDraftSelect = (draft: UserDocument) => {
-        onDraftSelect(draft);
+    const handleCardSelect = (item: UserDocument | Document) => {
+        // Como estamos no modal de drafts, sabemos que só teremos UserDocuments
+        if ('documentId' in item) {
+            onDraftSelect(item as UserDocument);
+        }
     };
 
     const handleClose = () => {
         setSearchTerm(""); // Limpa a busca
         onClose(); // Fecha o modal
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit'
-        });
-    };
-
-    const getProgressPercentage = (draft: UserDocument) => {
-        if (!draft.currentStep || !draft.totalSteps) return 0;
-        return Math.round((draft.currentStep / draft.totalSteps) * 100);
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'draft':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'in_progress':
-                return 'bg-blue-100 text-blue-800';
-            case 'completed':
-                return 'bg-green-100 text-green-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'draft':
-                return 'Rascunho';
-            case 'in_progress':
-                return 'Em Andamento';
-            case 'completed':
-                return 'Concluído';
-            default:
-                return status;
-        }
     };
 
     return (
@@ -100,7 +66,7 @@ export default function ContinueDraftsModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm z-[9999] overflow-hidden p-0 sm:p-4"
-                    onClick={handleClose} // ✅ AGORA FECHA CORRETAMENTE
+                    onClick={handleClose}
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -123,7 +89,7 @@ export default function ContinueDraftsModal({
                                     </div>
                                 </div>
                                 <button
-                                    onClick={handleClose} // ✅ FECHA CORRETAMENTE
+                                    onClick={handleClose}
                                     className="p-2 hover:bg-slate-100 rounded-lg transition-colors flex-shrink-0 ml-2 group"
                                     aria-label="Fechar modal"
                                 >
@@ -168,85 +134,14 @@ export default function ContinueDraftsModal({
                                 </div>
                             ) : (
                                 <div className="space-y-4 sm:space-y-6 max-w-full">
-                                    {filteredDrafts.map((draft) => {
-                                        const documentCategory = draft.documentId?.category || 'Sem categoria';
-                                        const IconComponent = getIconByCategory(documentCategory);
-
-                                        return (
-                                            <motion.div
-                                                key={draft._id}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="group relative p-4 sm:p-6 border border-slate-200 rounded-xl sm:rounded-2xl hover:border-green-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white active:scale-[0.98] max-w-full"
-                                                onClick={() => handleDraftSelect(draft)}
-                                            >
-                                                <div className="flex items-start gap-3 sm:gap-4 max-w-full">
-                                                    {/* Ícone com gradiente igual ao DocumentCard */}
-                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                                        <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                                                    </div>
-
-                                                    <div className="flex-1 min-w-0 max-w-full">
-                                                        {/* Header com título e badges */}
-                                                        <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-2">
-                                                            <h3 className="font-semibold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2 xs:line-clamp-1 transition-colors duration-300">
-                                                                {draft.documentId?.title || 'Documento sem título'}
-                                                            </h3>
-
-                                                            {/* Badges */}
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(draft.status)} whitespace-nowrap`}>
-                                                                    {getStatusText(draft.status)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Categoria e Informações */}
-                                                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0 mb-3">
-                                                            <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded-full w-fit">
-                                                                {documentCategory.charAt(0).toUpperCase() + documentCategory.slice(1)}
-                                                            </span>
-                                                            <span className="text-xs text-slate-500 flex items-center gap-1">
-                                                                <Clock className="w-3 h-3" />
-                                                                {draft.updatedAt ?
-                                                                    `Editado ${formatDate(draft.updatedAt)}` :
-                                                                    'Sem data'
-                                                                }
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Barra de Progresso */}
-                                                        {(draft.currentStep && draft.totalSteps) && (
-                                                            <div className="mt-3 max-w-full">
-                                                                <div className="flex items-center justify-between text-xs text-slate-600 mb-1 max-w-full">
-                                                                    <span className="flex-shrink-0">Progresso</span>
-                                                                    <span className="flex-shrink-0">{getProgressPercentage(draft)}%</span>
-                                                                </div>
-                                                                <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2 max-w-full">
-                                                                    <div
-                                                                        className="bg-green-600 h-1.5 sm:h-2 rounded-full transition-all duration-300 max-w-full group-hover:bg-green-700"
-                                                                        style={{ width: `${getProgressPercentage(draft)}%` }}
-                                                                    />
-                                                                </div>
-                                                                <div className="text-xs text-slate-500 mt-1 max-w-full">
-                                                                    {draft.currentStep} de {draft.totalSteps} passos
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Rodapé com ação */}
-                                                        <div className="flex items-center justify-end mt-3">
-                                                            <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1">
-                                                                Continuar <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-xl sm:rounded-2xl transition-opacity duration-300 -z-10" />
-                                            </motion.div>
-                                        );
-                                    })}
+                                    {filteredDrafts.map((draft) => (
+                                        <DocumentCard
+                                            key={draft._id}
+                                            item={draft}
+                                            mode="drafts"
+                                            onSelect={handleCardSelect}
+                                        />
+                                    ))}
                                 </div>
                             )}
                         </div>

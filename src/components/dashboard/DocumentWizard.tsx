@@ -18,6 +18,7 @@ interface DocumentWizardProps {
     userDocument?: UserDocument;
     onComplete?: (userDocument: UserDocument) => void;
     onCancel?: () => void;
+    onClose?: () => void;
     onProgressUpdate?: (progress: { currentStep: number; totalSteps: number; progress: number }) => void;
 }
 
@@ -26,6 +27,7 @@ export default function DocumentWizard({
     userDocument,
     onComplete,
     onCancel,
+    onClose,
     onProgressUpdate,
 }: DocumentWizardProps) {
 
@@ -192,6 +194,9 @@ export default function DocumentWizard({
         if (currentStep > 0) {
             setCurrentStep(prev => prev - 1);
         } else if (onCancel) onCancel();
+        else if (onClose) {
+            onClose();
+        }
     };
 
     const handleSaveDraft = async () => {
@@ -327,7 +332,7 @@ export default function DocumentWizard({
                             </button>
 
                             <div className="text-sm text-gray-600">
-                                Passo {currentStep + 1} de {questions.length}
+                                {currentStep + 1} de {questions.length}
                             </div>
                         </div>
 
