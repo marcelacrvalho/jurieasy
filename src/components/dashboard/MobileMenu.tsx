@@ -6,9 +6,38 @@ interface MobileMenuProps extends TouchHandlers {
     onClose: () => void;
     quickActions: QuickAction[];
     onNewDocument: () => void;
+    onMyDocuments: () => void; // ✅ NOVA PROP
+    onMyProfile: () => void;   // ✅ NOVA PROP
 }
 
-export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart, onTouchEnd, onNewDocument }: MobileMenuProps) {
+export default function MobileMenu({
+    isOpen,
+    onClose,
+    quickActions,
+    onTouchStart,
+    onTouchEnd,
+    onNewDocument,
+    onMyDocuments, // ✅ NOVA PROP
+    onMyProfile     // ✅ NOVA PROP
+}: MobileMenuProps) {
+
+    const handleActionClick = (actionLabel: string) => {
+        switch (actionLabel) {
+            case "Novo Contrato":
+                onNewDocument();
+                break;
+            case "Meus Documentos":
+                onMyDocuments(); // ✅ CHAMA A FUNÇÃO
+                break;
+            case "Meu Perfil":
+                onMyProfile();   // ✅ CHAMA A FUNÇÃO
+                break;
+            default:
+                console.log('Mobile action:', actionLabel);
+        }
+        onClose(); // Fecha o menu após clicar
+    };
+
     return (
         <div className={`fixed inset-0 z-50 lg:hidden transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
             }`}>
@@ -40,16 +69,7 @@ export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart
                             <button
                                 key={action.label}
                                 className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-100 rounded-2xl transition-all duration-200 active:scale-95"
-                                // No map dos quickActions no MobileMenu, adicione:
-                                onClick={() => {
-                                    if (action.label === "Novo Contrato") {
-                                        onNewDocument();
-                                        onClose();
-                                    } else {
-                                        console.log('Mobile action:', action.label);
-                                        onClose();
-                                    }
-                                }}
+                                onClick={() => handleActionClick(action.label)} // ✅ FUNÇÃO UNIFICADA
                                 onTouchStart={onTouchStart}
                                 onTouchEnd={onTouchEnd}
                             >
@@ -64,6 +84,7 @@ export default function MobileMenu({ isOpen, onClose, quickActions, onTouchStart
                                         {action.description}
                                     </span>
                                 </div>
+                                <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
                             </button>
                         ))}
                     </div>

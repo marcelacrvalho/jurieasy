@@ -446,6 +446,7 @@ export default function Dashboard() {
                 onClose={() => setIsProfileModalOpen(false)}
             />
 
+            // No Dashboard.tsx, atualize o MobileMenu:
             <MobileMenu
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
@@ -453,6 +454,8 @@ export default function Dashboard() {
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onNewDocument={() => setIsDocumentModalOpen(true)}
+                onMyDocuments={() => setIsMyDocumentsModalOpen(true)}
+                onMyProfile={() => setIsProfileModalOpen(true)}
             />
         </div>
     );
