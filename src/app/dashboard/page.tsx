@@ -29,6 +29,7 @@ import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager';
 import ContinueDraftsModal from "@/components/dashboard/ContinueDaftsModal";
 import CompletedDocumentsModal from "@/components/dashboard/CompletedDocumentsModal";
+import ProfileModal from "@/components/dashboard/ProfileModal";
 
 export default function Dashboard() {
     const router = useRouter();
@@ -47,6 +48,7 @@ export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [isMyDocumentsModalOpen, setIsMyDocumentsModalOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
 
     // Authentication check
@@ -175,7 +177,7 @@ export default function Dashboard() {
         } else if (actionLabel === "Meus Documentos") {
             setIsMyDocumentsModalOpen(true);
         } else {
-            toast.success(`Ação: ${actionLabel}`);
+            setIsProfileModalOpen(true);
         }
     };
 
@@ -437,6 +439,11 @@ export default function Dashboard() {
             <CompletedDocumentsModal
                 isOpen={isMyDocumentsModalOpen}
                 onClose={() => setIsMyDocumentsModalOpen(false)}
+            />
+
+            <ProfileModal
+                isOpen={isProfileModalOpen}
+                onClose={() => setIsProfileModalOpen(false)}
             />
 
             <MobileMenu

@@ -20,9 +20,10 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    plan: 'free' | 'pro' | 'escritorio';
+    plan: 'free' | 'pro' | 'escritorio' | 'escritório';
     authType: 'email' | 'google';
     emailVerified: boolean;
+    isOwner: boolean;
     preferences: UserPreferences;
     usage: UserUsage;
     hasActiveSubscription: boolean;
