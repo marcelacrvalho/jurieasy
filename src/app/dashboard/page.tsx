@@ -446,7 +446,6 @@ export default function Dashboard() {
                 onClose={() => setIsProfileModalOpen(false)}
             />
 
-            // No Dashboard.tsx, atualize o MobileMenu:
             <MobileMenu
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}

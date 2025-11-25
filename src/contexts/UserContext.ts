@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
 import { User } from '@/types/user';
 import { apiClient } from '@/lib/api-client';
-import { tokenManager } from '@/lib/token-manager'; // ✅ Import do tokenManager
+import { tokenManager } from '@/lib/token-manager';
 
 interface UserContextType {
     user: User | null;
@@ -16,6 +16,9 @@ interface UserContextType {
     clearToken: () => void;
     setLoading: (loading: boolean) => void;
     loadUserProfile: () => Promise<User | null>;
+    upgradePlan: (plan: 'free' | 'pro' | 'escritorio') => Promise<boolean>;
+    isUpgradingPlan: boolean;
+    error: string | null;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -24,10 +27,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [token, setTokenState] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isUpgradingPlan, setIsUpgradingPlan] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // ✅ FUNÇÃO PARA CARREGAR PERFIL DO USUÁRIO
     const loadUserProfile = useCallback(async (): Promise<User | null> => {
-        // ✅ VERIFICA NO TOKEN MANAGER (fonte da verdade)
         const currentToken = tokenManager.getToken();
         if (!currentToken) {
             console.log('❌ loadUserProfile: Nenhum token disponível no tokenManager');
@@ -36,71 +39,80 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
         setIsLoading(true);
         try {
-            console.log('🔄 Carregando perfil do usuário...');
             const response = await apiClient.get('/users/profile');
 
             if (response.success && response.data) {
-                console.log('✅ Perfil carregado com sucesso:', response.data.user.name);
                 setUser(response.data.user);
                 return response.data.user;
             } else {
-                console.error('❌ Erro ao carregar perfil:', response.error);
                 return null;
             }
         } catch (error) {
-            console.error('💥 Erro na requisição do perfil:', error);
             return null;
         } finally {
             setIsLoading(false);
         }
-    }, []); // ✅ Removida dependência do token local
+    }, []);
 
-    // ✅ CARREGAR TOKEN E PERFIL AO INICIALIZAR - AGORA DO TOKEN MANAGER
+    // Função para upgrade de plano
+    const upgradePlan = useCallback(async (plan: 'free' | 'pro' | 'escritorio'): Promise<boolean> => {
+        setIsUpgradingPlan(true);
+        setError(null);
+
+        try {
+            if (!tokenManager.hasToken()) {
+                setError('Usuário não autenticado');
+                return false;
+            }
+
+            const response = await apiClient.post('/users/upgrade', { plan });
+
+            if (response.success && response.data) {
+                setUser(response.data.user || response.data);
+                return true;
+            } else {
+                setError(response.error || 'Erro ao atualizar plano');
+                return false;
+            }
+        } catch (err) {
+            setError('Erro de conexão');
+            return false;
+        } finally {
+            setIsUpgradingPlan(false);
+        }
+    }, []);
+
     useEffect(() => {
         const initializeAuth = async () => {
-            console.log('🔍 UserProvider: Inicializando autenticação...');
-
-            // ✅ USA O TOKEN MANAGER COMO FONTE DA VERDADE
             const savedToken = tokenManager.getToken();
 
             if (savedToken) {
-                console.log('💾 Token encontrado no tokenManager, sincronizando contexto...');
-                setTokenState(savedToken); // ✅ Sincroniza com contexto
-
-                // ✅ CARREGA O PERFIL AUTOMATICAMENTE
+                setTokenState(savedToken);
                 await loadUserProfile();
             } else {
-                console.log('❌ Nenhum token no tokenManager');
-                setTokenState(null); // ✅ Garante sincronização
+                setTokenState(null);
             }
         };
 
         initializeAuth();
     }, [loadUserProfile]);
 
-    // ✅ SET TOKEN - ATUALIZA TOKEN MANAGER E CONTEXTO
     const setToken = useCallback((newToken: string) => {
-        console.log('💾 Salvando token no tokenManager E contexto...');
-        tokenManager.setToken(newToken); // ✅ Fonte da verdade
-        setTokenState(newToken); // ✅ Sincroniza contexto
+        tokenManager.setToken(newToken);
+        setTokenState(newToken);
     }, []);
 
-    // ✅ CLEAR TOKEN - LIMPA TOKEN MANAGER E CONTEXTO
     const clearToken = useCallback(() => {
-        console.log('🧹 Limpando token do tokenManager E contexto...');
-        tokenManager.clearToken(); // ✅ Fonte da verdade
-        setTokenState(null); // ✅ Sincroniza contexto
+        tokenManager.clearToken();
+        setTokenState(null);
     }, []);
 
-    // ✅ LOGOUT - LIMPA TUDO
     const logout = useCallback(() => {
-        console.log('🚪 Fazendo logout...');
         setUser(null);
-        clearToken(); // ✅ Já limpa tokenManager e contexto
+        clearToken();
     }, [clearToken]);
 
     const setUserCallback = useCallback((userData: User | null) => {
-        console.log('👤 Definindo usuário:', userData?.name || 'null');
         setUser(userData);
     }, []);
 
@@ -108,26 +120,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setIsLoading(loading);
     }, []);
 
-    // ✅ VALOR DO CONTEXTO - isAuthenticated usa tokenManager como fonte
     const value: UserContextType = {
         user,
         token,
         isLoading,
-        isAuthenticated: !!user && tokenManager.hasToken(), // ✅ Fonte da verdade
+        isAuthenticated: !!user && tokenManager.hasToken(),
         logout,
         setUser: setUserCallback,
         setToken,
         clearToken,
         setLoading: setLoadingCallback,
         loadUserProfile,
+        // Novas propriedades
+        upgradePlan,
+        isUpgradingPlan,
+        error,
     };
-
-    console.log('🎯 UserContext - Status:', {
-        user: user?.name || 'null',
-        tokenContext: token ? 'presente' : 'ausente',
-        tokenManager: tokenManager.hasToken() ? 'presente' : 'ausente',
-        isLoading
-    });
 
     return React.createElement(
         UserContext.Provider,

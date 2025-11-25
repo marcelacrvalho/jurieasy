@@ -20,7 +20,7 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    plan: 'free' | 'pro' | 'escritorio' | 'escritório';
+    plan: 'free' | 'pro' | 'escritorio';
     authType: 'email' | 'google';
     emailVerified: boolean;
     isOwner: boolean;
