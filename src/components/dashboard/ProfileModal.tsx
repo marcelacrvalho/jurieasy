@@ -1,11 +1,12 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Users, Crown, LogOut, CreditCard, Building, Menu } from "lucide-react";
+import { X, User, Users, Crown, LogOut, CreditCard, Menu } from "lucide-react";
 import { useState } from "react";
 import { useUserContext } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import { plans } from "@/data/pricesAndPlans";
+import { useUserDocumentContext } from "@/contexts/UserDocumentContext";
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -14,6 +15,8 @@ interface ProfileModalProps {
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const { user, logout } = useUserContext();
+    const { stats, isFetchingStats } = useUserDocumentContext();
+
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'profile' | 'team' | 'billing'>('profile');
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -251,7 +254,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                             {/* Conteúdo com Scroll */}
                             <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                                {activeTab === 'profile' && <ProfileTab user={user} />}
+                                {activeTab === 'profile' && <ProfileTab user={user} stats={stats} />}
                                 {activeTab === 'team' && user.plan === 'escritorio' && user.isOwner && <TeamTab />}
                                 {activeTab === 'billing' && <BillingTab user={user} onUpgrade={handleUpgradePlan} />}
                             </div>
@@ -263,7 +266,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     );
 }
 
-function ProfileTab({ user }: { user: any }) {
+function ProfileTab({ user, stats }: { user: any, stats: any }) {
     return (
         <div className="max-w-2xl space-y-4 md:space-y-6">
             <div className="bg-white border border-slate-200 rounded-xl md:rounded-2xl p-4 md:p-6">
@@ -283,7 +286,7 @@ function ProfileTab({ user }: { user: any }) {
                     </div>
                     <div>
                         <label className="text-xs md:text-sm font-medium text-slate-700">Plano atual</label>
-                        <p className="text-slate-900 mt-1 text-sm md:text-base">{user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
+                        <p className="text-slate-900 mt-1 text-sm md:text-base">{user.plan === 'escritorio' ? 'Escritório' : user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
                         </p>
                     </div>
                 </div>
@@ -293,20 +296,20 @@ function ProfileTab({ user }: { user: any }) {
                 <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4">Estatísticas</h3>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                     <div className="text-center p-3 md:p-4 bg-blue-50 rounded-lg md:rounded-xl">
-                        <div className="text-lg md:text-2xl font-bold text-blue-600">12</div>
+                        <div className="text-lg md:text-2xl font-bold text-blue-600">{stats.total}</div>
                         <div className="text-xs md:text-sm text-slate-600">Documentos</div>
                     </div>
                     <div className="text-center p-3 md:p-4 bg-green-50 rounded-lg md:rounded-xl">
-                        <div className="text-lg md:text-2xl font-bold text-green-600">8</div>
+                        <div className="text-lg md:text-2xl font-bold text-green-600">{stats.completed}</div>
                         <div className="text-xs md:text-sm text-slate-600">Concluídos</div>
                     </div>
                     <div className="text-center p-3 md:p-4 bg-yellow-50 rounded-lg md:rounded-xl">
-                        <div className="text-lg md:text-2xl font-bold text-yellow-600">3</div>
+                        <div className="text-lg md:text-2xl font-bold text-yellow-600">{stats.inProgress}</div>
                         <div className="text-xs md:text-sm text-slate-600">Em andamento</div>
                     </div>
                     <div className="text-center p-3 md:p-4 bg-purple-50 rounded-lg md:rounded-xl">
-                        <div className="text-lg md:text-2xl font-bold text-purple-600">1</div>
-                        <div className="text-xs md:text-sm text-slate-600">Rascunhos</div>
+                        <div className="text-lg md:text-2xl font-bold text-purple-600">{stats.completionRate}%</div>
+                        <div className="text-xs md:text-sm text-slate-600">Taxa de finalização</div>
                     </div>
                 </div>
             </div>
