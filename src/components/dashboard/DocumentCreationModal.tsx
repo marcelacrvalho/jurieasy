@@ -1,4 +1,3 @@
-// components/dashboard/DocumentCreationModal.tsx
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,7 +5,7 @@ import { X } from "lucide-react";
 import { Document } from "@/types/document";
 import { UserDocument } from "@/types/userDocument";
 import DocumentWizard from "@/components/dashboard/DocumentWizard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserDocuments } from "@/hooks/userDocuments";
 import { useUserContext } from '@/contexts/UserContext';
 import toast from "react-hot-toast";
@@ -25,11 +24,6 @@ interface ProgressInfo {
     progress: number;
 }
 
-interface DraftData {
-    answers: Record<string, any>;
-    currentStep: number;
-}
-
 export default function DocumentCreationModal({
     isOpen,
     onClose,
@@ -39,17 +33,36 @@ export default function DocumentCreationModal({
 }: DocumentCreationModalProps) {
     const { user } = useUserContext();
     const [progressInfo, setProgressInfo] = useState<ProgressInfo | null>(null);
-    const [currentDraftData, setCurrentDraftData] = useState<DraftData | null>(null);
-    const { createDocument, updateDocument } = useUserDocuments();
+    const [canCreateDocument, setCanCreateDocument] = useState(true);
+    const { createDocument, updateDocument, refreshDocuments } = useUserDocuments();
+
+    // ✅ CORREÇÃO: Verificar se o document é válido
+    const isValidDocument = document && document._id;
+
+    useEffect(() => {
+        if (isOpen && !userDocument && user) {
+            const remaining = user.usage.documentsRemaining;
+            setCanCreateDocument(remaining > 0);
+
+            if (remaining <= 0) {
+                setTimeout(() => {
+                    toast.error(`Limite de documentos atingido! Seu plano ${user.plan} permite ${user.usage.documentsCreated} documentos por mês.`, {
+                        duration: 6000,
+                        position: 'top-center'
+                    });
+                }, 300);
+            }
+        }
+    }, [isOpen, userDocument, user]);
 
     const handleWizardComplete = (userDocument: UserDocument) => {
-        console.log('✅ Documento criado/atualizado:', userDocument);
         onDocumentCreated(userDocument);
+        refreshDocuments();
+
         onClose();
     };
 
     const handleWizardCancel = () => {
-        console.log('❌ Wizard cancelado');
         onClose();
     };
 
@@ -57,57 +70,11 @@ export default function DocumentCreationModal({
         setProgressInfo(progress);
     };
 
-    const handleSaveDraft = (draftData: DraftData) => {
-        setCurrentDraftData(draftData);
-    };
-
     const handleCloseWithSave = async () => {
-        if (currentDraftData && !userDocument && document && user) {
-            console.log('💾 Salvando rascunho antes de fechar...', currentDraftData);
-
-            try {
-                const documentData = {
-                    documentId: document._id,
-                    answers: currentDraftData.answers,
-                    status: 'in_progress' as const,
-                    currentStep: currentDraftData.currentStep,
-                    totalSteps: progressInfo?.totalSteps || 0,
-                    shouldSave: true,
-                    isPublic: false
-                };
-
-                const result = await createDocument(documentData);
-
-                if (result) {
-                    console.log('✅ Rascunho salvo com sucesso:', result._id);
-                    toast.success('Rascunho salvo!');
-                    onDocumentCreated(result);
-                }
-            } catch (error) {
-                console.error('❌ Erro ao salvar rascunho:', error);
-                toast.error('Erro ao salvar rascunho');
-            }
-        }
-
-        if (currentDraftData && userDocument) {
-            console.log('📝 Atualizando rascunho existente...', currentDraftData);
-
-            try {
-                const result = await updateDocument(userDocument._id, {
-                    answers: currentDraftData.answers,
-                    currentStep: currentDraftData.currentStep,
-                    status: 'in_progress'
-                });
-
-                if (result) {
-                    console.log('✅ Rascunho atualizado com sucesso');
-                    toast.success('Progresso salvo!');
-                    onDocumentCreated(result);
-                }
-            } catch (error) {
-                console.error('❌ Erro ao atualizar rascunho:', error);
-                toast.error('Erro ao salvar progresso');
-            }
+        if (!canCreateDocument && !userDocument) {
+            toast.error('Não é possível salvar rascunho. Limite de documentos atingido.');
+            onClose();
+            return;
         }
 
         onClose();
@@ -123,7 +90,69 @@ export default function DocumentCreationModal({
         return 'Documento';
     };
 
-    // ✅ CORREÇÃO: Retorne JSX, não void
+    const renderWizard = () => {
+        // ✅ CORREÇÃO: Verificar se pode criar E se o documento é válido
+        if (!userDocument && !canCreateDocument) {
+            return (
+                <div className="flex-1 flex items-center justify-center p-8">
+                    <div className="text-center max-w-md">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <X className="w-8 h-8 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                            Limite Atingido
+                        </h3>
+                        <p className="text-slate-600 mb-4">
+                            Você atingiu o limite de {user?.usage.documentsCreated} documentos do seu plano {user?.plan}.
+                            Faça upgrade para criar mais documentos.
+                        </p>
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Entendi
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // ✅ CORREÇÃO: Não renderizar wizard se documento não for válido
+        if (!userDocument && !isValidDocument) {
+            return (
+                <div className="flex-1 flex items-center justify-center p-8">
+                    <div className="text-center max-w-md">
+                        <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <X className="w-8 h-8 text-yellow-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                            Documento Inválido
+                        </h3>
+                        <p className="text-slate-600 mb-4">
+                            O documento selecionado não pôde ser carregado. Tente novamente.
+                        </p>
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <DocumentWizard
+                documentTemplate={isValidDocument ? document : undefined} // ✅ Só passa se for válido
+                userDocument={userDocument || undefined}
+                onComplete={handleWizardComplete}
+                onCancel={handleWizardCancel}
+                onProgressUpdate={handleProgressUpdate}
+            />
+        );
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -146,6 +175,15 @@ export default function DocumentCreationModal({
                                     <h3 className="text-lg font-semibold text-slate-900">
                                         {getModalTitle()}
                                     </h3>
+                                    {/* ✅ INDICADOR DE USAGE */}
+                                    {!userDocument && user && (
+                                        <span className={`text-xs px-2 py-1 rounded-full ${user.usage.documentsRemaining > 0
+                                            ? 'bg-green-100 text-green-600'
+                                            : 'bg-red-100 text-red-600'
+                                            }`}>
+                                            {user.usage.documentsRemaining} documentos restantes
+                                        </span>
+                                    )}
                                 </div>
                                 <button
                                     onClick={handleCloseWithSave}
@@ -154,19 +192,11 @@ export default function DocumentCreationModal({
                                     <X className="w-5 h-5 text-slate-600" />
                                 </button>
                             </div>
-
-
                         </div>
 
-                        {/* Conteúdo - DocumentWizard */}
+                        {/* Conteúdo - DocumentWizard ou Mensagem de Limite */}
                         <div className="flex-1 overflow-y-auto min-h-0">
-                            <DocumentWizard
-                                documentTemplate={document || undefined}
-                                userDocument={userDocument || undefined}
-                                onComplete={handleWizardComplete}
-                                onCancel={handleWizardCancel}
-                                onProgressUpdate={handleProgressUpdate}
-                            />
+                            {renderWizard()}
                         </div>
                     </motion.div>
                 </motion.div>

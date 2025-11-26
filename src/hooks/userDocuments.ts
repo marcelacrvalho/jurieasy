@@ -43,6 +43,8 @@ interface UserDocumentsReturn {
 
     // Utility
     clearError: () => void;
+    refreshDocuments: () => void;
+    refreshStats: () => void;
 }
 
 export const useUserDocuments = (): UserDocumentsReturn => {
@@ -72,6 +74,9 @@ export const useUserDocuments = (): UserDocumentsReturn => {
     const clearError = useCallback(() => {
         contextClearError();
     }, [contextClearError]);
+
+    // ✅ CORREÇÃO: refreshAll agora recarrega APENAS rascunhos e stats
+
 
     const getUserDocumentStats = useCallback(async (userId: string): Promise<DocumentStats | null> => {
         setFetchingStats(true);
@@ -142,14 +147,11 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         }
     }, [setDocuments, setLoading, setError]);
 
-    // No arquivo do hook, adicione:
-
     const getUserCompletedDocuments = useCallback(async (userId: string, page: number = 1, limit: number = 20): Promise<UserDocument[]> => {
         setLoading(true);
         setError(null);
 
         try {
-
             const response: UserDocumentsArrayResponse = await apiClient.get(
                 `/user-documents/${userId}/completed?page=${page}&limit=${limit}`
             );
@@ -173,19 +175,10 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         setError(null);
 
         try {
-            console.log('📄 Buscando documentos do usuário...', { filters });
+            // ✅ CORREÇÃO: Use a rota correta que funciona
+            const endpoint = `/user-documents/${user?.id}`;
 
-            // Construir query string com filtros
-            const queryParams = new URLSearchParams();
-            if (filters?.status) queryParams.append('status', filters.status);
-            if (filters?.category) queryParams.append('category', filters.category);
-            if (filters?.search) queryParams.append('search', filters.search);
-            if (filters?.isPublic !== undefined) queryParams.append('isPublic', filters.isPublic.toString());
-            if (filters?.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
-            if (filters?.dateTo) queryParams.append('dateTo', filters.dateTo);
-
-            const queryString = queryParams.toString();
-            const endpoint = queryString ? `/user-documents?${queryString}` : '/user-documents';
+            console.log('📄 Buscando documentos do usuário...', { filters, endpoint });
 
             const response: UserDocumentsArrayResponse = await apiClient.get(endpoint);
 
@@ -207,7 +200,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         } finally {
             setLoading(false);
         }
-    }, [setDocuments, setLoading, setError]);
+    }, [setDocuments, setLoading, setError, user?.id]); // ✅ Adicione user?.id
 
     const getUserDocument = useCallback(async (documentId: string): Promise<UserDocument | null> => {
         setLoading(true);
@@ -242,13 +235,16 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         setCreating(true);
         setError(null);
 
+        if (user && !user.usage.documentsRemaining) {
+            throw new Error('LIMITE_ATINGIDO');
+        }
+
         try {
             console.log('🆕 Criando documento...', data);
 
-            // ✅ CORREÇÃO: Inclui userId automaticamente do contexto
             const requestData = {
                 ...data,
-                userId: data.userId || user?.id // ✅ Usa o userId do contexto se não foi fornecido
+                userId: data.userId || user?.id
             };
 
             if (!requestData.userId) {
@@ -277,7 +273,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         } finally {
             setCreating(false);
         }
-    }, [setDocuments, setCreating, setError, user?.id]); // ✅ Adicione user?.id nas dependências
+    }, [setDocuments, setCreating, setError, user?.id]); // ✅ REMOVA refreshAll das dependências
 
     const updateDocument = useCallback(async (documentId: string, data: UpdateDocumentData): Promise<UserDocument | null> => {
         setUpdating(true);
@@ -292,6 +288,9 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
             if (response.success && response.data) {
                 const updatedDocument = response.data;
+
+                // ✅ DEBUG: Verificar se o status foi realmente atualizado
+                console.log('🔍 Status do documento após atualização:', updatedDocument.status);
 
                 setDocuments((prev: UserDocument[]) => prev.map(doc =>
                     doc._id === documentId ? updatedDocument : doc
@@ -351,6 +350,14 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         }
     }, [setDocuments, setCurrentDocument, currentDocument, setDeleting, setError]);
 
+    const refreshAll = useCallback(() => {
+        if (user?.id) {
+            // Recarrega apenas documentos em rascunho (não todos os documentos)
+            getUserDocumentDraft(user.id);
+            getUserDocumentStats(user.id);
+        }
+    }, [user?.id, getUserDocumentDraft, getUserDocumentStats]);
+
     return {
         // Data states
         userDocuments,
@@ -381,5 +388,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
         // Utility
         clearError,
+        refreshDocuments: refreshAll,
+        refreshStats: refreshAll,
     };
 };

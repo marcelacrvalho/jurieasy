@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
 import { UserDocument, DocumentStats } from '@/types/userDocument';
 
 interface UserDocumentContextType {
@@ -10,6 +10,8 @@ interface UserDocumentContextType {
 
     // Estatísticas
     stats: DocumentStats | null;
+    refreshDocuments: () => void; // ✅ APENAS ADICIONE ESTA LINHA
+    refreshStats: () => void;
 
     // Loading states
     isLoadingUserDocument: boolean;
@@ -58,10 +60,23 @@ export function UserDocumentProvider({ children }: { children: ReactNode }) {
 
     const clearError = () => setError(null);
 
+
+    const refreshDocuments = useCallback(() => {
+        // Função vazia por enquanto - vamos implementar depois
+        console.log('Refresh documents chamado');
+    }, []);
+
+    const refreshStats = useCallback(() => {
+        // Função vazia por enquanto - vamos implementar depois
+        console.log('Refresh stats chamado');
+    }, []);
+
     const value: UserDocumentContextType = {
         // Documentos
         userDocuments,
         currentDocument,
+        refreshDocuments, // ✅ ADICIONE ESTA LINHA
+        refreshStats,     // ✅ E ESTA LINHA
 
         // Estatísticas
         stats,

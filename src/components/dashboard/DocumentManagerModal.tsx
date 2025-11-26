@@ -13,6 +13,7 @@ import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { DocumentCard } from "../shared/DocumentCard";
 import DocumentWizard from "./DocumentWizard";
+import { User } from "@/types/user";
 
 interface DocumentManagerModalProps {
     isOpen: boolean;
@@ -25,6 +26,7 @@ interface DocumentManagerModalProps {
     title?: string;
     description?: string;
     userId?: string;
+    user?: User;
 }
 
 const categories = [
@@ -44,6 +46,7 @@ export default function DocumentManagerModal({
     onDraftSelect,
     mode,
     userDocuments = [],
+    user,
     documents = [],
     title,
     description
@@ -179,17 +182,27 @@ export default function DocumentManagerModal({
     const renderWizardContent = () => (
         <div className="h-full flex flex-col">
             {/* Header do Wizard com botão X */}
+            {/* Header do Modal */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
-
-
-                {/* Título central */}
-                <div className="flex-1 text-center">
+                {/* Container da esquerda: Título + documentos restantes */}
+                <div className="flex items-center gap-4">
+                    {/* Título alinhado à esquerda */}
                     <h2 className="text-xl font-bold text-gray-900">
                         {selectedDocument?.title || selectedDraft?.documentId?.title || 'Criando Documento'}
                     </h2>
+
+                    {/* Documentos restantes ao lado do título */}
+                    {user != null ? (
+                        <span className={`text-xs px-3 py-1.5 rounded-full ${user.usage.documentsRemaining > 0
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-red-100 text-red-600'
+                            }`}>
+                            {user.usage.documentsRemaining} {user.usage.documentsRemaining === 1 ? 'documento' : 'documentos'} restante{user.usage.documentsRemaining !== 1 ? 's' : ''}
+                        </span>
+                    ) : ''}
                 </div>
 
-                {/* Botão Fechar (X) */}
+                {/* Botão Fechar (X) alinhado à direita */}
                 <button
                     onClick={handleCloseAll}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

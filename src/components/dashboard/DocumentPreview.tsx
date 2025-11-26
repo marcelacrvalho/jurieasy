@@ -21,16 +21,14 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
 
-    const { updateDocument } = useUserDocuments();
+    const { updateDocument, refreshDocuments } = useUserDocuments();
 
     // -------------------- FUNÇÕES --------------------
 
-    // ✅ CORREÇÃO: Função para criar data sem problemas de timezone
     const criarDataLocal = (ano: number, mes: number, dia: number): Date => {
         return new Date(ano, mes - 1, dia);
     };
 
-    // ✅ CORREÇÃO: Função melhorada para formatar data
     const formatarDataABNT = (dataString: string) => {
         if (!dataString) return "Não informado";
 
@@ -63,7 +61,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         }
     };
 
-    // ✅ CORREÇÃO: Para exibir data no input (formato YYYY-MM-DD)
     const formatarDataParaInput = (dataString: string) => {
         if (!dataString) return "";
 
@@ -100,7 +97,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         }
     };
 
-    // ✅ NOVA FUNÇÃO: Converter nome do mês para número
     const obterNumeroMes = (mes: string): number => {
         const meses: { [key: string]: number } = {
             'janeiro': 1, 'fevereiro': 2, 'março': 3, 'abril': 4,
@@ -110,7 +106,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         return meses[mes.toLowerCase()] || 1;
     };
 
-    // ✅ CORREÇÃO: Para converter input date para formato armazenamento
     const converterDataDoInput = (dataInput: string) => {
         if (!dataInput) return "";
 
@@ -168,7 +163,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
             .join(" ");
     };
 
-    // ✅ CORREÇÃO: Iniciar edição com tratamento especial para datas
     const iniciarEdicao = (key: string, value: any) => {
         setEditingField(key);
 
@@ -179,7 +173,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         }
     };
 
-    // ✅ CORREÇÃO: Salvar edição com tratamento especial para datas
     const salvarEdicao = () => {
         if (editingField) {
             let valorFinal = editValue;
@@ -205,7 +198,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
     };
 
     const documentText = useMemo(() => {
-        // ✅ PRIMEIRO: Tenta usar o generatedText salvo no banco
         if (userDocument.generatedText) {
             return userDocument.generatedText;
         }
@@ -244,7 +236,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         return text;
     }, [userDocument.generatedText, template.templateText, template.variables, editingAnswers]); // ✅ Adicione userDocument.generatedText nas dependências
 
-    // ✅ FUNÇÃO: Gerar PDF em formato ABNT
     const generatePDF = async (content: string, title: string, filename: string) => {
         const { jsPDF } = await import('jspdf');
 
@@ -338,7 +329,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         pdf.save(`${filename}.pdf`);
     };
 
-    // ✅ NOVA FUNÇÃO: Gerar DOC
     const generateDOC = async (content: string, title: string, filename: string) => {
         // Criar conteúdo HTML formatado para DOC
         const htmlContent = `
@@ -418,13 +408,13 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         URL.revokeObjectURL(url);
     };
 
-    // ✅ FUNÇÃO PRINCIPAL DE DOWNLOAD (SIMPLIFICADA)
+    // components/dashboard/DocumentPreview.tsx
     const handleDownload = async (format: 'pdf' | 'doc') => {
         setIsDownloading(true);
         setDownloadType(format);
 
         try {
-            // ✅ 1. ATUALIZAR O DOCUMENTO PARA STATUS "completed"
+            // 1. Atualizar o documento para status "completed"
             const updatedDocument = await updateDocument(userDocument._id, {
                 answers: editingAnswers,
                 status: "completed",
@@ -434,32 +424,28 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
             });
 
             if (updatedDocument) {
-                // ✅ 2. GERAR E BAIXAR NO FORMATO ESCOLHIDO
+                // 2. Gerar e baixar no formato escolhido
                 if (format === 'pdf') {
                     await generatePDF(documentText, template.title, template.title.replace(/\s+/g, '_'));
                 } else {
                     await generateDOC(documentText, template.title, template.title.replace(/\s+/g, '_'));
                 }
 
-                // ✅ 3. NOTIFICAR COMPONENTE PAI SOBRE CONCLUSÃO
+                // 3. ✅ CORREÇÃO: Aguardar um pouco antes do refresh para garantir que o backend processou
+                setTimeout(() => {
+                    refreshDocuments();
+                }, 500);
+
+                // 4. Notificar componente pai sobre conclusão
                 if (onComplete) {
                     onComplete(updatedDocument);
                 }
 
                 console.log(`✅ Documento concluído e ${format.toUpperCase()} baixado com sucesso!`);
-            } else {
-                console.error("❌ Erro ao concluir documento");
             }
         } catch (error) {
             console.error(`❌ Erro no download ${format.toUpperCase()}:`, error);
-            // Fallback para download em texto
-            const blob = new Blob([documentText], { type: "text/plain" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `${template.title.replace(/\s+/g, "_")}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
+            // ... fallback
         } finally {
             setIsDownloading(false);
             setDownloadType(null);

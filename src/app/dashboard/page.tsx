@@ -141,7 +141,6 @@ export default function Dashboard() {
                 setIsCreationModalOpen(true);
             }, 100);
 
-            toast.success(`Iniciando: ${document.title}`);
         }
     };
 
@@ -426,6 +425,7 @@ export default function Dashboard() {
                 onClose={() => setIsDocumentModalOpen(false)}
                 mode="create"
                 onDocumentSelect={handleItemSelect}
+                user={user}
             />
 
             <DocumentCreationModal

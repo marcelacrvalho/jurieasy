@@ -107,20 +107,24 @@ export default function DocumentWizard({
     };
 
     const saveProgress = async (currentAnswers: Record<string, any>, step: number) => {
-        if (!currentUserDocument) return;
+        // ✅ CORREÇÃO: Verificar se template existe antes de usar
+        if (!currentUserDocument || !template) {
+            console.log('⏸️ Save progress pausado: template ou userDocument não disponível');
+            return;
+        }
 
         try {
-            const totalSteps = template?.variables?.length || questions.length || 0;
+            const totalSteps = template.variables?.length || questions.length || 0;
 
-            // ✅ GERAR TEXTO PARCIAL PARA O PROGRESSO
-            const generatedText = generateDocumentText(template!, currentAnswers);
+            // ✅ CORREÇÃO: Só gerar texto se template existir
+            const generatedText = generateDocumentText(template, currentAnswers);
 
             await updateDocument(currentUserDocument._id, {
                 answers: currentAnswers,
                 currentStep: step,
                 totalSteps: totalSteps,
                 status: 'in_progress',
-                generatedText: generatedText // ✅ AGORA ENVIA O TEXTO GERADO
+                generatedText: generatedText
             });
         } catch (error) {
             console.error("Erro ao salvar rascunho:", error);
@@ -148,7 +152,7 @@ export default function DocumentWizard({
                     currentStep: questions.length,
                     totalSteps: totalSteps,
                     shouldSave: true,
-                    generatedText: generatedText // ✅ ENVIA O TEXTO GERADO
+                    generatedText: generatedText
                 });
             } else {
                 const documentData = {
@@ -160,7 +164,7 @@ export default function DocumentWizard({
                     shouldSave: true,
                     isPublic: false,
                     userId: user.id,
-                    generatedText: generatedText // ✅ ENVIA O TEXTO GERADO
+                    generatedText: generatedText
                 };
 
                 console.log('🆕 Criando novo documento com generatedText:', documentData);
@@ -182,9 +186,15 @@ export default function DocumentWizard({
         }
     };
 
-    // Função para gerar o texto do documento (igual ao do DocumentPreview)
+    // Função para gerar o texto do documento
     const generateDocumentText = (template: Document, answers: Record<string, any>): string => {
-        // Funções auxiliares (as mesmas do DocumentPreview)
+        // ✅ CORREÇÃO: Verificação adicional de segurança
+        if (!template || !template.templateText) {
+            console.error('❌ Template ou templateText inválido:', template);
+            return 'Template do documento não disponível.';
+        }
+
+        // ✅ CORREÇÃO: Mover criarDataLocal para dentro da função
         const criarDataLocal = (ano: number, mes: number, dia: number): Date => {
             return new Date(ano, mes - 1, dia);
         };
@@ -245,35 +255,40 @@ export default function DocumentWizard({
         };
 
         // Gerar o texto do documento
-        let text = template.templateText || "";
+        let text = template.templateText;
 
-        if (!text) {
-            text = `\n\n\t\t${template.title.toUpperCase()}\n\n`;
-            template.variables?.forEach((variable) => {
-                let value = answers[variable.id] || "Não informado";
-                let formattedValue = String(value);
+        try {
+            if (!text) {
+                text = `\n\n\t\t${template.title.toUpperCase()}\n\n`;
+                template.variables?.forEach((variable) => {
+                    let value = answers[variable.id] || "Não informado";
+                    let formattedValue = String(value);
 
-                if (variable.type === "date") formattedValue = formatarDataABNT(formattedValue);
-                if (variable.label.toLowerCase().includes("nome")) formattedValue = capitalizarNomeProprio(formattedValue);
-                if (variable.label.toLowerCase().includes("cidade")) formattedValue = capitalizarLocal(formattedValue);
+                    if (variable.type === "date") formattedValue = formatarDataABNT(formattedValue);
+                    if (variable.label.toLowerCase().includes("nome")) formattedValue = capitalizarNomeProprio(formattedValue);
+                    if (variable.label.toLowerCase().includes("cidade")) formattedValue = capitalizarLocal(formattedValue);
 
-                text += `${variable.label}: ${formattedValue}\n`;
-            });
-            text += `\n\nDocumento gerado em ${new Date().toLocaleDateString("pt-BR")}\n`;
-        } else {
-            Object.entries(answers).forEach(([key, value]) => {
-                const placeholder = `{{${key}}}`;
-                let formattedValue = String(value || "");
+                    text += `${variable.label}: ${formattedValue}\n`;
+                });
+                text += `\n\nDocumento gerado em ${new Date().toLocaleDateString("pt-BR")}\n`;
+            } else {
+                Object.entries(answers).forEach(([key, value]) => {
+                    const placeholder = `{{${key}}}`;
+                    let formattedValue = String(value || "");
 
-                if (key.includes("data")) formattedValue = formatarDataABNT(formattedValue);
-                if (key.includes("nome")) formattedValue = capitalizarNomeProprio(formattedValue);
-                if (key.includes("cidade")) formattedValue = capitalizarLocal(formattedValue);
+                    if (key.includes("data")) formattedValue = formatarDataABNT(formattedValue);
+                    if (key.includes("nome")) formattedValue = capitalizarNomeProprio(formattedValue);
+                    if (key.includes("cidade")) formattedValue = capitalizarLocal(formattedValue);
 
-                text = text.replace(new RegExp(placeholder, "g"), formattedValue);
-            });
+                    text = text.replace(new RegExp(placeholder, "g"), formattedValue);
+                });
+            }
+
+            return text;
+        } catch (error) {
+            console.error('❌ Erro ao gerar texto do documento:', error);
+            return 'Erro ao gerar o documento. Tente novamente.';
         }
-
-        return text;
     };
 
     const handleBack = () => {
@@ -286,13 +301,17 @@ export default function DocumentWizard({
     };
 
     const handleSaveDraft = async () => {
-        if (!template || !user) return;
+        // ✅ CORREÇÃO: Verificar se template existe
+        if (!template || !user) {
+            toast.error('Template não disponível para salvar rascunho');
+            return;
+        }
 
         try {
             let result: UserDocument | null = null;
             const totalSteps = template.variables?.length || questions.length || 0;
 
-            // ✅ GERAR TEXTO PARCIAL PARA O RASCUNHO
+            // ✅ CORREÇÃO: Gerar texto (já está protegido na função)
             const generatedText = generateDocumentText(template, answers);
 
             console.log('💾 SALVAMENTO MANUAL - Gerando texto para rascunho');
@@ -303,7 +322,7 @@ export default function DocumentWizard({
                     currentStep,
                     totalSteps: totalSteps,
                     status: 'in_progress',
-                    generatedText: generatedText // ✅ AGORA ENVIA O TEXTO GERADO
+                    generatedText: generatedText
                 });
             } else {
                 const documentData = {
@@ -315,7 +334,7 @@ export default function DocumentWizard({
                     shouldSave: true,
                     isPublic: false,
                     userId: user.id,
-                    generatedText: generatedText // ✅ AGORA ENVIA O TEXTO GERADO
+                    generatedText: generatedText
                 };
 
                 result = await createDocument(documentData);
@@ -331,7 +350,7 @@ export default function DocumentWizard({
         }
     };
 
-    // CORREÇÃO: Nova função para quando o documento é realmente concluído na preview
+    // Função para quando o documento é realmente concluído na preview
     const handleDocumentComplete = (completedDocument: UserDocument) => {
         setCurrentUserDocument(completedDocument);
         toast.success("Documento concluído com sucesso! 🎉");
@@ -340,17 +359,21 @@ export default function DocumentWizard({
     };
 
     useEffect(() => {
-        // ✅ CORREÇÃO: Usar saveProgress em vez de onSaveDraft
+        // ✅ CORREÇÃO: Só fazer auto-save se tiver userDocument E template
+        if (!currentUserDocument || !template) {
+            return;
+        }
+
         const timeoutId = setTimeout(() => {
-            if (currentUserDocument && Object.keys(answers).length > 0) {
+            if (Object.keys(answers).length > 0) {
                 saveProgress(answers, currentStep);
             }
         }, 1000); // Debounce de 1 segundo
 
         return () => clearTimeout(timeoutId);
-    }, [answers, currentStep, currentUserDocument]);
+    }, [answers, currentStep, currentUserDocument, template]); // ✅ Adicionar template como dependência
 
-    // LOADING PAGE -------------------------
+    // LOADING PAGE
     if (isGenerating) {
         return (
             <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
@@ -366,7 +389,7 @@ export default function DocumentWizard({
         );
     }
 
-    // PREVIEW PAGE -------------------------
+    // PREVIEW PAGE
     if (showPreview && currentUserDocument && template) {
         return (
             <DocumentPreview
@@ -402,7 +425,7 @@ export default function DocumentWizard({
         );
     }
 
-    // MAIN UI -------------------------
+    // MAIN UI
     return (
         <div className="h-full overflow-y-auto bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 text-gray-900">
 
