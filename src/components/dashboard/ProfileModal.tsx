@@ -9,6 +9,7 @@ import { plans } from "@/data/pricesAndPlans";
 import { useUserDocumentContext } from "@/contexts/UserDocumentContext";
 import { AddTeamMemberData, TeamMember, useTeamMembers } from "@/hooks/teamMembers";
 import toast from "react-hot-toast";
+import LoadingAnimation from "../shared/LoadingAnimation";
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -770,8 +771,11 @@ function BillingTab({ user }: { user: any }) {
                         >
                             {isUpgradingPlan ? (
                                 <div className="flex items-center justify-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Processando...
+                                    <div className="text-center">
+                                        <LoadingAnimation />
+
+                                        <p className="mt-4 text-slate-600"> Processando...</p>
+                                    </div>
                                 </div>
                             ) : plan.label === user.plan ? (
                                 'Plano Atual'

@@ -8,6 +8,7 @@ import { contractQuestions } from "@/lib/contract-questions";
 import { ContractData } from "@/lib/contract-template";
 import QuestionStep from "./QuestionStep";
 import ContractDocument from "./ContractPreview";
+import LoadingAnimation from "../shared/LoadingAnimation";
 
 export default function ContractWizard() {
     const [currentStep, setCurrentStep] = useState(0);
@@ -88,7 +89,7 @@ export default function ContractWizard() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-blue-50 text-gray-800">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4" />
+                    <LoadingAnimation />
                     <h2 className="text-2xl font-bold mb-2">Gerando seu contrato...</h2>
                     <p className="text-gray-500">Estamos preparando tudo para você</p>
                 </div>

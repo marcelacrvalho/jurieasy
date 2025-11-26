@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CreditCard, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { users } from '@/hooks/users';
+import { useUsers } from '@/hooks/users';
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 
 export default function PaymentPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const { upgradePlan, error: apiError, clearError } = users();
+    const { upgradePlan, error: apiError, clearError } = useUsers();
 
     useEffect(() => {
         const plan = localStorage.getItem("selectedPlan");
@@ -189,8 +189,11 @@ export default function PaymentPage() {
                         >
                             {isProcessing ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 animate-spin absolute left-4" />
-                                    Processando pagamento...
+                                    <div className="text-center">
+                                        <LoadingAnimation />
+
+                                        <p>Processando pagamento...</p>
+                                    </div>
                                 </>
                             ) : (
                                 'Confirmar pagamento'

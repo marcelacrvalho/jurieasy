@@ -217,7 +217,7 @@ export default function AuthPage() {
     // ✅ CORREÇÃO: Se já está autenticado, mostra loading até redirecionar
     if (user && tokenManager.hasToken()) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-white">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
                 <div className="text-center">
                     <LoadingAnimation />
                     <p className="mt-4 text-slate-600">Redirecionando...</p>

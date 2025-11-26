@@ -5,6 +5,7 @@ import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { useUserDocuments } from "@/hooks/userDocuments";
 import { Download } from "lucide-react";
+import LoadingAnimation from "../shared/LoadingAnimation";
 
 interface DocumentPreviewProps {
     userDocument: UserDocument;
@@ -522,8 +523,10 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                 >
                                     {isDownloading && downloadType === 'pdf' ? (
                                         <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Baixando...
+                                            <div className="text-center">
+                                                <LoadingAnimation />
+                                                <p className="mt-4 text-slate-600">Baixando...</p>
+                                            </div>
                                         </div>
                                     ) : (
                                         <>
@@ -545,8 +548,10 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                 >
                                     {isDownloading && downloadType === 'doc' ? (
                                         <div className="flex items-center gap-2">
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Baixando...
+                                            <div className="text-center">
+                                                <LoadingAnimation />
+                                                Baixando...
+                                            </div>
                                         </div>
                                     ) : (
                                         <>
