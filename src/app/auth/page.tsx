@@ -35,22 +35,45 @@ export default function AuthPage() {
         const checkExistingAuth = async () => {
             console.log('🔐 AuthPage: Verificando autenticação existente...');
 
-            // ✅ VERIFICA NO TOKEN MANAGER (fonte da verdade)
+            // ✅ VERIFICA SE JÁ TEM TOKEN VÁLIDO
             if (tokenManager.hasToken()) {
-                console.log('✅ Usuário já autenticado, redirecionando para dashboard...');
-                router.push('/dashboard');
-                return;
+                console.log('✅ Token encontrado, verificando se usuário está carregado...');
+
+                // Se já tem user no contexto, redireciona imediatamente
+                if (user) {
+                    console.log('✅ Usuário já carregado, redirecionando...');
+                    handleRedirect();
+                    return;
+                }
+
+                // Se não tem user mas tem token, espera um pouco pelo contexto
+                const timeout = setTimeout(() => {
+                    if (user) {
+                        console.log('✅ Usuário carregado após espera, redirecionando...');
+                        handleRedirect();
+                    } else {
+                        console.log('⚠️ Token existe mas usuário não carregou, mantendo na página...');
+                    }
+                }, 2000);
+
+                return () => clearTimeout(timeout);
             }
 
-            // ✅ SE TEM USER MAS NÃO TEM TOKEN, LIMPA O CONTEXTO (estado inconsistente)
-            if (user && !tokenManager.hasToken()) {
-                console.log('⚠️ Estado inconsistente: user sem token, limpando...');
-                // Isso será tratado pelo hook useUsers/logout
+            console.log('🔐 Nenhum token encontrado, mantendo na página de login');
+        };
+
+        const handleRedirect = () => {
+            if (shouldRedirectToPayment) {
+                router.push("/payment");
+            } else if (isGoogleAuth && selectedPlan) {
+                router.push("/payment");
+            } else {
+                router.push("/dashboard");
             }
         };
 
         checkExistingAuth();
-    }, [user, router]);
+    }, [user, shouldRedirectToPayment, isGoogleAuth, selectedPlan, router]);
 
     // Carrega o plano selecionado do localStorage
     useEffect(() => {
@@ -60,34 +83,25 @@ export default function AuthPage() {
         }
     }, []);
 
-    // ✅ CORREÇÃO: Redirecionamento melhorado
     useEffect(() => {
         if (user && tokenManager.hasToken()) {
-            console.log('🔄 Auth: Usuário autenticado, redirecionando...', {
-                shouldRedirectToPayment,
-                isGoogleAuth,
-                selectedPlan,
-                user: user.name
-            });
+            console.log('🔄 Auth: Usuário autenticado, redirecionando...');
 
             // Pequeno delay para melhor UX
             const redirectTimer = setTimeout(() => {
-                // Para registro com email + plano → payment
                 if (shouldRedirectToPayment) {
                     console.log("💰 Redirecionando para pagamento com plano:", selectedPlan);
                     router.push("/payment");
                 }
-                // Para registro com Google + plano → payment
                 else if (isGoogleAuth && selectedPlan) {
                     console.log("💰 Redirecionando Google auth para pagamento com plano:", selectedPlan);
                     router.push("/payment");
                 }
-                // Caso contrário → dashboard
                 else {
                     console.log("🏠 Redirecionando para dashboard");
                     router.push("/dashboard");
                 }
-            }, 500);
+            }, 1000);
 
             return () => clearTimeout(redirectTimer);
         }
@@ -100,55 +114,38 @@ export default function AuthPage() {
         setForm({ name: "", email: "", password: "" });
     };
 
-    // ✅ CORREÇÃO: Função de auth com email melhorada
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         clearError();
         setIsGoogleAuth(false);
 
-        // ✅ VALIDAÇÃO BÁSICA
-        if (!form.email || !form.password) {
-            clearError(); // Usa o clearError do hook
-            return;
-        }
-
-        if (!isLoginMode && !form.name) {
-            clearError();
-            return;
-        }
+        // Validações básicas
+        if (!form.email || !form.password) return;
+        if (!isLoginMode && !form.name) return;
 
         try {
+            let success = false;
+
             if (isLoginMode) {
-                const success = await login({
+                success = await login({
                     email: form.email,
                     password: form.password
                 });
-
-                if (success) {
-                    console.log("✅ Login com email realizado com sucesso!");
-                    // O redirecionamento será tratado no useEffect
-                }
             } else {
-                const success = await registerEmail({
+                success = await registerEmail({
                     name: form.name,
                     email: form.email,
                     password: form.password
                 });
+            }
 
-                if (success) {
-                    console.log("✅ Registro com email realizado com sucesso!");
-
-                    // Se tem plano selecionado, marca para redirecionar para pagamento
-                    if (selectedPlan) {
-                        console.log("📋 Registro com plano, preparando redirecionamento para pagamento");
-                        setShouldRedirectToPayment(true);
-                    }
-                    // Se não tem plano, o useEffect vai redirecionar para dashboard
+            if (success) {
+                if (!isLoginMode && selectedPlan) {
+                    setShouldRedirectToPayment(true);
                 }
             }
         } catch (error) {
             console.error("❌ Erro na autenticação:", error);
-            // O erro será tratado pelo hook
         }
     };
 

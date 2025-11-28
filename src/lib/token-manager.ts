@@ -1,33 +1,41 @@
+// lib/token-manager.ts
 class TokenManager {
     private token: string | null = null;
+    private readonly STORAGE_KEY = 'auth_token';
+
+    constructor() {
+        this.loadToken();
+    }
+
+    private loadToken() {
+        if (typeof window !== 'undefined') {
+            this.token = localStorage.getItem(this.STORAGE_KEY);
+        }
+    }
 
     setToken(token: string) {
         this.token = token;
-        // Opcional: salvar no localStorage/sessionStorage se quiser persistência
         if (typeof window !== 'undefined') {
-            sessionStorage.setItem('authToken', token);
+            localStorage.setItem(this.STORAGE_KEY, token);
         }
     }
 
     getToken(): string | null {
-        if (!this.token && typeof window !== 'undefined') {
-            // Tenta recuperar do sessionStorage
-            this.token = sessionStorage.getItem('authToken');
-        }
         return this.token;
+    }
+
+    hasToken(): boolean {
+        return !!this.token;
     }
 
     clearToken() {
         this.token = null;
         if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('authToken');
+            localStorage.removeItem(this.STORAGE_KEY);
+            // Limpar também credenciais salvas se quiser
+            localStorage.removeItem('userCredentials');
         }
-    }
-
-    hasToken(): boolean {
-        return !!this.getToken();
     }
 }
 
-// Singleton global
 export const tokenManager = new TokenManager();

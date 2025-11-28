@@ -92,35 +92,62 @@ export const useUsers = (): UserReturn => {
         setError(null);
 
         try {
-            console.log('🔄 Fazendo registro...');
+            console.log('🔄 [HOOK] Fazendo registro...', data);
 
-            const response: RegisterResponse = await apiClient.post('/users/register', data);
+            const axiosResponse = await apiClient.post('/users/register', data);
 
-            console.log('🎯 RESPOSTA COMPLETA DO BACKEND:', JSON.stringify(response, null, 2));
+            console.log('🎯 [HOOK] RESPOSTA COMPLETA:', axiosResponse);
 
-            if (response.success && response.data) {
-                console.log('✅ Registro bem-sucedido!');
+            // ✅ CORREÇÃO: Acesse axiosResponse.data (que é o corpo da resposta HTTP)
+            const responseData = axiosResponse.data;
 
-                // ✅ SALVAR NO TOKEN MANAGER E NO CONTEXTO
-                if (response.data.token) {
-                    console.log('💾 Salvando token no tokenManager e contexto...');
-                    tokenManager.setToken(response.data.token); // ✅ Singleton
-                    setToken(response.data.token); // ✅ Contexto
-                } else {
-                    console.log('❌ TOKEN NÃO VEIO NA RESPOSTA!');
+            console.log('🎯 [HOOK] ESTRUTURA DA RESPOSTA:', {
+                status: axiosResponse.status,
+                data: responseData,
+                hasSuccess: responseData.success,
+                hasData: !!responseData.data
+            });
+
+            // ✅ VERIFIQUE A ESTRUTURA REAL DA SUA RESPOSTA
+            // Se sua API retorna { data: { success, data, message } }
+            if (responseData.data && responseData.data.success && responseData.data.data) {
+                console.log('✅ [HOOK] Registro bem-sucedido (estrutura aninhada)');
+
+                const innerData = responseData.data.data;
+
+                if (innerData.token) {
+                    tokenManager.setToken(innerData.token);
+                    setToken(innerData.token);
                 }
 
-                // SALVAR USER
-                if (response.data.user) {
-                    setUser(response.data.user);
+                if (innerData.user) {
+                    setUser(innerData.user);
                 }
 
                 return true;
-            } else {
-                setError(response.error || 'Erro ao criar conta');
+            }
+            // Se sua API retorna { success, data, message } diretamente
+            else if (responseData.success && responseData.data) {
+                console.log('✅ [HOOK] Registro bem-sucedido (estrutura direta)');
+
+                if (responseData.data.token) {
+                    tokenManager.setToken(responseData.data.token);
+                    setToken(responseData.data.token);
+                }
+
+                if (responseData.data.user) {
+                    setUser(responseData.data.user);
+                }
+
+                return true;
+            }
+            else {
+                console.log('❌ [HOOK] Estrutura de resposta não reconhecida:', responseData);
+                setError('Erro inesperado na resposta do servidor');
                 return false;
             }
         } catch (err) {
+            console.error('❌ [HOOK] Erro no registro:', err);
             setError('Erro de conexão');
             return false;
         } finally {
@@ -136,23 +163,60 @@ export const useUsers = (): UserReturn => {
         setError(null);
 
         try {
-            // A API client deve retornar o corpo de dados do backend diretamente
-            const response: LoginResponse = await apiClient.post('/users/login', data);
+            console.log('🔄 [HOOK] Fazendo login...', { email: data.email });
 
-            if (response.success && response.data) {
-                if (response.data.token) {
-                    tokenManager.setToken(response.data.token); // ✅ Singleton
-                    setToken(response.data.token); // ✅ Contexto
+            const axiosResponse = await apiClient.post('/users/login', data);
+
+            console.log('🎯 [HOOK] RESPOSTA COMPLETA DO LOGIN:', axiosResponse);
+
+            const responseData = axiosResponse.data;
+
+            if (responseData.data && responseData.data.success && responseData.data.data) {
+
+                const innerData = responseData.data.data;
+
+                if (innerData.token) {
+                    tokenManager.setToken(innerData.token);
+                    setToken(innerData.token);
+                    console.log('💾 [HOOK] Token salvo');
                 }
 
-                setUser(response.data.user);
+                if (innerData.user) {
+                    setUser(innerData.user);
+                    console.log('✅ [HOOK] User salvo no contexto');
+                }
+
                 return true;
-            } else {
-                setError(response.error || 'Credenciais inválidas');
+            }
+            else if (responseData.success && responseData.data) {
+                console.log('✅ [HOOK] Login bem-sucedido (estrutura direta)');
+
+                if (responseData.data.token) {
+                    tokenManager.setToken(responseData.data.token);
+                    setToken(responseData.data.token);
+                    console.log('💾 [HOOK] Token salvo');
+                }
+
+                if (responseData.data.user) {
+                    setUser(responseData.data.user);
+                    console.log('✅ [HOOK] User salvo no contexto');
+                }
+
+                return true;
+            }
+            else {
+                console.log('❌ [HOOK] Estrutura de resposta não reconhecida no login:', responseData);
+                setError(responseData.error || 'Erro inesperado na resposta do servidor');
                 return false;
             }
         } catch (err) {
-            setError('Erro de conexão');
+            console.error('❌ [HOOK] Erro no login:', err);
+            if (axios.isAxiosError(err)) {
+                console.error('❌ [HOOK] Erro Axios no login:', err.response?.data);
+                setError(err.response?.data?.error || 'Credenciais inválidas');
+            } else {
+                setError('Erro de conexão');
+            }
             return false;
         } finally {
             setIsLoggingIn(false);
@@ -240,15 +304,18 @@ export const useUsers = (): UserReturn => {
     }, [setUser, setLoading]);
 
     const logout = useCallback(() => {
+        // ✅ LIMPAR TUDO
         localStorage.removeItem("userCredentials");
-
         tokenManager.clearToken();
         contextLogout();
 
         setTeamMembers([]);
         setError(null);
 
-        console.log("✅ Logout realizado - credenciais removidas");
+        console.log("✅ Logout completo - todas as credenciais removidas");
+
+        // ✅ OPCIONAL: Redirecionar para página inicial
+        // router.push('/');
     }, [contextLogout]);
 
     const upgradePlan = useCallback(async (plan: 'free' | 'pro' | 'escritorio'): Promise<boolean> => {

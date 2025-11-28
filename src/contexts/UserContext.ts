@@ -30,6 +30,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [isUpgradingPlan, setIsUpgradingPlan] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const setToken = useCallback((newToken: string) => {
+        tokenManager.setToken(newToken);
+        setTokenState(newToken);
+    }, []);
+
+    const clearToken = useCallback(() => {
+        tokenManager.clearToken();
+        setTokenState(null);
+    }, []);
+
+
     const loadUserProfile = useCallback(async (): Promise<User | null> => {
         const currentToken = tokenManager.getToken();
         if (!currentToken) {
@@ -86,37 +97,43 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
+    const logout = useCallback(() => {
+        setUser(null);
+        clearToken();
+    }, [clearToken]);
+
+    // contexts/UserContext.tsx
     useEffect(() => {
         const initializeAuth = async () => {
             const savedToken = tokenManager.getToken();
 
             if (savedToken) {
+                console.log('🔐 Token encontrado no storage, validando...');
                 setTokenState(savedToken);
-                // loadUserProfile irá usar o token salvo e tentar a requisição.
-                // Se o token estiver expirado, o interceptor do Axios cuidará da renovação.
-                await loadUserProfile();
+
+                try {
+                    // Tenta carregar o perfil do usuário com o token salvo
+                    const userProfile = await loadUserProfile();
+                    if (userProfile) {
+                        console.log('✅ Token válido, usuário autenticado automaticamente');
+                        // O usuário será redirecionado pelo AuthPage
+                    } else {
+                        console.log('❌ Token inválido ou expirado, limpando...');
+                        logout(); // Limpa token inválido
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao validar token salvo:', error);
+                    logout(); // Limpa em caso de erro
+                }
             } else {
+                console.log('🔐 Nenhum token salvo encontrado');
                 setTokenState(null);
             }
         };
 
         initializeAuth();
-    }, [loadUserProfile]);
+    }, [loadUserProfile, logout]);
 
-    const setToken = useCallback((newToken: string) => {
-        tokenManager.setToken(newToken);
-        setTokenState(newToken);
-    }, []);
-
-    const clearToken = useCallback(() => {
-        tokenManager.clearToken();
-        setTokenState(null);
-    }, []);
-
-    const logout = useCallback(() => {
-        setUser(null);
-        clearToken();
-    }, [clearToken]);
 
     const setUserCallback = useCallback((userData: User | null) => {
         setUser(userData);
