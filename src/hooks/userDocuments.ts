@@ -75,8 +75,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         contextClearError();
     }, [contextClearError]);
 
-    // ✅ CORREÇÃO: refreshAll agora recarrega APENAS rascunhos e stats
-
+    // --- Stats Operations ---
 
     const getUserDocumentStats = useCallback(async (userId: string): Promise<DocumentStats | null> => {
         setFetchingStats(true);
@@ -85,27 +84,35 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         try {
             console.log('📊 Buscando estatísticas do usuário...', userId);
 
-            const response: ApiResponse<DocumentStats> = await apiClient.get(`/user-documents/stats/${userId}`);
+            // 1. O Axios retorna um objeto de resposta. A tipagem garante que a propriedade 'data'
+            //    contém o seu ApiResponse<DocumentStats>
+            const axiosResponse = await apiClient.get<ApiResponse<DocumentStats>>(`/user-documents/stats/${userId}`);
 
-            console.log('📨 Resposta das estatísticas:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success && response.data) {
+            console.log('📨 Resposta das estatísticas:', responseData);
+
+            // 3. Verificamos as propriedades success/data/error em responseData
+            if (responseData.success && responseData.data) {
                 console.log('✅ Estatísticas carregadas com sucesso');
-                setStats(response.data);
-                return response.data;
+                setStats(responseData.data);
+                return responseData.data;
             } else {
-                console.error('❌ Erro ao buscar estatísticas:', response.error);
-                setError(response.error || 'Erro ao carregar estatísticas');
+                console.error('❌ Erro ao buscar estatísticas:', responseData.error);
+                setError(responseData.error || 'Erro ao carregar estatísticas');
                 return null;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na requisição das estatísticas:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return null;
         } finally {
             setFetchingStats(false);
         }
     }, [setStats, setFetchingStats, setError]);
+
+    // --- Document Fetching Operations ---
 
     const getUserDocumentDraft = useCallback(async (userId: string, page: number = 1, limit: number = 10): Promise<UserDocument[]> => {
         setLoading(true);
@@ -114,16 +121,20 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         try {
             console.log('📄 Buscando documentos em rascunho...', { userId, page, limit });
 
-            const response: UserDocumentsArrayResponse = await apiClient.get(
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.get<UserDocumentsArrayResponse>(
                 `/user-documents/${userId}/draft?page=${page}&limit=${limit}`
             );
 
-            console.log('📨 Resposta dos documentos em rascunho:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success && response.data) {
-                console.log('✅ Documentos em rascunho carregados com sucesso:', response.data.length);
+            console.log('📨 Resposta dos documentos em rascunho:', responseData);
 
-                const documentsData = Array.isArray(response.data) ? response.data : [];
+            if (responseData.success && responseData.data) {
+                console.log('✅ Documentos em rascunho carregados com sucesso:', responseData.data.length);
+
+                const documentsData = Array.isArray(responseData.data) ? responseData.data : [];
 
                 // Se for página 1, substitui a lista. Se for paginação, adiciona aos existentes
                 if (page === 1) {
@@ -134,13 +145,13 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
                 return documentsData;
             } else {
-                console.error('❌ Erro ao buscar documentos em rascunho:', response.error);
-                setError(response.error || 'Erro ao carregar documentos em rascunho');
+                console.error('❌ Erro ao buscar documentos em rascunho:', responseData.error);
+                setError(responseData.error || 'Erro ao carregar documentos em rascunho');
                 return [];
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na requisição dos documentos em rascunho:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return [];
         } finally {
             setLoading(false);
@@ -152,18 +163,22 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         setError(null);
 
         try {
-            const response: UserDocumentsArrayResponse = await apiClient.get(
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.get<UserDocumentsArrayResponse>(
                 `/user-documents/${userId}/completed?page=${page}&limit=${limit}`
             );
 
-            if (response.success && response.data) {
-                return Array.isArray(response.data) ? response.data : [];
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
+
+            if (responseData.success && responseData.data) {
+                return Array.isArray(responseData.data) ? responseData.data : [];
             } else {
-                setError(response.error || 'Erro ao carregar documentos completados');
+                setError(responseData.error || 'Erro ao carregar documentos completados');
                 return [];
             }
-        } catch (err) {
-            setError('Erro de conexão');
+        } catch (err: any) {
+            setError(err.message || 'Erro de conexão');
             return [];
         } finally {
             setLoading(false);
@@ -175,32 +190,35 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         setError(null);
 
         try {
-            // ✅ CORREÇÃO: Use a rota correta que funciona
             const endpoint = `/user-documents/${user?.id}`;
 
             console.log('📄 Buscando documentos do usuário...', { filters, endpoint });
 
-            const response: UserDocumentsArrayResponse = await apiClient.get(endpoint);
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.get<UserDocumentsArrayResponse>(endpoint);
 
-            console.log('📨 Resposta dos documentos:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success && response.data) {
-                console.log('✅ Documentos carregados com sucesso:', response.data.length);
-                setDocuments(response.data);
-                return response.data;
+            console.log('📨 Resposta dos documentos:', responseData);
+
+            if (responseData.success && responseData.data) {
+                console.log('✅ Documentos carregados com sucesso:', responseData.data.length);
+                setDocuments(responseData.data);
+                return responseData.data;
             } else {
-                console.error('❌ Erro ao buscar documentos:', response.error);
-                setError(response.error || 'Erro ao carregar documentos');
+                console.error('❌ Erro ao buscar documentos:', responseData.error);
+                setError(responseData.error || 'Erro ao carregar documentos');
                 return [];
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na requisição dos documentos:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return [];
         } finally {
             setLoading(false);
         }
-    }, [setDocuments, setLoading, setError, user?.id]); // ✅ Adicione user?.id
+    }, [setDocuments, setLoading, setError, user?.id]);
 
     const getUserDocument = useCallback(async (documentId: string): Promise<UserDocument | null> => {
         setLoading(true);
@@ -209,33 +227,39 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         try {
             console.log('📄 Buscando documento...', documentId);
 
-            const response: UserDocumentResponse = await apiClient.get(`/user-documents/${documentId}`);
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.get<UserDocumentResponse>(`/user-documents/${documentId}`);
 
-            console.log('📨 Resposta do documento:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success && response.data) {
-                console.log('✅ Documento carregado com sucesso:', response.data._id);
-                setCurrentDocument(response.data);
-                return response.data;
+            console.log('📨 Resposta do documento:', responseData);
+
+            if (responseData.success && responseData.data) {
+                console.log('✅ Documento carregado com sucesso:', responseData.data._id);
+                setCurrentDocument(responseData.data);
+                return responseData.data;
             } else {
-                console.error('❌ Erro ao buscar documento:', response.error);
-                setError(response.error || 'Erro ao carregar documento');
+                console.error('❌ Erro ao buscar documento:', responseData.error);
+                setError(responseData.error || 'Erro ao carregar documento');
                 return null;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na requisição do documento:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return null;
         } finally {
             setLoading(false);
         }
     }, [setCurrentDocument, setLoading, setError]);
 
+    // --- Document CRUD Operations ---
+
     const createDocument = useCallback(async (data: CreateDocumentData): Promise<UserDocument | null> => {
         setCreating(true);
         setError(null);
 
-        if (user && !user.usage.documentsRemaining) {
+        if (user && user.usage && user.usage.documentsRemaining === 0) {
             throw new Error('LIMITE_ATINGIDO');
         }
 
@@ -252,28 +276,32 @@ export const useUserDocuments = (): UserDocumentsReturn => {
                 return null;
             }
 
-            const response: UserDocumentResponse = await apiClient.post('/user-documents', requestData);
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.post<UserDocumentResponse>('/user-documents', requestData);
 
-            console.log('📨 Resposta da criação:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success && response.data) {
-                const newDocument = response.data;
+            console.log('📨 Resposta da criação:', responseData);
+
+            if (responseData.success && responseData.data) {
+                const newDocument = responseData.data;
                 setDocuments((prev: UserDocument[]) => [newDocument, ...prev]);
                 return newDocument;
 
             } else {
-                console.error('❌ Erro ao criar documento:', response.error);
-                setError(response.error || 'Erro ao criar documento');
+                console.error('❌ Erro ao criar documento:', responseData.error);
+                setError(responseData.error || 'Erro ao criar documento');
                 return null;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na criação do documento:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return null;
         } finally {
             setCreating(false);
         }
-    }, [setDocuments, setCreating, setError, user?.id]); // ✅ REMOVA refreshAll das dependências
+    }, [setDocuments, setCreating, setError, user]);
 
     const updateDocument = useCallback(async (documentId: string, data: UpdateDocumentData): Promise<UserDocument | null> => {
         setUpdating(true);
@@ -282,14 +310,17 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         try {
             console.log('✏️ Atualizando documento...', { documentId, data });
 
-            const response: UserDocumentResponse = await apiClient.put(`/user-documents/${documentId}`, data);
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.put<UserDocumentResponse>(`/user-documents/${documentId}`, data);
 
-            console.log('📨 Resposta da atualização:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success && response.data) {
-                const updatedDocument = response.data;
+            console.log('📨 Resposta da atualização:', responseData);
 
-                // ✅ DEBUG: Verificar se o status foi realmente atualizado
+            if (responseData.success && responseData.data) {
+                const updatedDocument = responseData.data;
+
                 console.log('🔍 Status do documento após atualização:', updatedDocument.status);
 
                 setDocuments((prev: UserDocument[]) => prev.map(doc =>
@@ -302,13 +333,13 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
                 return updatedDocument;
             } else {
-                console.error('❌ Erro ao atualizar documento:', response.error);
-                setError(response.error || 'Erro ao atualizar documento');
+                console.error('❌ Erro ao atualizar documento:', responseData.error);
+                setError(responseData.error || 'Erro ao atualizar documento');
                 return null;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na atualização do documento:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return null;
         } finally {
             setUpdating(false);
@@ -322,14 +353,18 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         try {
             console.log('🗑️ Deletando documento...', documentId);
 
-            const response: ApiResponse<{ message: string }> = await apiClient.delete(`/user-documents/${documentId}`);
+            // 1. Objeto de resposta do Axios
+            const axiosResponse = await apiClient.delete<ApiResponse<{ message: string }>>(`/user-documents/${documentId}`);
 
-            console.log('📨 Resposta da deleção:', response);
+            // 2. Acessamos o corpo da sua API através de .data
+            const responseData = axiosResponse.data;
 
-            if (response.success) {
+            console.log('📨 Resposta da deleção:', responseData);
+
+            if (responseData.success) {
                 console.log('✅ Documento deletado com sucesso');
 
-                setDocuments((prev: any[]) => prev.filter((doc: { _id: string; }) => doc._id !== documentId));
+                setDocuments((prev: UserDocument[]) => prev.filter((doc) => doc._id !== documentId));
 
                 if (currentDocument?._id === documentId) {
                     setCurrentDocument(null);
@@ -337,26 +372,33 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
                 return true;
             } else {
-                console.error('❌ Erro ao deletar documento:', response.error);
-                setError(response.error || 'Erro ao deletar documento');
+                console.error('❌ Erro ao deletar documento:', responseData.error);
+                setError(responseData.error || 'Erro ao deletar documento');
                 return false;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('💥 Erro na deleção do documento:', err);
-            setError('Erro de conexão');
+            setError(err.message || 'Erro de conexão');
             return false;
         } finally {
             setDeleting(false);
         }
     }, [setDocuments, setCurrentDocument, currentDocument, setDeleting, setError]);
 
-    const refreshAll = useCallback(() => {
+    // --- Utility ---
+
+    // Mantido como estava, apenas renomeado para maior clareza de propósito
+    const refreshDocuments = useCallback(() => {
         if (user?.id) {
-            // Recarrega apenas documentos em rascunho (não todos os documentos)
             getUserDocumentDraft(user.id);
+        }
+    }, [user?.id, getUserDocumentDraft]);
+
+    const refreshStats = useCallback(() => {
+        if (user?.id) {
             getUserDocumentStats(user.id);
         }
-    }, [user?.id, getUserDocumentDraft, getUserDocumentStats]);
+    }, [user?.id, getUserDocumentStats]);
 
     return {
         // Data states
@@ -388,7 +430,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
         // Utility
         clearError,
-        refreshDocuments: refreshAll,
-        refreshStats: refreshAll,
+        refreshDocuments,
+        refreshStats,
     };
 };

@@ -1,4 +1,3 @@
-// lib/token-manager.ts
 class TokenManager {
     private token: string | null = null;
 

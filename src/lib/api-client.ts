@@ -1,91 +1,48 @@
+import axios from 'axios';
 import { tokenManager } from './token-manager';
 
-const apiClient = {
-    async get(url: string, options?: { headers?: Record<string, string> }) {
-        const token = await tokenManager.getToken();
-        const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-            ...options?.headers
-        };
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        console.log('🔐 GET:', url, token ? 'COM token' : 'SEM token');
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-            method: 'GET',
-            headers,
-        });
-
-        return await response.json();
+// 1. Cria uma instância do Axios
+const apiClient = axios.create({
+    baseURL,
+    timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json',
     },
+    withCredentials: true,
+});
 
-    async post(url: string, body?: any, options?: { headers?: Record<string, string> }) {
-        const token = await tokenManager.getToken();
-        const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-            ...options?.headers
-        };
+// 2. Interceptor de REQUEST (Adiciona o Access Token)
+apiClient.interceptors.request.use(async (config) => {
+    const token = await tokenManager.getToken();
 
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+    if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+// 3. Interceptor de RESPONSE (Captura token de login/register/googleAuth)
+apiClient.interceptors.response.use((response) => {
+
+    if (
+        response.config.url?.includes('/login') ||
+        response.config.url?.includes('/register') ||
+        response.config.url?.includes('/googleAuth')
+    ) {
+        const newToken = response.data.data?.token;
+        if (newToken) {
+            tokenManager.setToken(newToken);
         }
+    }
 
-        console.log('🔐 POST:', url, token ? 'COM token' : 'SEM token');
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-            method: 'POST',
-            headers,
-            body: body ? JSON.stringify(body) : undefined,
-        });
-
-        return await response.json();
-    },
-
-    async put(url: string, body?: any, options?: { headers?: Record<string, string> }) {
-        const token = await tokenManager.getToken();
-        const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-            ...options?.headers
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        console.log('🔐 PUT:', url, token ? 'COM token' : 'SEM token');
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-            method: 'PUT',
-            headers,
-            body: body ? JSON.stringify(body) : undefined,
-        });
-
-        return await response.json();
-    },
-
-    async delete(url: string, options?: { headers?: Record<string, string> }) {
-        const token = await tokenManager.getToken();
-        const headers: HeadersInit = {
-            'Content-Type': 'application/json',
-            ...options?.headers
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        console.log('🔐 DELETE:', url, token ? 'COM token' : 'SEM token');
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-            method: 'DELETE',
-            headers,
-        });
-
-        return await response.json();
-    },
-};
+    return response;
+}, (error) => {
+    return Promise.reject(error);
+});
 
 export { apiClient };

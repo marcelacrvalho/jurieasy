@@ -4,7 +4,7 @@ import React, { createContext, useContext, ReactNode, useState, useCallback, use
 import { User } from '@/types/user';
 import { apiClient } from '@/lib/api-client';
 import { tokenManager } from '@/lib/token-manager';
-
+import { AxiosResponse } from 'axios';
 interface UserContextType {
     user: User | null;
     token: string | null;
@@ -39,15 +39,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
         setIsLoading(true);
         try {
+            // CORREÇÃO: Pegar a resposta do Axios
             const response = await apiClient.get('/users/profile');
+            const responseData = response.data; // ✅ Acessa os dados retornados pelo seu backend
 
-            if (response.success && response.data) {
-                setUser(response.data.user);
-                return response.data.user;
+            if (responseData.success && responseData.data) {
+                setUser(responseData.data.user);
+                return responseData.data.user;
             } else {
                 return null;
             }
         } catch (error) {
+            // O interceptor do Axios já trata 401, então aqui pegamos outros erros de rede/servidor.
             return null;
         } finally {
             setIsLoading(false);
@@ -66,12 +69,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
 
             const response = await apiClient.post('/users/upgrade', { plan });
+            const responseData = response.data; // ✅ Acessa os dados retornados pelo seu backend
 
-            if (response.success && response.data) {
-                setUser(response.data.user || response.data);
+            if (responseData.success && responseData.data) {
+                setUser(responseData.data.user || responseData.data);
                 return true;
             } else {
-                setError(response.error || 'Erro ao atualizar plano');
+                setError(responseData.error || 'Erro ao atualizar plano');
                 return false;
             }
         } catch (err) {
@@ -88,6 +92,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
             if (savedToken) {
                 setTokenState(savedToken);
+                // loadUserProfile irá usar o token salvo e tentar a requisição.
+                // Se o token estiver expirado, o interceptor do Axios cuidará da renovação.
                 await loadUserProfile();
             } else {
                 setTokenState(null);
@@ -131,7 +137,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         clearToken,
         setLoading: setLoadingCallback,
         loadUserProfile,
-        // Novas propriedades
         upgradePlan,
         isUpgradingPlan,
         error,

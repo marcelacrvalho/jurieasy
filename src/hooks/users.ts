@@ -9,7 +9,8 @@ import {
 import { ApiResponse } from '@/types/api';
 import { apiClient } from '@/lib/api-client';
 import { useUserContext } from '@/contexts/UserContext';
-import { tokenManager } from '@/lib/token-manager'; // ✅ Import do tokenManager
+import { tokenManager } from '@/lib/token-manager';
+import axios from 'axios';
 
 interface TeamMember {
     id: string;
@@ -135,6 +136,7 @@ export const useUsers = (): UserReturn => {
         setError(null);
 
         try {
+            // A API client deve retornar o corpo de dados do backend diretamente
             const response: LoginResponse = await apiClient.post('/users/login', data);
 
             if (response.success && response.data) {
@@ -162,24 +164,47 @@ export const useUsers = (): UserReturn => {
         setError(null);
 
         try {
-            const response: RegisterResponse = await apiClient.post('/users/google', {
+            // 🚨 ALTERAÇÃO: Remove a tipagem direta na chamada, pois o apiClient 
+            // deve retornar a estrutura de dados do backend (axiosResponse.data)
+            const axiosResponse = await apiClient.post('/users/google', {
                 accessToken: accessToken
             });
 
-            if (response.success && response.data) {
-                if (response.data.token) {
-                    tokenManager.setToken(response.data.token); // ✅ Singleton
-                    setToken(response.data.token); // ✅ Contexto
+            // 🚨 CORREÇÃO: Pegar o corpo de dados real do backend (que está dentro de .data)
+            const backendResponse: RegisterResponse = axiosResponse.data;
+
+            // Log de debug para ver o objeto do backend:
+            console.log('🎯 RESPOSTA GOOGLE (BACKEND DATA):', JSON.stringify(backendResponse, null, 2));
+
+            // Usar backendResponse para a lógica
+            if (backendResponse.success && backendResponse.data) {
+                if (backendResponse.data.token) {
+                    tokenManager.setToken(backendResponse.data.token); // ✅ Singleton
+                    setToken(backendResponse.data.token); // ✅ Contexto
                 }
 
-                setUser(response.data.user);
+                // console.log(backendResponse.data); // Mantido o log, mas agora com o nome corrigido
+
+                setUser(backendResponse.data.user);
                 return true;
             } else {
-                setError(response.error || 'Erro ao autenticar com Google');
+                // Trata o erro se a resposta veio 200, mas com sucesso=false
+                setError(backendResponse.error || 'Erro ao autenticar com Google');
                 return false;
             }
         } catch (err) {
-            setError('Erro de conexão');
+            // 🚨 CORREÇÃO: Tratar erros HTTP lançados pelo Axios
+            console.error('❌ ERRO NO GOOGLE AUTH (AXIOS):', err);
+
+            let errorMessage = 'Erro de conexão ou servidor';
+
+            if (axios.isAxiosError(err) && err.response) {
+                // Tenta ler a mensagem de erro que o backend enviou (4xx, 5xx)
+                // Usando 'data?.error' e 'data?.message' como fallback
+                errorMessage = (err.response.data as any)?.error || (err.response.data as any)?.message || `Erro do servidor: Status ${err.response.status}`;
+            }
+
+            setError(errorMessage);
             return false;
         } finally {
             setIsRegistering(false);
@@ -215,11 +240,15 @@ export const useUsers = (): UserReturn => {
     }, [setUser, setLoading]);
 
     const logout = useCallback(() => {
+        localStorage.removeItem("userCredentials");
+
         tokenManager.clearToken();
         contextLogout();
 
         setTeamMembers([]);
         setError(null);
+
+        console.log("✅ Logout realizado - credenciais removidas");
     }, [contextLogout]);
 
     const upgradePlan = useCallback(async (plan: 'free' | 'pro' | 'escritorio'): Promise<boolean> => {

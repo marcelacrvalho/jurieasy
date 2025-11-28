@@ -224,8 +224,8 @@ export default function Dashboard() {
     }
 
     // Data for display
-    const recentDocuments = userDocuments.slice(0, 4);
-    const featuredDocuments = documents.slice(0, 4);
+    const recentDocuments = (userDocuments ?? []).slice(0, 4);
+    const featuredDocuments = (documents ?? []).slice(0, 4);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-6 sm:py-10">
@@ -344,7 +344,6 @@ export default function Dashboard() {
                                     <p className="text-slate-600 text-sm mt-1">Atualizados conforme as últimas mudanças legais</p>
                                 </div>
                                 <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">
-                                    <Zap className="w-4 h-4" />
                                     <span className="text-xs font-medium">Atualizado</span>
                                 </div>
                             </div>

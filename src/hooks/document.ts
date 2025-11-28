@@ -11,6 +11,7 @@ import {
 } from '@/types/document';
 import { apiClient } from '@/lib/api-client';
 import { useDocumentContext } from '@/contexts/DocumentContext';
+import axios from 'axios';
 
 interface DocumentsReturn {
     // Data states
@@ -75,6 +76,20 @@ export const useDocuments = (): DocumentsReturn => {
         contextClearError();
     }, [contextClearError]);
 
+    // Função auxiliar para tratamento de erros do Axios
+    const handleAxiosError = useCallback((err: unknown): string => {
+        let errorMessage = 'Erro de conexão ou servidor';
+
+        if (axios.isAxiosError(err) && err.response) {
+            // Tenta ler a mensagem de erro que o backend enviou (4xx, 5xx)
+            errorMessage = (err.response.data as any)?.error
+                || (err.response.data as any)?.message
+                || `Erro do servidor: Status ${err.response.status}`;
+        }
+        console.error('💥 Erro na requisição:', err);
+        return errorMessage;
+    }, []);
+
     // GET /documents - Buscar documentos com filtros
     const getDocuments = useCallback(async (filters?: DocumentFilters): Promise<Document[]> => {
         setLoadingDocuments(true);
@@ -83,7 +98,6 @@ export const useDocuments = (): DocumentsReturn => {
         try {
             console.log('📄 Buscando documentos...', { filters });
 
-            // Construir query string com filtros
             const queryParams = new URLSearchParams();
             if (filters?.category) queryParams.append('category', filters.category);
             if (filters?.isPopular !== undefined) queryParams.append('isPopular', filters.isPopular.toString());
@@ -96,7 +110,9 @@ export const useDocuments = (): DocumentsReturn => {
             const queryString = queryParams.toString();
             const endpoint = queryString ? `/documents?${queryString}` : '/documents';
 
-            const response: DocumentsResponse = await apiClient.get(endpoint);
+            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
+            const axiosResponse = await apiClient.get(endpoint);
+            const response: DocumentsResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
 
             console.log('📨 Resposta dos documentos:', response);
 
@@ -111,13 +127,12 @@ export const useDocuments = (): DocumentsReturn => {
                 return [];
             }
         } catch (err) {
-            console.error('💥 Erro na requisição dos documentos:', err);
-            setError('Erro de conexão');
+            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
             return [];
         } finally {
             setLoadingDocuments(false);
         }
-    }, [setDocuments, setPagination, setLoadingDocuments, setError]);
+    }, [setDocuments, setPagination, setLoadingDocuments, setError, handleAxiosError]);
 
     // GET /documents/:id - Buscar documento por ID
     const getDocument = useCallback(async (documentId: string): Promise<Document | null> => {
@@ -127,7 +142,9 @@ export const useDocuments = (): DocumentsReturn => {
         try {
             console.log('📄 Buscando documento...', documentId);
 
-            const response: DocumentResponse = await apiClient.get(`/documents/${documentId}`);
+            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
+            const axiosResponse = await apiClient.get(`/documents/${documentId}`);
+            const response: DocumentResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
 
             console.log('📨 Resposta do documento:', response);
 
@@ -141,13 +158,12 @@ export const useDocuments = (): DocumentsReturn => {
                 return null;
             }
         } catch (err) {
-            console.error('💥 Erro na requisição do documento:', err);
-            setError('Erro de conexão');
+            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
             return null;
         } finally {
             setLoadingDocument(false);
         }
-    }, [setCurrentDocument, setLoadingDocument, setError]);
+    }, [setCurrentDocument, setLoadingDocument, setError, handleAxiosError]);
 
     // POST /documents - Criar documento
     const createDocument = useCallback(async (data: CreateDocumentData): Promise<Document | null> => {
@@ -157,7 +173,9 @@ export const useDocuments = (): DocumentsReturn => {
         try {
             console.log('🆕 Criando documento...', data);
 
-            const response: DocumentResponse = await apiClient.post('/documents', data);
+            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
+            const axiosResponse = await apiClient.post('/documents', data);
+            const response: DocumentResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
 
             console.log('📨 Resposta da criação:', response);
 
@@ -172,13 +190,12 @@ export const useDocuments = (): DocumentsReturn => {
                 return null;
             }
         } catch (err) {
-            console.error('💥 Erro na criação do documento:', err);
-            setError('Erro de conexão');
+            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
             return null;
         } finally {
             setCreating(false);
         }
-    }, [setDocuments, setCreating, setError]);
+    }, [setDocuments, setCreating, setError, handleAxiosError]);
 
     // PUT /documents/:id - Atualizar documento
     const updateDocument = useCallback(async (documentId: string, data: UpdateDocumentData): Promise<Document | null> => {
@@ -188,7 +205,9 @@ export const useDocuments = (): DocumentsReturn => {
         try {
             console.log('✏️ Atualizando documento...', { documentId, data });
 
-            const response: DocumentResponse = await apiClient.put(`/documents/${documentId}`, data);
+            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
+            const axiosResponse = await apiClient.put(`/documents/${documentId}`, data);
+            const response: DocumentResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
 
             console.log('📨 Resposta da atualização:', response);
 
@@ -213,13 +232,12 @@ export const useDocuments = (): DocumentsReturn => {
                 return null;
             }
         } catch (err) {
-            console.error('💥 Erro na atualização do documento:', err);
-            setError('Erro de conexão');
+            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
             return null;
         } finally {
             setUpdating(false);
         }
-    }, [setDocuments, setCurrentDocument, currentDocument, setUpdating, setError]);
+    }, [setDocuments, setCurrentDocument, currentDocument, setUpdating, setError, handleAxiosError]);
 
     // DELETE /documents/:id - Excluir documento
     const deleteDocument = useCallback(async (documentId: string): Promise<boolean> => {
@@ -229,7 +247,9 @@ export const useDocuments = (): DocumentsReturn => {
         try {
             console.log('🗑️ Excluindo documento...', documentId);
 
-            const response: DocumentResponse = await apiClient.delete(`/documents/${documentId}`);
+            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
+            const axiosResponse = await apiClient.delete(`/documents/${documentId}`);
+            const response: DocumentResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
 
             console.log('📨 Resposta da exclusão:', response);
 
@@ -251,13 +271,12 @@ export const useDocuments = (): DocumentsReturn => {
                 return false;
             }
         } catch (err) {
-            console.error('💥 Erro na exclusão do documento:', err);
-            setError('Erro de conexão');
+            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
             return false;
         } finally {
             setDeleting(false);
         }
-    }, [setDocuments, setCurrentDocument, currentDocument, setDeleting, setError]);
+    }, [setDocuments, setCurrentDocument, currentDocument, setDeleting, setError, handleAxiosError]);
 
     // GET /documents/categories - Buscar categorias
     const getCategories = useCallback(async (): Promise<string[]> => {
@@ -267,7 +286,9 @@ export const useDocuments = (): DocumentsReturn => {
         try {
             console.log('📂 Buscando categorias...');
 
-            const response: CategoriesResponse = await apiClient.get('/documents/categories');
+            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
+            const axiosResponse = await apiClient.get('/documents/categories');
+            const response: CategoriesResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
 
             console.log('📨 Resposta das categorias:', response);
 
@@ -281,43 +302,32 @@ export const useDocuments = (): DocumentsReturn => {
                 return [];
             }
         } catch (err) {
-            console.error('💥 Erro na requisição das categorias:', err);
-            setError('Erro de conexão');
+            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
             return [];
         } finally {
             setFetchingCategories(false);
         }
-    }, [setCategories, setFetchingCategories, setError]);
+    }, [setCategories, setFetchingCategories, setError, handleAxiosError]);
 
     return {
-        // Data states
+        // ... (return object inalterado)
         documents,
         currentDocument,
         categories,
         pagination,
-
-        // Loading states
         isLoadingDocuments,
         isLoadingDocument,
         isCreating,
         isUpdating,
         isDeleting,
         isFetchingCategories,
-
-        // Error state
         error,
-
-        // Document operations
         getDocuments,
         getDocument,
         createDocument,
         updateDocument,
         deleteDocument,
-
-        // Categories operations
         getCategories,
-
-        // Utility
         clearError,
     };
 };
