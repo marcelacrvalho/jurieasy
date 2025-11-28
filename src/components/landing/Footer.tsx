@@ -106,13 +106,6 @@ export default function Footer() {
                         <div className="text-gray-400 text-sm">
                             © {new Date().getFullYear()} Jurieasy. Todos os direitos reservados.
                         </div>
-                        <div className="flex items-center gap-6 text-gray-400 text-sm">
-                            <span>CNPJ: 12.345.678/0001-90</span> {/* TODO: adicionar meu CNPJ */}
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <span>Sistema operacional</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
