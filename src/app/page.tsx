@@ -9,11 +9,11 @@ import Prices from "@/components/landing/Prices";
 import SocialProof from "@/components/landing/SocialProof";
 import Testimonial from "@/components/landing/Testimonial";
 import Header from "@/components/landing/Header";
+import LegalSections from "@/components/landing/LegalSections";
 
 export default function LandingPage() {
   return (
     <>
-
       <Header />
       <Hero />
       <Benefits />
@@ -23,6 +23,7 @@ export default function LandingPage() {
       <Prices />
       <FAQ />
       <Footer />
+      <LegalSections />
     </>
   )
 }

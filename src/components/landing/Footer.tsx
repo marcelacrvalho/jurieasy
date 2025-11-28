@@ -14,18 +14,16 @@ export default function Footer() {
                         </p>
                     </div>
 
-                    {/* TODO: criar página para cada item */}
-
                     {/* Legal Column */}
                     <div>
                         <h3 className="font-semibold text-white mb-4 text-lg">Jurídico</h3>
                         <ul className="space-y-3">
                             {[
-                                { name: 'Termos de Uso', url: '#' },
-                                { name: 'Política de Privacidade', url: '#' },
-                                { name: 'LGPD', url: '#' },
-                                { name: 'Cookies', url: '#' },
-                                { name: 'Segurança', url: '#' }
+                                { name: 'Termos de Uso', url: '#termos-de-uso' },
+                                { name: 'Política de Privacidade', url: '#politica-privacidade' },
+                                { name: 'LGPD', url: '#lgpd' },
+                                { name: 'Cookies', url: '#cookies' },
+                                { name: 'Segurança', url: '#seguranca' }
                             ].map((item, index) => (
                                 <li key={index}>
                                     <a
@@ -57,17 +55,17 @@ export default function Footer() {
                                     <div className="text-gray-500 text-xs">Suporte</div>
                                 </div>
                             </li>
-                            <li className="flex items-start gap-3">
+                            <li className="flex items-start gap-2">
                                 <span>🏢</span>
                                 <div>
-                                    <div>Av. Paulista, 1000</div>
-                                    <div className="text-gray-500 text-xs">São Paulo - SP</div>
+                                    <div>Avenina Benjamin Constant, 113</div>
+                                    <div className="text-gray-500 text-xs">Varginha - Minas Gerais</div>
                                 </div>
                             </li>
                             <li className="flex items-start gap-3">
                                 <span>📞</span>
                                 <div>
-                                    <div>(11) 9999-9999</div>
+                                    <div>(35) 99938-5136</div>
                                     <div className="text-gray-500 text-xs">Segunda a Sexta, 9h-18h</div>
                                 </div>
                             </li>
@@ -91,7 +89,7 @@ export default function Footer() {
                             <input
                                 type="email"
                                 placeholder="seu.email@exemplo.com"
-                                className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-full text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 flex-1 min-w-64"
+                                className="px-4 py-3 bg-gray-900 border border-gray-700 rounded-full text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 flex-1 min-w-64"
                             />
                             <button className="bg-red border-gray-700 text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap">
                                 Assinar Newsletter
