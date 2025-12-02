@@ -215,9 +215,6 @@ export default function DocumentManagerModal({
         }
     };
 
-    // Removemos goToPage direto por número no modo create 
-    // pois sem o "total" da API não sabemos quantas páginas existem.
-
     const getDefaultTitles = () => {
         if (title && description) return { title, description };
         return mode === 'create'
@@ -229,7 +226,6 @@ export default function DocumentManagerModal({
 
     if (!isOpen) return null;
 
-    // ... (renderWizardContent mantém igual) ...
     const renderWizardContent = () => (
         <div className="h-full flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
@@ -374,7 +370,7 @@ export default function DocumentManagerModal({
             <div className="p-6 border-t border-slate-200 bg-slate-50">
                 <div className="flex items-center justify-between text-sm text-slate-600">
                     <span>
-                        {totalPages > 1 && ` • Página ${currentPage} de ${totalPages}`}
+                        {totalPages > 1 && ` Página ${currentPage} de ${totalPages}`}
                     </span>
                     {mode === 'create' && (
                         <span>Precisa de ajuda? <button className="text-blue-600 hover:text-blue-700 font-medium">Fale conosco</button></span>

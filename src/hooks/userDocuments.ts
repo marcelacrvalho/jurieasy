@@ -253,8 +253,6 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         }
     }, [setCurrentDocument, setLoading, setError]);
 
-    // --- Document CRUD Operations ---
-
     const createDocument = useCallback(async (data: CreateDocumentData): Promise<UserDocument | null> => {
         setCreating(true);
         setError(null);
@@ -385,7 +383,6 @@ export const useUserDocuments = (): UserDocumentsReturn => {
         }
     }, [setDocuments, setCurrentDocument, currentDocument, setDeleting, setError]);
 
-    // --- Utility ---
 
     // Mantido como estava, apenas renomeado para maior clareza de propósito
     const refreshDocuments = useCallback(() => {
@@ -396,9 +393,13 @@ export const useUserDocuments = (): UserDocumentsReturn => {
 
     const refreshStats = useCallback(() => {
         if (user?.id) {
-            getUserDocumentStats(user.id);
+            console.log('🔄 Executando refreshStats...');
+            // Chama a função principal de busca de estatísticas
+            getUserDocumentStats(user.id).catch(console.error);
+        } else {
+            console.warn('⚠️ Não foi possível refrescar estatísticas: user.id ausente.');
         }
-    }, [user?.id, getUserDocumentStats]);
+    }, [user?.id, getUserDocumentStats]); // Depende de user.id e da função de fetch
 
     return {
         // Data states

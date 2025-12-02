@@ -35,7 +35,7 @@ export default function Dashboard() {
     const router = useRouter();
     const { user, isLoading: isUserLoading, isAuthenticated, loadUserProfile } = useUserContext();
     const { stats, isFetchingStats } = useUserDocumentContext();
-    const { userDocuments, getUserDocumentDraft, getUserDocumentStats } = useUserDocuments();
+    const { userDocuments, getUserDocumentDraft, getUserDocumentStats, refreshStats } = useUserDocuments();
     const { documents, getDocuments, isLoadingDocuments } = useDocuments();
 
     // States
@@ -50,8 +50,6 @@ export default function Dashboard() {
     const [isMyDocumentsModalOpen, setIsMyDocumentsModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-
-    // Authentication check
     useEffect(() => {
         const checkAuthentication = async () => {
             if (!tokenManager.hasToken()) {
@@ -75,7 +73,6 @@ export default function Dashboard() {
         checkAuthentication();
     }, [user, isAuthenticated, router, loadUserProfile]);
 
-    // Loading transition
     useEffect(() => {
         if (!isCheckingAuth) {
             const timer = setTimeout(() => {
@@ -86,9 +83,10 @@ export default function Dashboard() {
         }
     }, [isCheckingAuth]);
 
-    // Load dashboard data
     useEffect(() => {
         if (!isLoading && user?.id && isAuthenticated) {
+            refreshStats();
+
             getUserDocumentStats(user.id).catch(error => {
                 console.error('Erro ao carregar estatísticas:', error);
                 toast.error('Erro ao carregar estatísticas');
@@ -108,20 +106,18 @@ export default function Dashboard() {
                 toast.error('Erro ao carregar modelos');
             });
         }
-    }, [isLoading, getUserDocumentStats, getUserDocumentDraft, getDocuments, user?.id, isAuthenticated]);
+    }, [isLoading, getUserDocumentStats, getUserDocumentDraft, getDocuments, user?.id, isAuthenticated]); // 👈 Dependências atualizadas
 
     // Handlers
     const handleCloseCreationModal = () => {
         setIsCreationModalOpen(false);
         setSelectedTemplate(null);
         setSelectedDraft(null);
+        refreshStats();
     };
-
-    // NO SEU DASHBOARD, MODIFIQUE A FUNÇÃO handleItemSelect:
 
     const handleItemSelect = (item: Document | UserDocument) => {
         if ('documentId' in item) {
-            // É UserDocument (rascunho) - CONTINUA RASCUNHO
             const userDocument = item as UserDocument;
             setIsDraftsModalOpen(false);
 
@@ -180,7 +176,6 @@ export default function Dashboard() {
         }
     };
 
-    // Loading states
     if (isCheckingAuth || isUserLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
@@ -223,7 +218,6 @@ export default function Dashboard() {
         );
     }
 
-    // Data for display
     const recentDocuments = (userDocuments ?? []).slice(0, 4);
     const featuredDocuments = (documents ?? []).slice(0, 4);
 
