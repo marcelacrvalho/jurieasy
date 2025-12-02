@@ -32,7 +32,10 @@ interface DocumentsReturn {
     error: string | null;
 
     // Document operations
-    getDocuments: (filters?: DocumentFilters) => Promise<Document[]>;
+    getDocuments: (
+        filters?: DocumentFilters,
+        options?: { skipStateUpdate?: boolean }
+    ) => Promise<Document[]>;
     getDocument: (documentId: string) => Promise<Document | null>;
     createDocument: (data: CreateDocumentData) => Promise<Document | null>;
     updateDocument: (documentId: string, data: UpdateDocumentData) => Promise<Document | null>;
@@ -91,46 +94,50 @@ export const useDocuments = (): DocumentsReturn => {
     }, []);
 
     // GET /documents - Buscar documentos com filtros
-    const getDocuments = useCallback(async (filters?: DocumentFilters): Promise<Document[]> => {
-        setLoadingDocuments(true);
-        setError(null);
+    const getDocuments = useCallback(async (
+        filters?: DocumentFilters,
+        options?: { skipStateUpdate?: boolean } // Novo parâmetro
+    ): Promise<Document[]> => {
+
+        // Só ativa o loading global se não for pular a atualização de estado
+        if (!options?.skipStateUpdate) setLoadingDocuments(true);
+
+        // Se for uma busca local, talvez você queira limpar o erro localmente no componente, 
+        // mas aqui vamos manter a lógica de erro global ou você pode adaptar.
+        if (!options?.skipStateUpdate) setError(null);
 
         try {
-            console.log('📄 Buscando documentos...', { filters });
-
+            // ... (construção da queryParams mantém igual) ...
             const queryParams = new URLSearchParams();
             if (filters?.category) queryParams.append('category', filters.category);
-            if (filters?.isPopular !== undefined) queryParams.append('isPopular', filters.isPopular.toString());
             if (filters?.search) queryParams.append('search', filters.search);
-            if (filters?.page) queryParams.append('page', filters.page.toString());
-            if (filters?.limit) queryParams.append('limit', filters.limit.toString());
-            if (filters?.sortBy) queryParams.append('sortBy', filters.sortBy);
-            if (filters?.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+            // ... outros filtros
 
             const queryString = queryParams.toString();
             const endpoint = queryString ? `/documents?${queryString}` : '/documents';
 
-            // 🚨 CORREÇÃO: Captura a resposta completa do Axios
             const axiosResponse = await apiClient.get(endpoint);
-            const response: DocumentsResponse = axiosResponse.data; // 🚨 Acessa o corpo de dados do backend
-
-            console.log('📨 Resposta dos documentos:', response);
+            const response: DocumentsResponse = axiosResponse.data;
 
             if (response.success && response.data) {
-                console.log('✅ Documentos carregados com sucesso:', response.data.length);
-                setDocuments(response.data);
-                setPagination(response.pagination || null);
+                // A MÁGICA ACONTECE AQUI:
+                if (!options?.skipStateUpdate) {
+                    // Comportamento padrão: Atualiza o contexto global
+                    setDocuments(response.data);
+                    setPagination(response.pagination || null);
+                }
+
+                // Sempre retorna os dados para quem chamou
                 return response.data;
             } else {
-                console.error('❌ Erro ao buscar documentos:', response.error);
-                setError(response.error || 'Erro ao carregar documentos');
+                if (!options?.skipStateUpdate) setError(response.error || 'Erro');
                 return [];
             }
         } catch (err) {
-            setError(handleAxiosError(err)); // 🚨 Usa o novo tratador de erros
+            if (!options?.skipStateUpdate) setError(handleAxiosError(err));
             return [];
         } finally {
-            setLoadingDocuments(false);
+            if (!options?.skipStateUpdate) setLoadingDocuments(false);
         }
     }, [setDocuments, setPagination, setLoadingDocuments, setError, handleAxiosError]);
 

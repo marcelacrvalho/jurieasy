@@ -420,7 +420,7 @@ export default function Dashboard() {
 
             <DocumentManagerModal
                 isOpen={isDocumentModalOpen}
-                documents={documents}
+                //documents={documents}
                 onClose={() => setIsDocumentModalOpen(false)}
                 mode="create"
                 onDocumentSelect={handleItemSelect}
