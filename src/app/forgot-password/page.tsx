@@ -2,10 +2,12 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '../../lib/api-client';
 import { Mail, ArrowLeft, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Interface para os erros do formulário
 interface FormErrors {
@@ -126,8 +128,8 @@ export default function ForgotPasswordPage() {
                 <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
                     {/* Cabeçalho */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                            <Mail className="w-8 h-8 text-indigo-600" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                            <Mail className="w-8 h-8 text-blue-600" />
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900 mb-2">
                             Recuperar Senha
@@ -149,7 +151,7 @@ export default function ForgotPasswordPage() {
                                 value={email}
                                 onChange={handleEmailChange}
                                 placeholder="seu@email.com"
-                                className={`w-full px-4 py-3 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition disabled:opacity-50`}
+                                className={`w-full px-4 py-3 text-gray-600 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:opacity-50`}
                                 required
                                 disabled={loading}
                             />
@@ -162,7 +164,7 @@ export default function ForgotPasswordPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 hover:shadow-md"
+                            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 hover:shadow-md"
                         >
                             {loading ? (
                                 <>
@@ -192,8 +194,8 @@ export default function ForgotPasswordPage() {
 
                             {success && (
                                 <div className="mt-3 text-xs text-green-700">
-                                    <p>🔒 Por segurança, o link expira em 1 hora</p>
-                                    <p>📧 Verifique sua pasta de spam caso não encontre</p>
+                                    <p>Por segurança, o link expira em 1 hora</p>
+                                    <p>Verifique sua pasta de spam caso não encontre</p>
                                 </div>
                             )}
                         </div>
@@ -206,18 +208,9 @@ export default function ForgotPasswordPage() {
                                 Lembrou da senha?{' '}
                                 <Link
                                     href="/auth"
-                                    className="text-indigo-600 hover:text-indigo-800 font-medium"
+                                    className="text-blue-600 hover:text-blue-800 font-medium"
                                 >
                                     Voltar para o login
-                                </Link>
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Não tem uma conta?{' '}
-                                <Link
-                                    href="/register"
-                                    className="text-indigo-600 hover:text-indigo-800 font-medium"
-                                >
-                                    Criar conta agora
                                 </Link>
                             </p>
                         </div>
@@ -227,7 +220,7 @@ export default function ForgotPasswordPage() {
                 {/* Informações de segurança */}
                 <div className="mt-6 text-center text-sm text-gray-500 space-y-3">
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p className="font-medium text-blue-800 mb-2">🛡️ Medidas de segurança:</p>
+                        <p className="font-medium text-blue-800 mb-2"> Medidas de segurança:</p>
                         <ul className="text-left text-blue-700 space-y-1">
                             <li className="flex items-start">
                                 <span className="mr-2">•</span>
@@ -235,7 +228,7 @@ export default function ForgotPasswordPage() {
                             </li>
                             <li className="flex items-start">
                                 <span className="mr-2">•</span>
-                                <span>Sempre verifique o remetente do email (suporte@jurieasy.com)</span>
+                                <span>Sempre verifique o remetente do email (noreply@jurieasy.com)</span>
                             </li>
                             <li className="flex items-start">
                                 <span className="mr-2">•</span>
@@ -244,28 +237,58 @@ export default function ForgotPasswordPage() {
                         </ul>
                     </div>
 
-                    <p>
-                        Ainda com problemas?{' '}
-                        <Link
-                            href="/contact"
-                            className="text-indigo-600 hover:text-indigo-800 font-medium"
+                    <div className="inline-flex items-center">
+                        <p className="text-gray-600">
+                            Ainda com problemas?
+                        </p>
+                        <button
+                            onClick={() => {
+                                const subject = encodeURIComponent('Suporte - Recuperação de Senha - Jurieasy');
+                                const body = encodeURIComponent(
+                                    `Olá equipe Jurieasy,\n\nEstou com problemas para recuperar minha senha.\n\nInformações do problema:\n\n• Email cadastrado: \n• Data: ${new Date().toLocaleDateString('pt-BR')}\n• Descrição do problema:\n\nPor favor, me ajude a resolver esta questão.\n\nAtenciosamente,\n[Seu Nome]`
+                                );
+                                window.location.href = `mailto:suporte@jurieasy.com?subject=${subject}&body=${body}`;
+                            }}
+                            className="text-blue-600 hover:text-blue-800 font-medium bg-transparent border-none cursor-pointer hover:underline ml-1"
                         >
                             Contate nosso suporte
-                        </Link>
-                    </p>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Footer/Branding */}
             <div className="mt-10 text-center">
-                <div className="flex items-center justify-center space-x-2 mb-4">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg"></div>
-                    <span className="text-xl font-bold text-gray-900">Jurieasy</span>
-                </div>
-                <div className="text-xs text-gray-500">
+                <motion.div
+                    className="flex items-center justify-center space-x-2 mb-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <motion.div
+                        className="w-8 h-8 relative"
+                        whileHover={{ rotate: 15, scale: 1.1 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                    >
+                        <Image
+                            src="/globe.svg"
+                            alt="Jurieasy Logo"
+                            width={32}
+                            height={32}
+                            className="text-blue-600"
+                        />
+                    </motion.div>
+                    <span className="text-xl font-bold text-gray-600">Jurieasy</span>
+                </motion.div>
+                <motion.div
+                    className="text-xs text-gray-500"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                >
                     <p>© {new Date().getFullYear()} Jurieasy. Todos os direitos reservados.</p>
                     <p className="mt-1">Sua segurança é nossa prioridade</p>
-                </div>
+                </motion.div>
             </div>
         </div>
     );

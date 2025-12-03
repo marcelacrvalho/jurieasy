@@ -31,36 +31,26 @@ export default function AuthPage() {
         clearError
     } = useUsers();
 
-    // ✅ CORREÇÃO: Verificar se já está autenticado ao carregar a página
     useEffect(() => {
         const checkExistingAuth = async () => {
             console.log('🔐 AuthPage: Verificando autenticação existente...');
 
-            // ✅ VERIFICA SE JÁ TEM TOKEN VÁLIDO
             if (tokenManager.hasToken()) {
-                console.log('✅ Token encontrado, verificando se usuário está carregado...');
-
-                // Se já tem user no contexto, redireciona imediatamente
                 if (user) {
                     console.log('✅ Usuário já carregado, redirecionando...');
                     handleRedirect();
                     return;
                 }
 
-                // Se não tem user mas tem token, espera um pouco pelo contexto
                 const timeout = setTimeout(() => {
                     if (user) {
                         console.log('✅ Usuário carregado após espera, redirecionando...');
                         handleRedirect();
-                    } else {
-                        console.log('⚠️ Token existe mas usuário não carregou, mantendo na página...');
                     }
                 }, 2000);
 
                 return () => clearTimeout(timeout);
             }
-
-            console.log('🔐 Nenhum token encontrado, mantendo na página de login');
         };
 
         const handleRedirect = () => {
@@ -91,15 +81,12 @@ export default function AuthPage() {
             // Pequeno delay para melhor UX
             const redirectTimer = setTimeout(() => {
                 if (shouldRedirectToPayment) {
-                    console.log("💰 Redirecionando para pagamento com plano:", selectedPlan);
                     router.push("/payment");
                 }
                 else if (isGoogleAuth && selectedPlan) {
-                    console.log("💰 Redirecionando Google auth para pagamento com plano:", selectedPlan);
                     router.push("/payment");
                 }
                 else {
-                    console.log("🏠 Redirecionando para dashboard");
                     router.push("/dashboard");
                 }
             }, 1000);
@@ -150,7 +137,6 @@ export default function AuthPage() {
         }
     };
 
-    // ✅ CORREÇÃO: Função Google melhorada
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             try {
@@ -162,33 +148,24 @@ export default function AuthPage() {
                     console.error("❌ Access Token não recebido do Google");
                     return;
                 }
-
-                console.log("🔐 Iniciando autenticação Google...");
                 const success = await registerGoogle(access_token);
 
                 if (success) {
-                    console.log("✅ Login Google realizado com sucesso!");
-                    // O redirecionamento será tratado no useEffect
-
-                    // Se tem plano selecionado, marca para redirecionar para pagamento
                     if (selectedPlan) {
                         console.log("📋 Google auth com plano, preparando redirecionamento para pagamento");
                         setShouldRedirectToPayment(true);
                     }
                 }
             } catch (err) {
-                console.error("❌ Erro no login Google:", err);
                 setIsGoogleAuth(false);
             }
         },
         onError: (error) => {
-            console.error("❌ Erro Google OAuth:", error);
             setIsGoogleAuth(false);
         },
         scope: 'openid profile email',
     });
 
-    // ✅ CORREÇÃO: Loading states mais precisos
     const isLoading = isRegistering || isLoggingIn;
     const isFormLoading = isLoading && !isGoogleAuth;
     const isGoogleLoading = isLoading && isGoogleAuth;
@@ -316,7 +293,6 @@ export default function AuthPage() {
                         {isLoginMode ? "Bem-vindo de volta" : "Crie sua conta"}
                     </h1>
 
-                    {/* ✅ Exibir erro se houver */}
                     {error && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
@@ -390,7 +366,7 @@ export default function AuthPage() {
                             transition={{ duration: 0.1 }}
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-blue-700 text-white py-2 rounded-full hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition font-medium shadow-sm relative"
+                            className="w-full bg-blue-600 text-white py-2 rounded-full hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition font-medium shadow-sm relative"
                         >
                             {isFormLoading && (
                                 <motion.div
@@ -490,12 +466,14 @@ export default function AuthPage() {
                         </button>
                     </p>
 
-                    <Link
-                        href="/forgot-password"
-                        className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
-                    >
-                        Esqueceu sua senha?
-                    </Link>
+                    <div className="mt-4 text-center">
+                        <Link
+                            href="/forgot-password"
+                            className="inline-block text-sm text-gray-600 hover:text-blue-600 transition-colors hover:underline"
+                        >
+                            Esqueceu sua senha?
+                        </Link>
+                    </div>
                 </motion.div>
             </motion.div>
         </div>

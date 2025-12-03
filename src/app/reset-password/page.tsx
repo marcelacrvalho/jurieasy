@@ -3,8 +3,10 @@
 import { useEffect, useState, Suspense, FormEvent, ChangeEvent } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiClient } from '../../lib/api-client';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Interfaces de tipo
 interface FormData {
@@ -189,7 +191,7 @@ function ResetPasswordContent() {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
                     <h1 className="text-2xl font-semibold text-gray-800 mb-2">
                         Verificando token...
                     </h1>
@@ -207,8 +209,8 @@ function ResetPasswordContent() {
                 <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
                     {/* Cabeçalho */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                            <Lock className="w-8 h-8 text-indigo-600" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                            <Lock className="w-8 h-8 text-blue-600" />
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900 mb-2">
                             Nova Senha
@@ -234,14 +236,14 @@ function ResetPasswordContent() {
                             <div className="space-y-3">
                                 <button
                                     onClick={() => router.push('/forgot-password')}
-                                    className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-all duration-200 hover:shadow-md"
+                                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 hover:shadow-md"
                                 >
                                     Solicitar Novo Link
                                 </button>
 
                                 <Link
                                     href="/auth"
-                                    className="block w-full border-2 border-indigo-600 text-indigo-600 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-all duration-200 text-center"
+                                    className="block w-full border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-medium hover:bg-blue-50 transition-all duration-200 text-center"
                                 >
                                     Voltar para o Login
                                 </Link>
@@ -264,7 +266,7 @@ function ResetPasswordContent() {
                                             value={formData.newPassword}
                                             onChange={handleInputChange}
                                             placeholder="Mínimo 6 caracteres"
-                                            className={`w-full px-4 py-3 border ${errors.newPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition pr-10`}
+                                            className={`w-full px-4 py-3 border ${errors.newPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pr-10`}
                                             disabled={loading}
                                         />
                                         <button
@@ -297,7 +299,7 @@ function ResetPasswordContent() {
                                             value={formData.confirmPassword}
                                             onChange={handleInputChange}
                                             placeholder="Digite a senha novamente"
-                                            className={`w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition pr-10`}
+                                            className={`w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pr-10`}
                                             disabled={loading}
                                         />
                                         <button
@@ -340,7 +342,7 @@ function ResetPasswordContent() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 hover:shadow-md"
+                                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 hover:shadow-md"
                                 >
                                     {loading ? (
                                         <>
@@ -383,7 +385,7 @@ function ResetPasswordContent() {
                                         Voltar para o{' '}
                                         <Link
                                             href="/auth"
-                                            className="text-indigo-600 hover:text-indigo-800 font-medium"
+                                            className="text-blue-600 hover:text-blue-800 font-medium"
                                         >
                                             login
                                         </Link>
@@ -406,14 +408,38 @@ function ResetPasswordContent() {
             </div>
 
             {/* Footer/Branding */}
+            {/* Footer/Branding */}
             <div className="mt-10 text-center">
-                <div className="flex items-center justify-center space-x-2 mb-4">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg"></div>
-                    <span className="text-xl font-bold text-gray-900">Jurieasy</span>
-                </div>
-                <div className="text-xs text-gray-500">
-                    <p>© {new Date().getFullYear()} Jurieasy. Protegendo seus dados.</p>
-                </div>
+                <motion.div
+                    className="flex items-center justify-center space-x-2 mb-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <motion.div
+                        className="w-8 h-8 relative"
+                        whileHover={{ rotate: 15, scale: 1.1 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                    >
+                        <Image
+                            src="/globe.svg"
+                            alt="Jurieasy Logo"
+                            width={32}
+                            height={32}
+                            className="text-blue-600"
+                        />
+                    </motion.div>
+                    <span className="text-xl font-bold text-gray-600">Jurieasy</span>
+                </motion.div>
+                <motion.div
+                    className="text-xs text-gray-500"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                >
+                    <p>© {new Date().getFullYear()} Jurieasy. Todos os direitos reservados.</p>
+                    <p className="mt-1">Sua segurança é nossa prioridade</p>
+                </motion.div>
             </div>
         </div>
     );
@@ -424,7 +450,7 @@ export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
         }>
             <ResetPasswordContent />
