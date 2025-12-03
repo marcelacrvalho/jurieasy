@@ -10,6 +10,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useUsers } from '@/hooks/users';
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager'; // ✅ Import do tokenManager
+import Link from "next/link";
 
 export default function AuthPage() {
     const router = useRouter();
@@ -488,6 +489,13 @@ export default function AuthPage() {
                             {isLoginMode ? "Crie agora" : "Faça login"}
                         </button>
                     </p>
+
+                    <Link
+                        href="/forgot-password"
+                        className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
+                    >
+                        Esqueceu sua senha?
+                    </Link>
                 </motion.div>
             </motion.div>
         </div>
