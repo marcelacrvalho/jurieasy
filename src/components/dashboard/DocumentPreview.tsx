@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document, Witness } from "@/types/document";
 import { useUserDocuments } from "@/hooks/userDocuments";
-import { Download } from "lucide-react";
+import { Download, ImageIcon, Trash2, Upload } from "lucide-react";
 import LoadingAnimation from "../shared/LoadingAnimation";
 
 interface DocumentPreviewProps {
@@ -21,10 +21,53 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
     const [editingAnswers, setEditingAnswers] = useState<Record<string, any>>({ ...userDocument.answers });
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
+    const [logo, setLogo] = useState<string | null>(null);
 
     const { updateDocument, refreshDocuments } = useUserDocuments();
 
     // -------------------- FUNÇÕES --------------------
+
+    const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogo(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeLogo = () => setLogo(null);
+
+    // Função auxiliar para carregar dados da imagem
+    const obterDimensoesImagem = (base64: string): Promise<{ width: number; height: number; format: string }> => {
+        return new Promise((resolve, reject) => {
+            const img = new window.Image();
+            img.onload = () => {
+                // Tenta extrair o formato da string base64 (ex: data:image/png;base64...)
+                let format = 'PNG'; // Fallback
+                try {
+                    const match = base64.match(/^data:image\/(\w+);base64,/);
+                    if (match && match[1]) {
+                        format = match[1].toUpperCase();
+                        // jspdf prefere 'JPEG' em vez de 'JPG'
+                        if (format === 'JPG') format = 'JPEG';
+                    }
+                } catch (e) {
+                    console.warn("Não foi possível detectar formato da imagem, usando PNG.");
+                }
+
+                resolve({
+                    width: img.width,
+                    height: img.height,
+                    format: format as string
+                });
+            };
+            img.onerror = reject;
+            img.src = base64;
+        });
+    };
 
     const criarDataLocal = (ano: number, mes: number, dia: number): Date => {
         return new Date(ano, mes - 1, dia);
@@ -252,7 +295,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
         const marginLeft = 60;
         const marginRight = 40;
-        const marginTop = 60;
+        let marginTop = 60;
         const marginBottom = 40;
         const lineHeight = 18;
         const pageWidth = pdf.internal.pageSize.width;
@@ -261,6 +304,32 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         pdf.setFont("Times");
         pdf.setFontSize(12);
         pdf.setTextColor(0);
+
+        if (logo) {
+            try {
+                // 1. Obtemos as dimensões e formato de forma segura usando o navegador
+                const { width, height, format } = await obterDimensoesImagem(logo);
+
+                const imgWidth = 100; // Largura fixa desejada no PDF
+                const imgHeight = (height * imgWidth) / width; // Mantém proporção
+
+                // Centraliza
+                const x = (pageWidth - imgWidth) / 2;
+                const y = 30;
+
+                // 2. Passamos o formato explicitamente ('PNG', 'JPEG') para o jspdf não se perder
+                // O alias 'format' deve ser um dos tipos suportados pelo jspdf
+                // Se o formato não for suportado (ex: webp), isso pode ainda dar erro, 
+                // mas o input file deve restringir isso.
+                pdf.addImage(logo, format, x, y, imgWidth, imgHeight);
+
+                marginTop = y + imgHeight + 30;
+            } catch (error) {
+                console.error("Erro ao adicionar logo no PDF:", error);
+                // Se der erro, o PDF continua sendo gerado sem a logo
+            }
+        }
+        // ---------------------------------------------------------
 
         let y = marginTop + 10;
 
@@ -389,10 +458,17 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
         let clausulaIndex = 0;
 
+        const logoHtml = logo
+            ? `<div style="text-align:center; margin-bottom: 20px;">
+         <img src="${logo}" width="120" style="height:auto;" />
+       </div>`
+            : '';
+
         const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    ${logoHtml}
     <title>${title}</title>
 
     <style>
@@ -516,10 +592,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 : ''
             }
 
-    </div>
-
-    <div class="footer">
-        Documento gerado em ${new Date().toLocaleDateString('pt-BR')} – Jurieasy
     </div>
 
 </body>
@@ -693,6 +765,50 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                             </div>
 
                         </div>
+                    </div>
+                </div>
+
+                <div className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 mb-6 shadow-sm transition-all flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <ImageIcon className="w-5 h-5 text-blue-600" />
+                            Personalizar Documento
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Adicione o logotipo da sua empresa ao cabeçalho do documento, em PNG
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        {logo ? (
+                            <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-gray-200 pr-4">
+                                <img src={logo} alt="Logo Preview" className="h-10 w-auto object-contain rounded-md" />
+                                <button
+                                    onClick={removeLogo}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                    title="Remover logo"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                <input
+                                    type="file"
+                                    id="logo-upload"
+                                    className="hidden"
+                                    accept="image/png, image/jpeg, image/jpg"
+                                    onChange={handleLogoUpload}
+                                />
+                                <label
+                                    htmlFor="logo-upload"
+                                    className="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-gray-400 text-gray-600 hover:bg-gray-50 hover:border-blue-500 hover:text-blue-600 transition-all"
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Upload Logo</span>
+                                </label>
+                            </div>
+                        )}
                     </div>
                 </div>
 
