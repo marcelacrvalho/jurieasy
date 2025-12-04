@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { UserDocument } from "@/types/userDocument";
-import { Document } from "@/types/document";
+import { Document, Witness } from "@/types/document";
 import { useUserDocuments } from "@/hooks/userDocuments";
 import { Download } from "lucide-react";
 import LoadingAnimation from "../shared/LoadingAnimation";
@@ -237,177 +237,308 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         return text;
     }, [userDocument.generatedText, template.templateText, template.variables, editingAnswers]); // ✅ Adicione userDocument.generatedText nas dependências
 
-    const generatePDF = async (content: string, title: string, filename: string) => {
-        const { jsPDF } = await import('jspdf');
+    const generatePDF = async (
+        content: string,
+        title: string,
+        filename: string,
+        witnesses?: Witness[]
+    ) => {
+        const { jsPDF } = await import("jspdf");
 
-        const pdf = new jsPDF();
+        const pdf = new jsPDF({
+            unit: "pt",
+            format: "a4",
+        });
 
-        // Configurações ABNT
-        const marginLeft = 30;
-        const marginRight = 20;
-        const marginTop = 40;
-        const marginBottom = 20;
-        const lineHeight = 6;
+        const marginLeft = 60;
+        const marginRight = 40;
+        const marginTop = 60;
+        const marginBottom = 40;
+        const lineHeight = 18;
         const pageWidth = pdf.internal.pageSize.width;
         const pageHeight = pdf.internal.pageSize.height;
-        let yPosition = marginTop;
 
-        pdf.setFont("times");
-
-        // TÍTULO
-        pdf.setFontSize(14);
-        pdf.setFont("times", "bold");
-        const titleFormatted = title.toUpperCase();
-        const titleWidth = pdf.getTextWidth(titleFormatted);
-        const titleX = (pageWidth - titleWidth) / 2;
-        pdf.text(titleFormatted, titleX, yPosition);
-        yPosition += 20;
-
-        // LINHA SEPARADORA
-        pdf.setDrawColor(0, 0, 0);
-        pdf.line(marginLeft, yPosition, pageWidth - marginRight, yPosition);
-        yPosition += 15;
-
-        // CORPO DO TEXTO
+        pdf.setFont("Times");
         pdf.setFontSize(12);
-        pdf.setFont("times", "normal");
+        pdf.setTextColor(0);
 
-        const paragraphs = content.split('\n');
+        let y = marginTop + 10;
 
-        for (let i = 0; i < paragraphs.length; i++) {
-            const paragraph = paragraphs[i].trim();
+        // Cabeçalho
+        pdf.setLineWidth(0.4);
+        pdf.line(marginLeft, marginTop - 20, pageWidth - marginRight, marginTop - 20);
 
-            if (!paragraph) {
-                yPosition += lineHeight;
+        pdf.setFont("Times", "bold");
+        pdf.setFontSize(14);
+        pdf.text(title.toUpperCase(), pageWidth / 2, y, { align: "center" });
+        y += 25;
+
+        pdf.setLineWidth(0.3);
+        pdf.line(marginLeft, y, pageWidth - marginRight, y);
+        y += 20;
+
+        pdf.setFont("Times", "normal");
+        pdf.setFontSize(12);
+
+        let clausulaIndex = 0;
+
+        const paragraphs = content.split("\n");
+
+        for (let p of paragraphs) {
+            const text = p.trim();
+            if (!text) {
+                y += lineHeight;
                 continue;
             }
 
-            if (paragraph === paragraph.toUpperCase() && paragraph.length > 5) {
-                if (yPosition > pageHeight - marginBottom - 20) {
+            // Cláusula
+            const isClause = text === text.toUpperCase() && text.length > 4;
+
+            if (isClause) {
+                clausulaIndex++;
+
+                if (y > pageHeight - marginBottom - 40) {
                     pdf.addPage();
-                    yPosition = marginTop;
+                    y = marginTop;
                 }
 
-                pdf.setFont("times", "bold");
-                const titleLines = pdf.splitTextToSize(paragraph, pageWidth - marginLeft - marginRight);
-                pdf.text(titleLines, marginLeft, yPosition);
-                yPosition += (titleLines.length * lineHeight) + 8;
-                pdf.setFont("times", "normal");
+                pdf.setFont("Times", "bold");
+                pdf.text(`${clausulaIndex}. ${text}`, marginLeft, y);
+                pdf.setFont("Times", "normal");
+
+                y += lineHeight + 6;
                 continue;
             }
 
-            const textLines = pdf.splitTextToSize(paragraph, pageWidth - marginLeft - marginRight);
+            // Parágrafo normal
+            const lines = pdf.splitTextToSize(
+                text,
+                pageWidth - marginLeft - marginRight
+            );
 
-            if (yPosition + (textLines.length * lineHeight) > pageHeight - marginBottom) {
+            if (y + lines.length * lineHeight > pageHeight - marginBottom) {
                 pdf.addPage();
-                yPosition = marginTop;
+                y = marginTop;
             }
 
-            pdf.text(textLines, marginLeft, yPosition);
-            yPosition += (textLines.length * lineHeight) + 2;
+            pdf.text(lines, marginLeft, y);
+            y += lines.length * lineHeight;
         }
 
-        // SEÇÃO DE ASSINATURAS
-        yPosition += 20;
-        if (yPosition > pageHeight - 60) {
+        // -----------------------------
+        // ⭐ Assinaturas das partes
+        // -----------------------------
+
+        if (y + 140 > pageHeight - marginBottom) {
             pdf.addPage();
-            yPosition = marginTop;
+            y = marginTop;
         }
 
-        const signatureY = pageHeight - 50;
-        pdf.line(marginLeft, signatureY, marginLeft + 70, signatureY);
-        pdf.line(pageWidth - marginRight - 70, signatureY, pageWidth - marginRight, signatureY);
+        y += 40;
 
-        pdf.setFontSize(10);
-        pdf.text("Assinatura da Parte 1", marginLeft, signatureY + 8);
-        pdf.text("Assinatura da Parte 2", pageWidth - marginRight - 70, signatureY + 8);
+        // Parte 1
+        pdf.line(marginLeft, y, marginLeft + 180, y);
+        pdf.text("Assinatura da Parte 1", marginLeft, y + 14);
 
-        // RODAPÉ ABNT
-        const date = new Date().toLocaleDateString('pt-BR');
-        pdf.setFontSize(9);
-        pdf.text(`Documento gerado em ${date} - Jurieasy`, marginLeft, pageHeight - 10);
+        // Parte 2
+        pdf.line(pageWidth - marginRight - 180, y, pageWidth - marginRight, y);
+        pdf.text(
+            "Assinatura da Parte 2",
+            pageWidth - marginRight - 180,
+            y + 14
+        );
+
+        y += 80;
+
+        // -----------------------------
+        // ⭐ Testemunhas (opcionais)
+        // -----------------------------
+
+        if (witnesses && witnesses.length > 0) {
+
+            if (y + 160 > pageHeight - marginBottom) {
+                pdf.addPage();
+                y = marginTop;
+            }
+
+            y += 40;
+            pdf.setFont("Times", "bold");
+            pdf.text("Testemunhas", marginLeft, y);
+            y += 25;
+
+            pdf.setFont("Times", "normal");
+
+            witnesses.forEach(w => {
+                pdf.line(marginLeft, y, marginLeft + 200, y);
+                pdf.text(w.name, marginLeft, y + 14);
+                pdf.text(w.document, marginLeft, y + 28);
+                y += 50;
+            });
+        }
 
         pdf.save(`${filename}.pdf`);
     };
 
-    const generateDOC = async (content: string, title: string, filename: string) => {
-        // Criar conteúdo HTML formatado para DOC
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>${title}</title>
-                <style>
-                    body { 
-                        font-family: 'Times New Roman', Times, serif; 
-                        font-size: 12pt; 
-                        line-height: 1.6;
-                        margin: 3cm 2cm 2cm 3cm;
-                        text-align: justify;
-                    }
-                    .title { 
-                        text-align: center; 
-                        font-weight: bold; 
-                        font-size: 14pt;
-                        text-transform: uppercase;
-                        margin-bottom: 20px;
-                    }
-                    .signature-section { 
-                        margin-top: 60px; 
-                        border-top: 1px solid #000;
-                        padding-top: 10px;
-                        text-align: center;
-                    }
-                    .footer {
-                        font-size: 9pt;
-                        text-align: left;
-                        margin-top: 30px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="title">${title}</div>
-                ${content.split('\n').map(paragraph => {
-            if (paragraph.trim().toUpperCase() === paragraph.trim() && paragraph.trim()) {
-                return `<div class="title" style="font-size: 12pt; margin: 15px 0;">${paragraph}</div>`;
-            }
-            return `<p style="text-indent: 30px; margin: 2px 0;">${paragraph}</p>`;
-        }).join('')}
-                
-                <div class="signature-section">
-                    <table width="100%">
-                        <tr>
-                            <td width="50%" align="center">
-                                <div style="border-top: 1px solid #000; width: 200px; margin: 0 auto;"></div>
-                                <p>Assinatura da Parte 1</p>
-                            </td>
-                            <td width="50%" align="center">
-                                <div style="border-top: 1px solid #000; width: 200px; margin: 0 auto;"></div>
-                                <p>Assinatura da Parte 2</p>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="footer">
-                    Documento gerado em ${new Date().toLocaleDateString('pt-BR')} - Jurieasy
-                </div>
-            </body>
-            </html>
-        `;
 
-        // Criar blob e fazer download
+    const generateDOC = async (
+        content: string,
+        title: string,
+        filename: string,
+        witnesses?: Witness[]
+    ) => {
+
+        let clausulaIndex = 0;
+
+        const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+
+    <style>
+        body { 
+            font-family: 'Times New Roman', Times, serif; 
+            font-size: 12pt; 
+            line-height: 1.6;
+            margin: 3cm 2cm 2cm 3cm;
+            text-align: justify;
+        }
+
+        .title { 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 14pt;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+
+        .clause-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin: 20px 0 5px 0;
+            text-transform: uppercase;
+        }
+
+        p {
+            text-indent: 30px;
+            margin: 4px 0;
+        }
+
+        .signature-wrapper {
+            margin-top: 70px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .signature-block {
+            width: 60%;
+            text-align: center;
+            font-size: 12pt;
+            line-height: 1.2;
+            margin-bottom: 40px;
+        }
+
+        hr.signature-line {
+            border: none;
+            border-top: 1px solid #000;
+            margin: 0 auto 5px;
+            width: 90%;
+            height: 1px;
+        }
+
+        .footer {
+            font-size: 9pt;
+            text-align: left;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="title">${title}</div>
+
+    ${content
+                .split('\n')
+                .map(paragraph => {
+                    const clean = paragraph.trim();
+                    const isClause = clean && clean === clean.toUpperCase();
+
+                    if (isClause) {
+                        clausulaIndex++;
+                        return `
+                    <div class="clause-title">
+                        ${clausulaIndex}. ${clean}
+                    </div>
+                `;
+                    }
+
+                    return `<p>${clean}</p>`;
+                })
+                .join('')}
+
+    <div class="signature-wrapper">
+
+        <!-- Parte 1 -->
+        <div class="signature-block">
+            <hr class="signature-line" />
+            <div>Assinatura da Parte 1</div>
+        </div>
+
+        <div style="height: 40px;"></div>
+
+        <!-- Parte 2 -->
+        <div class="signature-block">
+            <hr class="signature-line" />
+            <div>Assinatura da Parte 2</div>
+        </div>
+
+        ${witnesses && witnesses.length > 0
+                ? `
+            <div style="margin-top: 60px; text-align:center;">
+                <strong>Testemunhas</strong>
+            </div>
+
+            ${witnesses
+                    .map(
+                        w => `
+                <div class="signature-block">
+                    <hr class="signature-line" />
+                    <div>${w.name}</div>
+                    <div>${w.document}</div>
+                </div>
+                `
+                    )
+                    .join('')}
+        `
+                : ''
+            }
+
+    </div>
+
+    <div class="footer">
+        Documento gerado em ${new Date().toLocaleDateString('pt-BR')} – Jurieasy
+    </div>
+
+</body>
+</html>`;
+
+
         const blob = new Blob([htmlContent], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `${filename}.doc`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+
         URL.revokeObjectURL(url);
     };
+
 
     // components/dashboard/DocumentPreview.tsx
     const handleDownload = async (format: 'pdf' | 'doc') => {
@@ -429,7 +560,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 if (format === 'pdf') {
                     await generatePDF(documentText, template.title, template.title.replace(/\s+/g, '_'));
                 } else {
-                    await generateDOC(documentText, template.title, template.title.replace(/\s+/g, '_'));
+                    await generateDOC(documentText, template.title, template.title.replace(/\s+/g, '_'), template.witnesses);
                 }
 
                 // 3. ✅ CORREÇÃO: Aguardar um pouco antes do refresh para garantir que o backend processou
@@ -446,7 +577,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
             }
         } catch (error) {
             console.error(`❌ Erro no download ${format.toUpperCase()}:`, error);
-            // ... fallback
         } finally {
             setIsDownloading(false);
             setDownloadType(null);
@@ -493,7 +623,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
                             <p className="text-gray-600 mt-1 leading-relaxed">
                                 {template.description} —
-                                <span className="text-[#1A237E] font-semibold"> Formato ABNT</span>
+                                <span className="text-black font-semibold"> Formato ABNT</span>
                             </p>
                         </div>
 
@@ -688,7 +818,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="text-[#1A237E] font-semibold text-sm mt-1">
+                                        <div className="text-gray-800 font-semibold text-sm mt-1">
                                             {v}
                                         </div>
                                     )}
@@ -708,32 +838,32 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 {/* Informações do Documento */}
                 <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 mt-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all">
 
-                    <h3 className="text-xl font-bold text-[#1A237E] mb-6 flex items-center gap-2 tracking-tight">
+                    <h3 className="text-xl font-bold text-black mb-6 flex items-center gap-2 tracking-tight">
                         Informações do Documento
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm">
 
                         {/* Card */}
-                        <div className="rounded-xl p-4 bg-[#E8EAF6] border border-[#C5CAE9] shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[#1A237E] font-medium block opacity-90">Título</span>
-                            <p className="mt-1 text-[#1A237E] font-semibold tracking-tight">
+                        <div className="rounded-xl p-4 bg-white border border-gray-300 shadow-sm hover:shadow-md transition-all">
+                            <span className="text-blue-600 font-medium block opacity-90">Título</span>
+                            <p className="mt-1 text-gray-800 font-semibold tracking-tight">
                                 {template.title}
                             </p>
                         </div>
 
                         {/* Card */}
-                        <div className="rounded-xl p-4 bg-[#E8EAF6] border border-[#C5CAE9] shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[#1A237E] font-medium block opacity-90">Categoria</span>
-                            <p className="mt-1 text-[#1A237E] font-semibold capitalize tracking-tight">
+                        <div className="rounded-xl p-4 bg-white border border-gray-300 shadow-sm hover:shadow-md transition-all">
+                            <span className="text-blue-600 font-medium block opacity-90">Categoria</span>
+                            <p className="mt-1 text-gray-800 font-semibold capitalize tracking-tight">
                                 {template.category}
                             </p>
                         </div>
 
                         {/* Card */}
-                        <div className="rounded-xl p-4 bg-[#E8EAF6] border border-[#C5CAE9] shadow-sm hover:shadow-md transition-all">
-                            <span className="text-[#1A237E] font-medium block opacity-90">Gerado em</span>
-                            <p className="mt-1 text-[#1A237E] font-semibold tracking-tight">
+                        <div className="rounded-xl p-4 bg-white border border-gray-300 shadow-sm hover:shadow-md transition-all">
+                            <span className="text-blue-600 font-medium block opacity-90">Gerado em</span>
+                            <p className="mt-1 text-gray-800 font-semibold capitalize tracking-tight">
                                 {new Date().toLocaleDateString("pt-BR")}
                             </p>
                         </div>

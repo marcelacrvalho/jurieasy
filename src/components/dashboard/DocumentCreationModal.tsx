@@ -36,7 +36,6 @@ export default function DocumentCreationModal({
     const [canCreateDocument, setCanCreateDocument] = useState(true);
     const { createDocument, updateDocument, refreshDocuments } = useUserDocuments();
 
-    // ✅ CORREÇÃO: Verificar se o document é válido
     const isValidDocument = document && document._id;
 
     useEffect(() => {
@@ -175,8 +174,8 @@ export default function DocumentCreationModal({
                                     <h3 className="text-lg font-semibold text-slate-900">
                                         {getModalTitle()}
                                     </h3>
-                                    {/* ✅ INDICADOR DE USAGE */}
-                                    {!userDocument && user && (
+                                    {/* INDICADOR DE USAGE */}
+                                    {!userDocument && user && user.plan !== 'escritorio' && (
                                         <span className={`text-xs px-2 py-1 rounded-full ${user.usage.documentsRemaining > 0
                                             ? 'bg-green-100 text-green-600'
                                             : 'bg-red-100 text-red-600'
