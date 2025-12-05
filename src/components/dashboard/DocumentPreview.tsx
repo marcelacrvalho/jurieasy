@@ -4,8 +4,7 @@ import { useState, useMemo } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document, Witness } from "@/types/document";
 import { useUserDocuments } from "@/hooks/userDocuments";
-import { Download, ImageIcon, Trash2, Upload } from "lucide-react";
-import LoadingAnimation from "../shared/LoadingAnimation";
+import { Download, FolderOpen, ImageIcon, Trash2, Upload } from "lucide-react";
 
 interface DocumentPreviewProps {
     userDocument: UserDocument;
@@ -17,7 +16,7 @@ interface DocumentPreviewProps {
 
 export default function DocumentPreview({ userDocument, template, onBack, onSave, onComplete }: DocumentPreviewProps) {
     const [isDownloading, setIsDownloading] = useState(false);
-    const [downloadType, setDownloadType] = useState<'pdf' | 'doc' | null>(null);
+    const [downloadType, setDownloadType] = useState<'pdf' | 'doc' | 'docuSign' | null>(null);
     const [editingAnswers, setEditingAnswers] = useState<Record<string, any>>({ ...userDocument.answers });
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
@@ -448,6 +447,15 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         pdf.save(`${filename}.pdf`);
     };
 
+    const handleGoToDocuSign = async () => {
+        await generatePDF(
+            documentText,
+            template.title,
+            template.title.replace(/\s+/g, '_'),
+            template.witnesses
+        );
+        window.open("https://app.docusign.com/send", "_blank");
+    };
 
     const generateDOC = async (
         content: string,
@@ -613,7 +621,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
 
     // components/dashboard/DocumentPreview.tsx
-    const handleDownload = async (format: 'pdf' | 'doc') => {
+    const handleDownload = async (format: 'pdf' | 'doc' | 'docuSign') => {
         setIsDownloading(true);
         setDownloadType(format);
 
@@ -631,8 +639,10 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 // 2. Gerar e baixar no formato escolhido
                 if (format === 'pdf') {
                     await generatePDF(documentText, template.title, template.title.replace(/\s+/g, '_'));
-                } else {
+                } else if (format == 'doc') {
                     await generateDOC(documentText, template.title, template.title.replace(/\s+/g, '_'), template.witnesses);
+                } else {
+                    await handleGoToDocuSign();
                 }
 
                 // 3. ✅ CORREÇÃO: Aguardar um pouco antes do refresh para garantir que o backend processou
@@ -687,89 +697,110 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
                 {/* Header Moderno */}
                 <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-200/50 p-6 mb-6 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
-                    <div className="flex items-center justify-between">
-                        <div>
+                    {/* MOBILE: Empilhar verticalmente */}
+                    <div className="sm:flex sm:items-center sm:justify-between gap-5">
+                        {/* MOBILE: Primeira linha - Botão + Título */}
+                        <div className="flex items-center justify-between mb-4 sm:mb-0">
+                            {/* BOTÃO VOLTAR */}
+                            <button
+                                onClick={onBack}
+                                className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700
+                                bg-white/60 backdrop-blur-sm
+                                hover:bg-gray-100 hover:border-gray-400
+                                transition-all active:scale-95 shadow-sm"
+                            >
+                                ←
+                            </button>
+
+                            {/* MOBILE: Mostrar título ao lado do botão */}
+                            <div className="sm:hidden ml-4 flex-1">
+                                <h1 className="text-lg font-bold text-gray-900 truncate">
+                                    {template.title}
+                                </h1>
+                                <p className="text-xs text-gray-600 mt-0.5">
+                                    <span className="text-black font-semibold">ABNT</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* DESKTOP: Título no meio */}
+                        <div className="hidden sm:block flex-1 text-center">
                             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                                 {template.title}
                             </h1>
-
                             <p className="text-gray-600 mt-1 leading-relaxed">
                                 {template.description} —
                                 <span className="text-black font-semibold"> Formato ABNT</span>
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-
-                            {/* BOTÃO VOLTAR */}
+                        {/* BOTÕES DE DOWNLOAD - Mesmo layout para todas as telas */}
+                        <div className="flex items-center gap-3 justify-center sm:justify-end">
+                            {/* BOTÃO BAIXAR PDF */}
                             <button
-                                onClick={onBack}
-                                className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700
-                bg-white/60 backdrop-blur-sm
-                hover:bg-gray-100 hover:border-gray-400
-                transition-all active:scale-95 shadow-sm"
+                                onClick={() => handleDownload('pdf')}
+                                disabled={isDownloading}
+                                className="px-4 py-2 rounded-xl text-white font-medium
+                                bg-slate-600 hover:bg-slate-700
+                                disabled:opacity-50
+                                transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
                             >
-                                ←
+                                {isDownloading && downloadType === 'pdf' ? (
+                                    <span className="text-sm">Baixando...</span>
+                                ) : (
+                                    <>
+                                        <Download className="w-4 h-4" />
+                                        <span className="hidden sm:inline">PDF</span>
+                                        <span className="sm:hidden">PDF</span>
+                                    </>
+                                )}
                             </button>
 
-                            <div className="flex items-center gap-2">
-                                {/* BOTÃO BAIXAR PDF */}
-                                <button
-                                    onClick={() => handleDownload('pdf')}
-                                    disabled={isDownloading}
-                                    className="px-4 py-2 rounded-xl text-white font-medium
-                    bg-slate-600
-                    hover:from-slate-600 hover:to-slate-700
-                    disabled:opacity-50
-                    transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
-                                >
-                                    {isDownloading && downloadType === 'pdf' ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-center">
-                                                <LoadingAnimation />
-                                                <p className="mt-4 text-slate-600">Baixando...</p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <Download className="w-4 h-4" />
-                                            PDF
-                                        </>
-                                    )}
-                                </button>
+                            {/* BOTÃO BAIXAR DOC */}
+                            <button
+                                onClick={() => handleDownload('doc')}
+                                disabled={isDownloading}
+                                className="px-4 py-2 rounded-xl text-white font-medium
+                                bg-blue-600 hover:bg-blue-700
+                                disabled:opacity-50
+                                transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
+                            >
+                                {isDownloading && downloadType === 'doc' ? (
+                                    <span className="text-sm">Baixando...</span>
+                                ) : (
+                                    <>
+                                        <Download className="w-4 h-4" />
+                                        <span className="hidden sm:inline">DOC</span>
+                                        <span className="sm:hidden">DOC</span>
+                                    </>
+                                )}
+                            </button>
 
-                                {/* BOTÃO BAIXAR DOC */}
-                                <button
-                                    onClick={() => handleDownload('doc')}
-                                    disabled={isDownloading}
-                                    className="px-4 py-2 rounded-xl text-white font-medium
-                    bg-blue-600
-                    hover:from-blue-600 hover:to-blue-700
-                    disabled:opacity-50
-                    transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
-                                >
-                                    {isDownloading && downloadType === 'doc' ? (
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-center">
-                                                <LoadingAnimation />
-                                                Baixando...
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <Download className="w-4 h-4" />
-                                            DOC
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-
+                            <button
+                                onClick={() => handleDownload('docuSign')}
+                                className="px-4 py-2 rounded-xl text-white font-medium
+                                bg-amber-500 hover:bg-amber-600
+                                transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
+                            >
+                                <FolderOpen className="w-4 h-4" />
+                                <span className="hidden sm:inline">DocuSign</span>
+                                <span className="sm:hidden">Sign</span>
+                            </button>
                         </div>
+                    </div>
+
+                    {/* MOBILE: Mostrar descrição completa abaixo */}
+                    <div className="mt-4 sm:hidden">
+                        <p className="text-sm text-gray-600">
+                            {template.description} —
+                            <span className="text-black font-semibold"> Formato ABNT</span>
+                        </p>
                     </div>
                 </div>
 
-                <div className="bg-white backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 mb-6 shadow-sm transition-all flex items-center justify-between">
-                    <div>
+                {/* Personalizar Documento */}
+                <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-200/50 p-6 mb-6 shadow-sm transition-all flex flex-col hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex-1">
                         <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                             <ImageIcon className="w-5 h-5 text-blue-600" />
                             Personalizar Documento
@@ -781,7 +812,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
                     <div className="flex items-center gap-4">
                         {logo ? (
-                            <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-gray-200 pr-4">
+                            <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-gray-200">
                                 <img src={logo} alt="Logo Preview" className="h-10 w-auto object-contain rounded-md" />
                                 <button
                                     onClick={removeLogo}
@@ -813,19 +844,19 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 </div>
 
                 {/* Resto do conteúdo */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-10 mb-10 transition-all">
-                    <div className="max-w-none font-serif text-[15px] text-gray-900 leading-[1.6] text-justify tracking-tight [text-indent:30px] prose-headings:font-serif prose-headings:text-gray-900 prose-headings:text-[17px]">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-6 sm:p-10 mb-10 transition-all">
+                    <div className="max-w-none font-serif text-sm sm:text-[15px] text-gray-900 leading-[1.6] text-justify tracking-tight [text-indent:20px] sm:[text-indent:30px] prose-headings:font-serif prose-headings:text-gray-900 prose-headings:text-base sm:prose-headings:text-[17px]">
                         {documentText ? (
                             <>
                                 {formatarTextoPreview(documentText)}
 
                                 {/* Assinaturas (ABNT) */}
-                                <div className="mt-20 pt-10 border-t border-gray-400 grid grid-cols-1 md:grid-cols-2 gap-16">
+                                <div className="mt-10 sm:mt-20 pt-6 sm:pt-10 border-t border-gray-400 grid grid-cols-1 gap-8 sm:gap-16">
                                     {[1, 2].map((p) => (
                                         <div key={p} className="text-center">
-                                            <div className="h-24"></div>
-                                            <div className="border-t border-gray-600 w-64 mx-auto"></div>
-                                            <p className="text-[13px] text-gray-700 mt-2 tracking-wide font-serif">
+                                            <div className="h-16 sm:h-24"></div>
+                                            <div className="border-t border-gray-600 w-48 sm:w-64 mx-auto"></div>
+                                            <p className="text-xs sm:text-[13px] text-gray-700 mt-2 tracking-wide font-serif">
                                                 Assinatura da Parte {p}
                                             </p>
                                         </div>
@@ -840,16 +871,16 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                     </div>
                 </div>
 
-
-                <div className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/40 p-6 transition-all">
+                {/* Dados Preenchidos */}
+                <div className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/40 p-4 sm:p-6 transition-all">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-black tracking-tight">
+                        <h2 className="text-lg sm:text-xl font-bold text-black tracking-tight">
                             Dados Preenchidos
                         </h2>
                     </div>
 
                     {/* GRID DE CAMPOS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                         {Object.entries(editingAnswers).map(([key, value]) => {
                             let v = String(value || "—");
                             if (key.includes("nome")) v = capitalizarNomeProprio(v);
@@ -863,10 +894,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                 <div
                                     key={key}
                                     onClick={() => iniciarEdicao(key, value)}
-                                    className={`
-                        rounded-xl p-4 cursor-pointer transition-all border border-gray-200 bg-white/50 hover:bg-white/70 hover:shadow-md"
-                                        
-                    `}
+                                    className="rounded-xl p-4 cursor-pointer transition-all border border-gray-200 bg-white/50 hover:bg-white/70 hover:shadow-md"
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-sm font-medium text-gray-700 capitalize">
@@ -874,13 +902,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                         </span>
 
                                         <span
-                                            className={`
-                                text-xs px-2 py-0.5 rounded-full shadow-sm transition
-                                ${isActive
-                                                    ? "bg-blue-600 text-white"
-                                                    : "bg-blue-600 text-white"
-                                                }
-                            `}
+                                            className="text-xs px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-sm"
                                         >
                                             {isActive ? "Editando…" : "Editar"}
                                         </span>
@@ -895,7 +917,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                                     value={editValue}
                                                     onChange={(e) => setEditValue(e.target.value)}
                                                     className="w-full px-3 py-2 text-gray-700 border border-gray-300 rounded-lg
-                                    focus:ring-2 focus:ring-blue-300 outline-none shadow-sm"
+                                                    focus:ring-2 focus:ring-blue-300 outline-none shadow-sm"
                                                     autoFocus
                                                 />
                                             ) : (
@@ -904,7 +926,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                                     value={editValue}
                                                     onChange={(e) => setEditValue(e.target.value)}
                                                     className="w-full px-3 py-2 text-gray-700 border border-gray-300 rounded-lg
-                                    focus:ring-2 focus:ring-blue-300 outline-none shadow-sm"
+                                                    focus:ring-2 focus:ring-blue-300 outline-none shadow-sm"
                                                     autoFocus
                                                 />
                                             )}
@@ -916,7 +938,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                                         salvarEdicao();
                                                     }}
                                                     className="px-3 py-1.5 rounded-lg font-medium text-white bg-gradient-to-r
-                                    from-blue-500 to-blue-600 hover:opacity-90 active:scale-95 transition shadow-sm"
+                                                    from-blue-500 to-blue-600 hover:opacity-90 active:scale-95 transition shadow-sm"
                                                 >
                                                     Salvar
                                                 </button>
@@ -927,7 +949,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                                         cancelarEdicao();
                                                     }}
                                                     className="px-3 py-1.5 rounded-lg font-medium text-black bg-gray-200
-                                    hover:bg-gray-300 active:scale-95 transition shadow-sm"
+                                                    hover:bg-gray-300 active:scale-95 transition shadow-sm"
                                                 >
                                                     Cancelar
                                                 </button>
@@ -944,7 +966,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                     </div>
 
                     {/* RODAPÉ */}
-                    <div className="mt-6 pt-4 border-t border-gray-200/70 flex items-center justify-between">
+                    <div className="mt-6 pt-4 border-t border-gray-200/70">
                         <p className="text-sm text-gray-700">
                             Todas as alterações são refletidas automaticamente no documento.
                         </p>
@@ -952,14 +974,13 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 </div>
 
                 {/* Informações do Documento */}
-                <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-6 mt-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all">
+                <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-4 sm:p-6 mt-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)] transition-all">
 
-                    <h3 className="text-xl font-bold text-black mb-6 flex items-center gap-2 tracking-tight">
+                    <h3 className="text-lg sm:text-xl font-bold text-black mb-6 flex items-center gap-2 tracking-tight">
                         Informações do Documento
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm">
-
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 text-sm">
                         {/* Card */}
                         <div className="rounded-xl p-4 bg-white border border-gray-300 shadow-sm hover:shadow-md transition-all">
                             <span className="text-blue-600 font-medium block opacity-90">Título</span>
@@ -983,10 +1004,8 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                 {new Date().toLocaleDateString("pt-BR")}
                             </p>
                         </div>
-
                     </div>
                 </div>
-
             </div>
         </div>
     );
