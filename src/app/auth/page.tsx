@@ -9,7 +9,8 @@ import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useUsers } from '@/hooks/users';
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
-import { tokenManager } from '@/lib/token-manager'; // ✅ Import do tokenManager
+import { tokenManager } from '@/lib/token-manager';
+import { Eye, EyeOff } from 'lucide-react';
 import Link from "next/link";
 
 export default function AuthPage() {
@@ -19,6 +20,7 @@ export default function AuthPage() {
     const [form, setForm] = useState({ name: "", email: "", password: "" });
     const [shouldRedirectToPayment, setShouldRedirectToPayment] = useState(false);
     const [isGoogleAuth, setIsGoogleAuth] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const {
         user,
@@ -33,8 +35,6 @@ export default function AuthPage() {
 
     useEffect(() => {
         const checkExistingAuth = async () => {
-            console.log('🔐 AuthPage: Verificando autenticação existente...');
-
             if (tokenManager.hasToken()) {
                 if (user) {
                     console.log('✅ Usuário já carregado, redirecionando...');
@@ -348,16 +348,30 @@ export default function AuthPage() {
                             <label className="block text-sm font-medium text-gray-700">
                                 Senha
                             </label>
-                            <input
-                                type="password"
-                                value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                className="mt-1 w-full rounded-full border border-gray-300 px-4 py-2 bg-white text-gray-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200"
-                                placeholder="********"
-                                required
-                                minLength={6}
-                                disabled={isLoading}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={form.password}
+                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                    className="mt-1 w-full rounded-full border border-gray-300 px-4 py-2 bg-white text-gray-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all duration-200 pr-10"
+                                    placeholder="********"
+                                    required
+                                    minLength={6}
+                                    disabled={isLoading}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    disabled={isLoading}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5 text-gray-500" />
+                                    ) : (
+                                        <Eye className="h-5 w-5 text-gray-500" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <motion.button
