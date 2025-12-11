@@ -1,0 +1,10 @@
+{
+    "name": "Jurieasy",
+    "short_name": "Jurieasy",
+    "description": "Crie contratos jurídicos profissionais em minutos",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#2563EB",
+    "icons": []
+}

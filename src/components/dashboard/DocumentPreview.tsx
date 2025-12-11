@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document, Witness } from "@/types/document";
 import { useUserDocuments } from "@/hooks/userDocuments";
@@ -279,6 +279,22 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
         return text;
     }, [userDocument.generatedText, template.templateText, template.variables, editingAnswers]); // ✅ Adicione userDocument.generatedText nas dependências
 
+    const [textoEditavel, setTextoEditavel] = useState(documentText || "");
+
+    useEffect(() => {
+        setTextoEditavel(documentText || "");
+    }, [documentText]);
+
+    // 3. (Opcional) Referência para pegar o texto na hora do download sem precisar re-renderizar tudo
+    const textoRef = useRef(documentText || "");
+
+    // Função para atualizar o texto conforme o usuário digita
+    const handleTextChange = (e: { currentTarget: { innerText: any; }; }) => {
+        const novoTexto = e.currentTarget.innerText;
+        setTextoEditavel(novoTexto);
+        textoRef.current = novoTexto;
+    };
+
     const generatePDF = async (
         content: string,
         title: string,
@@ -449,7 +465,7 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
 
     const handleGoToDocuSign = async () => {
         await generatePDF(
-            documentText,
+            textoEditavel, // ✅ Usar texto editado
             template.title,
             template.title.replace(/\s+/g, '_'),
             template.witnesses
@@ -620,15 +636,15 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
     };
 
 
-    // components/dashboard/DocumentPreview.tsx
     const handleDownload = async (format: 'pdf' | 'doc' | 'docuSign') => {
         setIsDownloading(true);
         setDownloadType(format);
 
         try {
-            // 1. Atualizar o documento para status "completed"
+            // 1. Atualizar o documento para status "completed" com o texto EDITADO
             const updatedDocument = await updateDocument(userDocument._id, {
                 answers: editingAnswers,
+                generatedText: textoEditavel, // ✅ Usar o texto editado, não o original
                 status: "completed",
                 currentStep: userDocument.currentStep,
                 totalSteps: userDocument.totalSteps,
@@ -636,11 +652,13 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
             });
 
             if (updatedDocument) {
-                // 2. Gerar e baixar no formato escolhido
+                // 2. Gerar e baixar no formato escolhido usando o texto EDITADO
+                const textoParaDownload = textoEditavel; // ✅ Usar texto editado
+
                 if (format === 'pdf') {
-                    await generatePDF(documentText, template.title, template.title.replace(/\s+/g, '_'));
+                    await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
                 } else if (format == 'doc') {
-                    await generateDOC(documentText, template.title, template.title.replace(/\s+/g, '_'), template.witnesses);
+                    await generateDOC(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'), template.witnesses);
                 } else {
                     await handleGoToDocuSign();
                 }
@@ -842,13 +860,31 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 </div>
 
                 {/* Resto do conteúdo */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-6 sm:p-10 mb-10 transition-all">
-                    <div className="max-w-none font-serif text-sm sm:text-[15px] text-gray-900 leading-[1.6] text-justify tracking-tight [text-indent:20px] sm:[text-indent:30px] prose-headings:font-serif prose-headings:text-gray-900 prose-headings:text-base sm:prose-headings:text-[17px]">
-                        {documentText ? (
-                            <>
-                                {formatarTextoPreview(documentText)}
+                {/* Resto do conteúdo - AGORA COM ESTADO LOCAL */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-6 sm:p-10 mb-10 transition-all group relative">
 
-                                {/* Assinaturas (ABNT) */}
+                    {/* Tooltip de ajuda visual */}
+                    <div className="absolute top-4 right-4 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 px-2 py-1 rounded-md border border-gray-100 pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                        Modo edição ativo
+                    </div>
+
+                    <div className="max-w-none font-serif text-sm sm:text-[15px] text-gray-900 leading-[1.6] text-justify tracking-tight prose-headings:font-serif prose-headings:text-gray-900 prose-headings:text-base sm:prose-headings:text-[17px]">
+                        {textoEditavel ? (
+                            <>
+                                {/* ÁREA DE TEXTO EDITÁVEL */}
+                                <div
+                                    contentEditable={true}
+                                    suppressContentEditableWarning={true}
+                                    onInput={handleTextChange} // Atualiza o estado local a cada letra
+                                    className="outline-none focus:ring-2 focus:ring-blue-100 focus:bg-blue-50/30 rounded-lg p-2 -m-2 transition-all whitespace-pre-wrap min-h-[200px]"
+                                    style={{ textIndent: '0px' }}
+                                >
+                                    {/* Renderiza o texto inicial. O React não vai atualizar isso a cada tecla para não pular o cursor */}
+                                    {documentText}
+                                </div>
+
+                                {/* Assinaturas (Mantidas estáticas para preservar layout) */}
                                 <div className="mt-10 sm:mt-20 pt-6 sm:pt-10 border-t border-gray-400 grid grid-cols-1 gap-8 sm:gap-16">
                                     {[1, 2].map((p) => (
                                         <div key={p} className="text-center">
@@ -868,7 +904,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                         )}
                     </div>
                 </div>
-
                 {/* Dados Preenchidos */}
                 <div className="bg-white/60 backdrop-blur-xl rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/40 p-4 sm:p-6 transition-all">
                     <div className="flex items-center justify-between mb-6">
