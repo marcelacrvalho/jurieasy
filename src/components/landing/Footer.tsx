@@ -1,5 +1,26 @@
+"use client";
 
-export default function Footer() {
+import { Mail, MessageCircleQuestionMark, Building, Phone } from 'lucide-react';
+
+
+interface FooterProps {
+    onLegalClick?: (sectionId: string) => void;
+}
+
+export default function Footer({ onLegalClick }: FooterProps) {
+    const handleLegalClick = (sectionId: string) => {
+        if (onLegalClick) {
+            onLegalClick(sectionId);
+            return;
+        }
+
+        // Fallback: rolar para a seção se o modal não estiver disponível
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
         <footer className="bg-gray-900 text-white">
             {/* Main Footer */}
@@ -19,51 +40,51 @@ export default function Footer() {
                         <h3 className="font-semibold text-white mb-4 text-lg">Jurídico</h3>
                         <ul className="space-y-3">
                             {[
-                                { name: 'Termos de Uso', url: '#termos-de-uso' },
-                                { name: 'Política de Privacidade', url: '#politica-privacidade' },
-                                { name: 'LGPD', url: '#lgpd' },
-                                { name: 'Cookies', url: '#cookies' },
-                                { name: 'Segurança', url: '#seguranca' }
-                            ].map((item, index) => (
-                                <li key={index}>
-                                    <a
-                                        href={item.url}
-                                        className="text-gray-400 hover:text-white transition-colors text-sm"
+                                { name: 'Termos de Uso', id: 'termos-de-uso' },
+                                { name: 'Política de Privacidade', id: 'politica-privacidade' },
+                                { name: 'LGPD', id: 'lgpd' },
+                                { name: 'Cookies', id: 'cookies' },
+                                { name: 'Segurança', id: 'seguranca' }
+                            ].map((item) => (
+                                <li key={item.id}>
+                                    <button
+                                        onClick={() => handleLegalClick(item.id)}
+                                        className="text-gray-400 hover:text-white transition-colors text-sm text-left"
                                     >
                                         {item.name}
-                                    </a>
+                                    </button>
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    {/* Contact Column */}
+                    {/* Contact Column - mantido igual */}
                     <div>
                         <h3 className="font-semibold text-white mb-4 text-lg">Contato</h3>
                         <ul className="space-y-3 text-gray-400 text-sm">
-                            <li className="flex items-start gap-3">
-                                <span>📧</span>
+                            <li className="flex items-center gap-3">
+                                <Mail className="h-3 w-3 text-gray-500" />
                                 <div>
                                     <div>comercial@jurieasy.com</div>
                                     <div className="text-gray-500 text-xs">Comercial</div>
                                 </div>
                             </li>
-                            <li className="flex items-start gap-3">
-                                <span>🛟</span>
+                            <li className="flex items-center gap-3">
+                                <MessageCircleQuestionMark className="h-3 w-3 text-gray-500" />
                                 <div>
                                     <div>suporte@jurieasy.com</div>
                                     <div className="text-gray-500 text-xs">Suporte</div>
                                 </div>
                             </li>
-                            <li className="flex items-start gap-2">
-                                <span>🏢</span>
+                            <li className="flex items-center gap-2">
+                                <Building className="h-3 w-3 text-gray-500" />
                                 <div>
-                                    <div>Avenina Benjamin Constant, 113</div>
+                                    <div>Avenida Benjamin Constant, 113</div>
                                     <div className="text-gray-500 text-xs">Varginha - Minas Gerais</div>
                                 </div>
                             </li>
-                            <li className="flex items-start gap-3">
-                                <span>📞</span>
+                            <li className="flex items-center gap-3">
+                                <Phone className="h-3 w-3 text-gray-500" />
                                 <div>
                                     <div>(35) 99938-5136</div>
                                     <div className="text-gray-500 text-xs">Segunda a Sexta, 9h-18h</div>
@@ -75,7 +96,7 @@ export default function Footer() {
                 </div>
             </div>
 
-            {/* Newsletter Section */}
+            {/* Newsletter Section - mantido igual */}
             <div className="border-t border-gray-800">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -99,7 +120,7 @@ export default function Footer() {
                 </div>
             </div>
 
-            {/* Bottom Footer */}
+            {/* Bottom Footer - mantido igual */}
             <div className="border-t border-gray-800">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">

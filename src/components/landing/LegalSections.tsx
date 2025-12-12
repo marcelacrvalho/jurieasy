@@ -1,129 +1,161 @@
-const LegalSections = () => {
+// components/landing/LegalSections.tsx
+"use client";
+
+interface LegalSectionsProps {
+    activeSection: string | null;
+    onClose: () => void;
+}
+
+const LegalSections = ({ activeSection, onClose }: LegalSectionsProps) => {
+    if (!activeSection) return null;
+
+    const sections = {
+        "termos-de-uso": {
+            title: "Termos de Uso",
+            content: [
+                {
+                    subtitle: "1. Aceitação dos Termos",
+                    text: "Ao acessar e usar a Jurieasy, você concorda em cumprir estes Termos de Uso e todas as leis e regulamentos aplicáveis."
+                },
+                {
+                    subtitle: "2. Uso do Serviço",
+                    text: "Nossos serviços são destinados para uso profissional jurídico. Você é responsável por manter a confidencialidade de sua conta."
+                },
+                {
+                    subtitle: "3. Limitações",
+                    text: "Não use nossos serviços para atividades ilegais ou não autorizadas."
+                }
+            ]
+        },
+        "politica-privacidade": {
+            title: "Política de Privacidade",
+            content: [
+                {
+                    subtitle: "Coleta de Informações",
+                    text: "Coletamos informações necessárias para fornecer nossos serviços, incluindo dados de cadastro e uso da plataforma."
+                },
+                {
+                    subtitle: "Uso das Informações",
+                    text: "Utilizamos seus dados para personalizar sua experiência, melhorar nossos serviços e cumprir obrigações legais."
+                },
+                {
+                    subtitle: "Compartilhamento",
+                    text: "Não vendemos seus dados pessoais. Compartilhamos informações apenas quando necessário por exigência legal."
+                }
+            ]
+        },
+        "lgpd": {
+            title: "LGPD - Lei Geral de Proteção de Dados",
+            content: [
+                {
+                    subtitle: "Conformidade",
+                    text: "A Jurieasy está em total conformidade com a Lei Geral de Proteção de Dados (Lei 13.709/2018)."
+                }
+            ]
+        },
+        "cookies": {
+            title: "Política de Cookies",
+            content: [
+                {
+                    subtitle: "O que são Cookies?",
+                    text: "Cookies são pequenos arquivos de texto armazenados em seu dispositivo para melhorar sua experiência de navegação."
+                },
+                {
+                    subtitle: "Cookies Essenciais",
+                    text: "Necessários para o funcionamento do site."
+                },
+                {
+                    subtitle: "Cookies de Desempenho",
+
+                    text: "Analisam como você usa o nosso site."
+                },
+                {
+                    subtitle: "Cookies de Funcionalidade",
+                    text: "Lembram suas preferências."
+                }
+            ]
+
+        },
+        "seguranca": {
+            "title": "Política de Segurança",
+            "content": [
+                {
+                    "subtitle": "Proteção de Dados",
+                    "text": "Implementamos criptografia de ponta a ponta (TLS/SSL 256-bit e AES-256) para garantir a confidencialidade de todas as informações."
+                },
+                {
+                    "subtitle": "Controles de Acesso",
+                    "text": "Autenticação multifator obrigatória, controle de acesso baseado em função e monitoramento contínuo de todas as atividades."
+                },
+                {
+                    "subtitle": "Infraestrutura",
+                    "text": "Hospedagem em data centers Tier III certificados ISO 27001 e SOC 2, com redundância completa e backups automatizados."
+                },
+                {
+                    "subtitle": "Conformidade",
+                    "text": "Total aderência à LGPD, com políticas claras de tratamento de dados e registro de atividades."
+                },
+                {
+                    "subtitle": "Monitoramento",
+                    "text": "Sistemas de detecção de intrusões, firewall de última geração e varreduras regulares de vulnerabilidades."
+                },
+                {
+                    "subtitle": "Gestão de Incidentes",
+                    "text": "Plano de resposta a incidentes documentado com notificação obrigatória em até 72 horas se necessário."
+                },
+                {
+                    "subtitle": "Continuidade",
+                    "text": "Plano de recuperação de desastres testado regularmente para garantir disponibilidade contínua."
+                }
+            ]
+        }
+    };
+
+    const section = sections[activeSection as keyof typeof sections];
+
+    if (!section) return null;
+
     return (
-        <div className="max-w-6xl mx-auto px-4 py-12 bg-gray-900">
-            {/* Termos de Uso */}
-            <section id="termos-de-uso" className="mb-16 scroll-mt-20">
-                <h2 className="text-2xl font-bold text-white mb-6">Termos de Uso</h2>
-                <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">1. Aceitação dos Termos</h3>
-                    <p className="text-gray-300 mb-4">
-                        Ao acessar e usar a Jurieasy, você concorda em cumprir estes Termos de Uso
-                        e todas as leis e regulamentos aplicáveis.
-                    </p>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Overlay */}
+            <div
+                className="fixed inset-0 bg-black bg-opacity-75 transition-opacity"
+                onClick={onClose}
+            />
 
-                    <h3 className="text-xl font-semibold text-white mb-4">2. Uso do Serviço</h3>
-                    <p className="text-gray-300 mb-4">
-                        Nossos serviços são destinados para uso profissional jurídico.
-                        Você é responsável por manter a confidencialidade de sua conta.
-                    </p>
+            {/* Modal Content */}
+            <div className="flex min-h-full items-center justify-center p-4">
+                <div className="relative bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    {/* Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute right-4 top-4 text-gray-400 hover:text-white z-10 text-2xl p-2"
+                    >
+                        ✕
+                    </button>
 
-                    <h3 className="text-xl font-semibold text-white mb-4">3. Limitações</h3>
-                    <p className="text-gray-300">
-                        Não use nossos serviços para atividades ilegais ou não autorizadas.
-                    </p>
+                    {/* Content */}
+                    <div className="p-6 md:p-8">
+                        <div className="scroll-mt-20">
+                            <h2 className="text-2xl font-bold text-white mb-6">
+                                {section.title}
+                            </h2>
+                            <div className="space-y-6">
+                                {section.content.map((item, index) => (
+                                    <div key={index}>
+                                        <h3 className="text-xl font-semibold text-white mb-3">
+                                            {item.subtitle}
+                                        </h3>
+                                        <p className="text-gray-300">
+                                            {item.text}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </section>
-
-            {/* Política de Privacidade */}
-            <section id="politica-privacidade" className="mb-16 scroll-mt-20">
-                <h2 className="text-2xl font-bold text-white mb-6">Política de Privacidade</h2>
-                <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">Coleta de Informações</h3>
-                    <p className="text-gray-300 mb-4">
-                        Coletamos informações necessárias para fornecer nossos serviços,
-                        incluindo dados de cadastro e uso da plataforma.
-                    </p>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Uso das Informações</h3>
-                    <p className="text-gray-300 mb-4">
-                        Utilizamos seus dados para personalizar sua experiência,
-                        melhorar nossos serviços e cumprir obrigações legais.
-                    </p>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Compartilhamento</h3>
-                    <p className="text-gray-300">
-                        Não vendemos seus dados pessoais. Compartilhamos informações apenas
-                        quando necessário por exigência legal.
-                    </p>
-                </div>
-            </section>
-
-            {/* LGPD */}
-            <section id="lgpd" className="mb-16 scroll-mt-20">
-                <h2 className="text-2xl font-bold text-white mb-6">LGPD - Lei Geral de Proteção de Dados</h2>
-                <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">Conformidade</h3>
-                    <p className="text-gray-300 mb-4">
-                        A Jurieasy está em total conformidade com a Lei Geral de Proteção de Dados (Lei 13.709/2018).
-                    </p>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Direitos do Titular</h3>
-                    <ul className="text-gray-300 list-disc list-inside space-y-2 mb-4">
-                        <li>Confirmação da existência de tratamento</li>
-                        <li>Acesso aos dados</li>
-                        <li>Correção de dados incompletos ou inexatos</li>
-                        <li>Eliminação de dados desnecessários</li>
-                        <li>Revogação do consentimento</li>
-                    </ul>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Encarregado de Dados (DPO)</h3>
-                    <p className="text-gray-300">
-                        Para exercer seus direitos, entre em contato com nosso Encarregado de Dados:
-                        <a href="mailto:suporte@jurieasy.com" className="text-blue-400 hover:text-blue-300 ml-1">
-                            suporte@jurieasy.com
-                        </a>
-                    </p>
-                </div>
-            </section>
-
-            {/* Cookies */}
-            <section id="cookies" className="mb-16 scroll-mt-20">
-                <h2 className="text-2xl font-bold text-white mb-6">Política de Cookies</h2>
-                <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">O que são Cookies?</h3>
-                    <p className="text-gray-300 mb-4">
-                        Cookies são pequenos arquivos de texto armazenados em seu dispositivo
-                        para melhorar sua experiência de navegação.
-                    </p>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Tipos de Cookies Utilizados</h3>
-                    <ul className="text-gray-300 list-disc list-inside space-y-2 mb-4">
-                        <li>Cookies Essenciais: necessários para o funcionamento do site</li>
-                        <li>Cookies de Desempenho: analisam como você usa nosso site</li>
-                        <li>Cookies de Funcionalidade: lembram suas preferências</li>
-                    </ul>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Controle de Cookies</h3>
-                    <p className="text-gray-300">
-                        Você pode controlar ou excluir cookies através das configurações do seu navegador.
-                    </p>
-                </div>
-            </section>
-
-            {/* Segurança */}
-            <section id="seguranca" className="mb-16 scroll-mt-20">
-                <h2 className="text-2xl font-bold text-white mb-6">Política de Segurança</h2>
-                <div className="bg-gray-900 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">Medidas de Segurança</h3>
-                    <p className="text-gray-300 mb-4">
-                        Implementamos medidas técnicas e organizacionais robustas para proteger seus dados:
-                    </p>
-
-                    <ul className="text-gray-300 list-disc list-inside space-y-2 mb-4">
-                        <li>Criptografia de dados em repouso e em trânsito</li>
-                        <li>Autenticação multifator</li>
-                        <li>Monitoramento contínuo de segurança</li>
-                        <li>Backups regulares</li>
-                        <li>Controles de acesso baseados em função</li>
-                    </ul>
-
-                    <h3 className="text-xl font-semibold text-white mb-4">Conformidade e Certificações</h3>
-                    <p className="text-gray-300">
-                        Nossa infraestrutura atende aos mais altos padrões de segurança
-                        e estamos em conformidade com as melhores práticas do setor.
-                    </p>
-                </div>
-            </section>
+            </div>
         </div>
     );
 };

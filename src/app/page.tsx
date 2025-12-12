@@ -1,5 +1,7 @@
+// app/page.tsx ou onde estiver sua LandingPage
 "use client";
 
+import { useState } from 'react';
 import Benefits from "@/components/landing/Benefits";
 import FAQ from "@/components/landing/FAQ";
 import Footer from "@/components/landing/Footer";
@@ -12,6 +14,12 @@ import Header from "@/components/landing/Header";
 import LegalSections from "@/components/landing/LegalSections";
 
 export default function LandingPage() {
+  const [activeLegalSection, setActiveLegalSection] = useState<string | null>(null);
+
+  const handleLegalClick = (sectionId: string) => {
+    setActiveLegalSection(sectionId);
+  };
+
   return (
     <>
       <Header />
@@ -22,8 +30,13 @@ export default function LandingPage() {
       <Testimonial />
       <Prices />
       <FAQ />
-      <Footer />
-      <LegalSections />
+      <Footer onLegalClick={handleLegalClick} />
+
+      {/* LegalSections agora é um modal controlado pelo estado */}
+      <LegalSections
+        activeSection={activeLegalSection}
+        onClose={() => setActiveLegalSection(null)}
+      />
     </>
-  )
+  );
 }
