@@ -167,7 +167,6 @@ export default function DocumentWizard({
                     generatedText: generatedText
                 };
 
-                console.log('🆕 Criando novo documento com generatedText:', documentData);
                 result = await createDocument(documentData);
             }
 
@@ -179,22 +178,17 @@ export default function DocumentWizard({
             }
 
         } catch (error) {
-            console.error("❌ Erro ao gerar documento:", error);
             toast.error("Erro ao conectar com o servidor. Verifique se a API está rodando.");
         } finally {
             setIsGenerating(false);
         }
     };
 
-    // Função para gerar o texto do documento
     const generateDocumentText = (template: Document, answers: Record<string, any>): string => {
-        // ✅ CORREÇÃO: Verificação adicional de segurança
         if (!template || !template.templateText) {
-            console.error('❌ Template ou templateText inválido:', template);
             return 'Template do documento não disponível.';
         }
 
-        // ✅ CORREÇÃO: Mover criarDataLocal para dentro da função
         const criarDataLocal = (ano: number, mes: number, dia: number): Date => {
             return new Date(ano, mes - 1, dia);
         };
@@ -342,7 +336,7 @@ export default function DocumentWizard({
 
             if (result) {
                 setCurrentUserDocument(result);
-                toast.success('Rascunho salvo com sucesso! 📝');
+                toast.success('Rascunho salvo com sucesso!');
             }
         } catch (error) {
             console.error('Erro ao salvar rascunho:', error);
@@ -353,13 +347,12 @@ export default function DocumentWizard({
     // Função para quando o documento é realmente concluído na preview
     const handleDocumentComplete = (completedDocument: UserDocument) => {
         setCurrentUserDocument(completedDocument);
-        toast.success("Documento concluído com sucesso! 🎉");
+        toast.success("Documento concluído com sucesso!");
         if (onComplete) onComplete(completedDocument);
         if (onCancel) onCancel();
     };
 
     useEffect(() => {
-        // ✅ CORREÇÃO: Só fazer auto-save se tiver userDocument E template
         if (!currentUserDocument || !template) {
             return;
         }
@@ -394,6 +387,7 @@ export default function DocumentWizard({
         return (
             <DocumentPreview
                 userDocument={currentUserDocument}
+                plan={user?.plan ?? ''}
                 template={template}
                 onBack={() => setShowPreview(false)}
                 onSave={() => handleDocumentComplete(currentUserDocument)}

@@ -683,13 +683,11 @@ function BillingTab({ user }: { user: any }) {
                 });
             }
         } catch (err) {
-            // ✅ CORREÇÃO: Garantir que o toast seja removido em caso de erro
             toast.error('Erro ao processar a solicitação', {
                 id: toastId,
                 duration: 5000
             });
         } finally {
-            // ✅ CORREÇÃO ADICIONAL: Forçar remoção após um tempo como fallback
             setTimeout(() => {
                 toast.dismiss(toastId);
             }, 6000); // 1 segundo a mais que a duração máxima

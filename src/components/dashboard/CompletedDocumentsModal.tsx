@@ -121,6 +121,7 @@ export default function CompletedDocumentsModal({
                 {selectedDocument && selectedDocument.documentId && (
                     <DocumentPreview
                         userDocument={selectedDocument}
+                        plan={user?.plan ?? ''}
                         template={selectedDocument.documentId as Document}
                         onBack={handleClosePreview}
                         onSave={handleDownloadFromPreview}

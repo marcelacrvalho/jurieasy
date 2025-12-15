@@ -9,12 +9,13 @@ import { Download, FolderOpen, ImageIcon, Trash2, Upload } from "lucide-react";
 interface DocumentPreviewProps {
     userDocument: UserDocument;
     template: Document;
+    plan: String;
     onBack: () => void;
     onSave: (updatedAnswers: Record<string, any>) => void;
     onComplete?: (completedDocument: UserDocument) => void;
 }
 
-export default function DocumentPreview({ userDocument, template, onBack, onSave, onComplete }: DocumentPreviewProps) {
+export default function DocumentPreview({ userDocument, template, plan, onBack, onSave, onComplete }: DocumentPreviewProps) {
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadType, setDownloadType] = useState<'pdf' | 'doc' | 'docuSign' | null>(null);
     const [editingAnswers, setEditingAnswers] = useState<Record<string, any>>({ ...userDocument.answers });
@@ -792,16 +793,18 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                                 )}
                             </button>
 
-                            <button
-                                onClick={() => handleDownload('docuSign')}
-                                className="px-4 py-2 rounded-xl text-white font-medium
-                                bg-amber-500 hover:bg-amber-600
-                                transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
-                            >
-                                <FolderOpen className="w-4 h-4" />
-                                <span className="hidden sm:inline">DocuSign</span>
-                                <span className="sm:hidden">Sign</span>
-                            </button>
+                            {plan !== 'free' && (
+                                <button
+                                    onClick={() => handleDownload('docuSign')}
+                                    className="px-4 py-2 rounded-xl text-white font-medium
+        bg-amber-500 hover:bg-amber-600
+        transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
+                                >
+                                    <FolderOpen className="w-4 h-4" />
+                                    <span className="hidden sm:inline">DocuSign</span>
+                                    <span className="sm:hidden">Sign</span>
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -860,7 +863,6 @@ export default function DocumentPreview({ userDocument, template, onBack, onSave
                 </div>
 
                 {/* Resto do conteúdo */}
-                {/* Resto do conteúdo - AGORA COM ESTADO LOCAL */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-6 sm:p-10 mb-10 transition-all group relative">
 
                     {/* Tooltip de ajuda visual */}

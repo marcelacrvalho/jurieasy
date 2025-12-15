@@ -73,8 +73,7 @@ export default function ContractWizard() {
             setIsGenerating(false);
             setShowPreview(true);
 
-            toast.success("Contrato gerado com sucesso! 🎉", {
-                icon: "✅",
+            toast.success("Contrato gerado com sucesso!", {
                 style: {
                     borderRadius: "10px",
                     background: "#2563EB",

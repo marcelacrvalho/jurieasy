@@ -167,14 +167,24 @@ export default function Dashboard() {
     };
 
     const handleQuickAction = (actionLabel: string) => {
+        if (user?.plan === 'free' &&
+            (actionLabel === "Meus Documentos" || actionLabel === "Favoritos")) {
+            toast.error('Faça upgrade para acessar esta funcionalidade');
+            return;
+        }
+
         if (actionLabel === "Novo Contrato") {
             setIsDocumentModalOpen(true);
         } else if (actionLabel === "Meus Documentos") {
             setIsMyDocumentsModalOpen(true);
+        } else if (actionLabel === "Favoritos") {
+            //TODO: Implementar lógica para favoritos
+            toast.success('Funcionalidade em desenvolvimento');
         } else {
             setIsProfileModalOpen(true);
         }
     };
+
 
     if (isCheckingAuth || isUserLoading) {
         return (
