@@ -684,29 +684,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         }
     };
 
-    const formatarTextoPreview = (texto: string) => {
-        return texto.split("\n").map((linha, index) => {
-            if (linha.trim().toUpperCase() === linha.trim() && linha.trim()) {
-                return (
-                    <div key={index} className="text-center font-bold text-lg my-6 tracking-wide text-gray-900">
-                        {linha}
-                    </div>
-                );
-            }
-
-            if (linha.includes(":")) {
-                const [rotulo, valor] = linha.split(":");
-                return (
-                    <div key={index} className="my-2 flex gap-2">
-                        <span className="font-semibold text-gray-800">{rotulo}:</span>
-                        <span className="text-gray-700">{valor}</span>
-                    </div>
-                );
-            }
-
-            return <div key={index} className="my-1 text-gray-700">{linha || <br />}</div>;
-        });
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
@@ -793,7 +770,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                                 )}
                             </button>
 
-                            {plan !== 'free' && (
+                            {plan == 'escritório' && (
                                 <button
                                     onClick={() => handleDownload('docuSign')}
                                     className="px-4 py-2 rounded-xl text-white font-medium
@@ -878,11 +855,15 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                                 <div
                                     contentEditable={true}
                                     suppressContentEditableWarning={true}
-                                    onInput={handleTextChange} // Atualiza o estado local a cada letra
+                                    onInput={handleTextChange}
                                     className="outline-none focus:ring-2 focus:ring-blue-100 focus:bg-blue-50/30 rounded-lg p-2 -m-2 transition-all whitespace-pre-wrap min-h-[200px]"
-                                    style={{ textIndent: '0px' }}
+                                    style={{
+                                        textIndent: '0px',
+                                        maxHeight: '70vh', // 👈 Limitar altura máxima
+                                        overflowY: 'auto', // 👈 Forçar rolagem vertical
+                                        wordBreak: 'break-word' // 👈 Quebrar palavras longas
+                                    }}
                                 >
-                                    {/* Renderiza o texto inicial. O React não vai atualizar isso a cada tecla para não pular o cursor */}
                                     {documentText}
                                 </div>
 

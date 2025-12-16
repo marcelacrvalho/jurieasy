@@ -143,7 +143,7 @@ export default function DocumentCreationModal({
 
         return (
             <DocumentWizard
-                documentTemplate={isValidDocument ? document : undefined} // ✅ Só passa se for válido
+                documentTemplate={isValidDocument ? document : undefined}
                 userDocument={userDocument || undefined}
                 onComplete={handleWizardComplete}
                 onCancel={handleWizardCancel}

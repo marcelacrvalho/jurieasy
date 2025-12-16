@@ -42,7 +42,6 @@ export default function DocumentWizard({
     const [template, setTemplate] = useState<Document | null>(documentTemplate || null);
     const [currentUserDocument, setCurrentUserDocument] = useState<UserDocument | null>(userDocument || null);
 
-    // Load template if needed
     useEffect(() => {
         if (userDocument?.documentId?._id && !template) {
             loadTemplate(userDocument.documentId._id);
@@ -107,7 +106,6 @@ export default function DocumentWizard({
     };
 
     const saveProgress = async (currentAnswers: Record<string, any>, step: number) => {
-        // ✅ CORREÇÃO: Verificar se template existe antes de usar
         if (!currentUserDocument || !template) {
             console.log('⏸️ Save progress pausado: template ou userDocument não disponível');
             return;
@@ -116,7 +114,6 @@ export default function DocumentWizard({
         try {
             const totalSteps = template.variables?.length || questions.length || 0;
 
-            // ✅ CORREÇÃO: Só gerar texto se template existir
             const generatedText = generateDocumentText(template, currentAnswers);
 
             await updateDocument(currentUserDocument._id, {
@@ -142,7 +139,6 @@ export default function DocumentWizard({
             let result: UserDocument | null = null;
             const totalSteps = template.variables?.length || questions.length || 0;
 
-            // ✅ GERAR O TEXTO DO DOCUMENTO ANTES DE ENVIAR
             const generatedText = generateDocumentText(template, finalAnswers);
 
             if (currentUserDocument) {
@@ -295,7 +291,6 @@ export default function DocumentWizard({
     };
 
     const handleSaveDraft = async () => {
-        // ✅ CORREÇÃO: Verificar se template existe
         if (!template || !user) {
             toast.error('Template não disponível para salvar rascunho');
             return;
@@ -305,7 +300,6 @@ export default function DocumentWizard({
             let result: UserDocument | null = null;
             const totalSteps = template.variables?.length || questions.length || 0;
 
-            // ✅ CORREÇÃO: Gerar texto (já está protegido na função)
             const generatedText = generateDocumentText(template, answers);
 
             console.log('💾 SALVAMENTO MANUAL - Gerando texto para rascunho');
@@ -382,7 +376,6 @@ export default function DocumentWizard({
         );
     }
 
-    // PREVIEW PAGE
     if (showPreview && currentUserDocument && template) {
         return (
             <DocumentPreview
