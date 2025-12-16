@@ -21,25 +21,25 @@ export default function Benefits() {
             icon: "/landing-rocket.svg",
             title: "Velocidade impressionante",
             description:
-                "De horas para minutos. Gere contratos profissionais em menos de 2 minutos",
+                "De horas para minutos. Gere contratos profissionais e completos em menos de 2 minutos",
         },
         {
             icon: "/landing-lock.svg",
             title: "Segurança jurídica",
             description:
-                "Criptografia avançada e total conformidade com a LGPD",
+                "Criptografia avançada e total conformidade com a LGPD e leis vigentes, garantindo a validade de cada documento",
         },
         {
             icon: "/landing-layers.svg",
-            title: "Precisão técnica",
+            title: "Revisado por especialistas",
             description:
-                "Modelos revisados por especialistas jurídicos de diversas áreas",
+                "Modelos elaborados e revisados por advogados experientes em diversas áreas, garantindo precisão técnica em cada cláusula",
         },
         {
             icon: "/landing-sync.svg",
-            title: "Atualizações automáticas",
+            title: "Sempre atualizado com a lei",
             description:
-                "Sempre em dia com as últimas mudanças legais e regulatórias",
+                "Sem preocupações. Nossos modelos são atualizados de forma automática sempre que houver mudanças nas últimas reformas legais e regulatórias",
         },
     ];
 
@@ -63,7 +63,7 @@ export default function Benefits() {
                     </h2>
                     <p className="text-gray-600 text-lg mt-4 max-w-2xl mx-auto">
                         Nossa tecnologia transforma a criação de contratos em uma
-                        experiência rápida, segura e confiável.
+                        experiência rápida, segura e confiável
                     </p>
                 </motion.div>
 

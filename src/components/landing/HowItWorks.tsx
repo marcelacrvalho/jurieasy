@@ -43,45 +43,59 @@ export default function HowItWorks() {
                     </p>
                 </motion.div>
 
-                {/* Etapas */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
-                    {steps.map((item, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 40 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.2, duration: 0.6 }}
-                            viewport={{ once: true }}
-                            className="text-center bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group"
-                        >
-                            {/* Ícone animado */}
+                {/* Container principal com flex para espaçamento igual */}
+                <div className="flex flex-col">
+                    {/* Etapas */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+                        {steps.map((item, index) => (
                             <motion.div
-                                animate={{ y: [0, -6, 0] }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                }}
-                                className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
+                                key={index}
+                                initial={{ opacity: 0, y: 40 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.2, duration: 0.6 }}
+                                viewport={{ once: true }}
+                                className="text-center bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group"
                             >
-                                <Image
-                                    src={item.icon}
-                                    alt={item.title}
-                                    width={34}
-                                    height={34}
-                                    className="group-hover:scale-110 transition-transform"
-                                />
-                            </motion.div>
+                                {/* Ícone animado */}
+                                <motion.div
+                                    animate={{ y: [0, -6, 0] }}
+                                    transition={{
+                                        duration: 3,
+                                        repeat: Infinity,
+                                        ease: "easeInOut",
+                                    }}
+                                    className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
+                                >
+                                    <Image
+                                        src={item.icon}
+                                        alt={item.title}
+                                        width={34}
+                                        height={34}
+                                        className="group-hover:scale-110 transition-transform"
+                                    />
+                                </motion.div>
 
-                            {/* Título e descrição */}
-                            <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">
-                                {item.title}
-                            </h3>
-                            <p className="text-gray-600 text-base leading-relaxed">
-                                {item.description}
-                            </p>
-                        </motion.div>
-                    ))}
+                                {/* Título e descrição */}
+                                <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-blue-700 transition-colors">
+                                    {item.title}
+                                </h3>
+                                <p className="text-gray-600 text-base leading-relaxed">
+                                    {item.description}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Espaço flexível + Botão */}
+                    {/* Espaço flexível + Botão com margem */}
+                    <div className="mt-16 md:mt-24 flex items-center justify-center"> {/* Margem grande */}
+                        <button
+                            onClick={() => (window.location.href = "/auth")}
+                            className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
+                        >
+                            Gerar meu primeiro contrato agora
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

@@ -1,4 +1,4 @@
-// app/page.tsx ou onde estiver sua LandingPage
+// app/page.tsx
 "use client";
 
 import { useState } from 'react';
@@ -24,9 +24,9 @@ export default function LandingPage() {
     <>
       <Header />
       <Hero />
+      <SocialProof />
       <Benefits />
       <HowItWorks />
-      <SocialProof />
       <Testimonial />
       <Prices />
       <FAQ />

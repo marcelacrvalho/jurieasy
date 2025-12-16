@@ -43,52 +43,31 @@ export default function Hero() {
                     <button
                         onClick={() => (window.location.href = "/auth")}
                         className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
-                        Criar meu primeiro contrato
-                    </button>
-                    <button
-                        onClick={() => (window.location.href = "/demonstration")}
-                        className="border border-gray-300 text-gray-800 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all"
-                    >
-                        Ver demonstração
+                        Criar meu primeiro contrato grátis
                     </button>
                 </motion.div>
 
-                {/* Mockup */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: 0.6, duration: 0.8 }}
-                    className="relative mt-20 sm:mt-24 w-full max-w-5xl px-4 flex justify-center"
-                >
-                    {/* Container para as duas imagens - sem moldura externa */}
-                    <div className="flex gap-5 w-full">
-                        {/* Primeira imagem - 60% (50% maior) */}
-                        <div className="flex-[3] relative">
-                            <Image
-                                src="/slide-1.svg"
-                                alt="Exemplo da plataforma Jurieasy"
-                                width={1000}
-                                height={600}
-                                className="rounded-xl w-full h-auto"
-                            />
-                            {/* Efeito glow sutil para a primeira imagem */}
-                            <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-blue-400/10 shadow-[0_0_20px_rgba(59,130,246,0.15)] pointer-events-none" />
-                        </div>
+                {/* Seção do Vídeo */}
+                <section className="w-full py-12 md:py-16">
+                    <div className="container mx-auto px-4 md:px-6">
+                        <div className="max-w-4xl mx-auto">
 
-                        {/* Segunda imagem - 40% */}
-                        <div className="flex-[2] relative">
-                            <Image
-                                src="/slide-2.svg"
-                                alt="Exemplo da plataforma Jurieasy"
-                                width={1000}
-                                height={600}
-                                className="rounded-xl w-full h-auto"
-                            />
-                            {/* Efeito glow sutil para a segunda imagem */}
-                            <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-blue-400/10 shadow-[0_0_20px_rgba(59,130,246,0.15)] pointer-events-none" />
+                            <div className="relative w-full rounded-xl md:rounded-2xl overflow-hidden shadow-lg md:shadow-xl">
+                                <video
+                                    className="w-full h-auto"
+                                    controls
+                                    autoPlay={true}
+                                    muted
+                                    playsInline
+                                >
+                                    <source src="/landing-video.mp4" type="video/mp4" />
+                                    Seu navegador não suporta a tag de vídeo.
+                                </video>
+                            </div>
                         </div>
                     </div>
-                </motion.div>
+                </section>
+
             </div>
         </section>
     );
