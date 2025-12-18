@@ -41,7 +41,6 @@ export default function DocumentWizard({
     const [showPreview, setShowPreview] = useState(false);
     const [template, setTemplate] = useState<Document | null>(documentTemplate || null);
     const [currentUserDocument, setCurrentUserDocument] = useState<UserDocument | null>(userDocument || null);
-    const isGeneratingRef = useRef(false);
 
     useEffect(() => {
         if (userDocument?.documentId?._id && !template) {

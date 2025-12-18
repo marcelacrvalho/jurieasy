@@ -626,7 +626,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         URL.revokeObjectURL(url);
     };
 
-
     const handleDownload = async (format: 'pdf' | 'doc' | 'docuSign') => {
         setIsDownloading(true);
 

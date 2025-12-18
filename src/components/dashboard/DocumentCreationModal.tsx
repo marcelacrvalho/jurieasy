@@ -34,7 +34,7 @@ export default function DocumentCreationModal({
     const { user } = useUserContext();
     const [progressInfo, setProgressInfo] = useState<ProgressInfo | null>(null);
     const [canCreateDocument, setCanCreateDocument] = useState(true);
-    const { createDocument, updateDocument, refreshDocuments } = useUserDocuments();
+    const { refreshDocuments } = useUserDocuments();
 
     const isValidDocument = document && document._id;
 
