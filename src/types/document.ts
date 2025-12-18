@@ -10,10 +10,7 @@ export interface Document {
     category: string;
     templateText: string;
     variables?: Variable[];
-
-    // 👉 Novo campo
     witnesses?: Witness[];
-
     tags: string[];
     isActive: boolean;
     isPopular: boolean;
@@ -23,13 +20,14 @@ export interface Document {
     icon?: string;
     createdAt: string;
     updatedAt: string;
-
     difficulty?: string;
     jurisdiction?: string;
     legalReferences?: string[];
     successRate?: number;
     averageCompletionTime?: number;
     questions?: any[];
+    whyUseThis?: string;
+    requiredDocuments?: string[];
 }
 
 export interface Variable {
@@ -42,6 +40,7 @@ export interface Variable {
     placeholder?: string;
     description?: string;
     defaultValue?: any;
+    helperMessage?: string;
     validation?: {
         pattern?: string;
         min?: number;
@@ -53,6 +52,7 @@ export interface Variable {
 export interface Question {
     id: string;
     question: string;
+    variableId?: string;
     type: 'text' | 'select' | 'radio' | 'checkbox' | 'date' | 'textarea' | 'number';
     options?: string[];
     required: boolean;

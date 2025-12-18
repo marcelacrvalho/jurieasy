@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { plans } from "@/data/pricesAndPlans";
 import { motion } from "framer-motion";
 

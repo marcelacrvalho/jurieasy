@@ -41,6 +41,10 @@ const LegalSections = ({ activeSection, onClose }: LegalSectionsProps) => {
                 {
                     subtitle: "Compartilhamento",
                     text: "Não vendemos seus dados pessoais. Compartilhamos informações apenas quando necessário por exigência legal."
+                },
+                {
+                    subtitle: "Uso justo para o plano PRO",
+                    text: "Para que nenhum tipo de usuário seja prejudicado com possíveis falhas pelo excesso de uso, limitamos a quantidade de documentos geradas por dia por usuário para 500."
                 }
             ]
         },

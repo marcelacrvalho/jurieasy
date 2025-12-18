@@ -38,7 +38,9 @@ export const metadata: Metadata = {
     "contratos profissionais",
     "empresas",
     "startups",
-    "contrato de locação"
+    "contrato de locação",
+    "contrato de prestação de serviço",
+    "contrato de eventos"
   ],
   authors: [{ name: "Jurieasy" }],
   creator: "Jurieasy",

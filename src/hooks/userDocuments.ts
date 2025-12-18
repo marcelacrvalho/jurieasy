@@ -200,10 +200,7 @@ export const useUserDocuments = (): UserDocumentsReturn => {
             // 2. Acessamos o corpo da sua API através de .data
             const responseData = axiosResponse.data;
 
-            console.log('📨 Resposta dos documentos:', responseData);
-
             if (responseData.success && responseData.data) {
-                console.log('✅ Documentos carregados com sucesso:', responseData.data.length);
                 setDocuments(responseData.data);
                 return responseData.data;
             } else {
@@ -396,8 +393,6 @@ export const useUserDocuments = (): UserDocumentsReturn => {
             console.log('🔄 Executando refreshStats...');
             // Chama a função principal de busca de estatísticas
             getUserDocumentStats(user.id).catch(console.error);
-        } else {
-            console.warn('⚠️ Não foi possível refrescar estatísticas: user.id ausente.');
         }
     }, [user?.id, getUserDocumentStats]); // Depende de user.id e da função de fetch
 

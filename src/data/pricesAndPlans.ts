@@ -25,25 +25,25 @@ export const plans = [
             "Suporte prioritário"
         ],
         button: "Assinar plano",
-        popular: true,
+        popular: false,
     },
     {
         name: "Escritório",
         label: "escritorio",
-        price: "R$ 119",
+        price: "R$ 197",
         description: "Para equipes jurídicas e alto volume",
         features: [
             "Documentos ilimitados",
             "Logo personalizada",
             "Documentos na nuvem",
             "Exportar PDF e Word",
-            "Até 20 usuários no mesmo plano",
+            "Até 10 usuários no mesmo plano",
             "Fluxo de aprovação",
             "Painel administrativo",
-            "Integração com DocuSign e GOV BR",
+            "Compatível para assinar com DocuSign e GOV BR",
             "Suporte dedicado"
         ],
         button: "Assinar plano",
-        popular: false,
+        popular: true,
     },
 ];

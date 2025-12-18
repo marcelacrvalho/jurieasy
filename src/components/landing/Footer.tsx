@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, MessageCircleQuestionMark, Building, Phone } from 'lucide-react';
-
+import Image from "next/image";
 
 interface FooterProps {
     onLegalClick?: (sectionId: string) => void;
@@ -126,6 +126,23 @@ export default function Footer({ onLegalClick }: FooterProps) {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="text-gray-400 text-sm">
                             © {new Date().getFullYear()} Jurieasy. Todos os direitos reservados.
+                        </div>
+
+                        <div className="flex items-center gap-2 md:gap-4"> {/* Container para as imagens */}
+                            <Image
+                                src="/lgpd-certified.png"
+                                alt="Certificado LGPD"
+                                width={80}
+                                height={80}
+                                className="text-blue-600"
+                            />
+                            <Image
+                                src="/ssl-certified.png"
+                                alt="Certificado SSL"
+                                width={60}
+                                height={60}
+                                className="text-blue-600"
+                            />
                         </div>
                     </div>
                 </div>
