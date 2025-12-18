@@ -6,7 +6,7 @@ import { Document } from "@/types/document";
 import { UserDocument } from "@/types/userDocument";
 import DocumentWizard from "@/components/dashboard/DocumentWizard";
 import { useState, useEffect } from "react";
-import { useUserDocuments } from "@/hooks/userDocuments";
+import { useUserDocuments } from "@/contexts/UserDocumentContext";
 import { useUserContext } from '@/contexts/UserContext';
 import toast from "react-hot-toast";
 

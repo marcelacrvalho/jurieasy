@@ -2,9 +2,9 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDocuments } from "@/hooks/document";
-import { useUserDocuments } from "@/hooks/userDocuments";
+import { useUserDocuments } from '@/contexts/UserDocumentContext';
 import { useUserContext } from "@/contexts/UserContext";
 import { Document } from "@/types/document";
 import { UserDocument } from "@/types/userDocument";
@@ -41,6 +41,7 @@ export default function DocumentWizard({
     const [showPreview, setShowPreview] = useState(false);
     const [template, setTemplate] = useState<Document | null>(documentTemplate || null);
     const [currentUserDocument, setCurrentUserDocument] = useState<UserDocument | null>(userDocument || null);
+    const isGeneratingRef = useRef(false);
 
     useEffect(() => {
         if (userDocument?.documentId?._id && !template) {
@@ -167,13 +168,16 @@ export default function DocumentWizard({
             }
 
             if (result) {
+                console.log('✅ Documento gerado com sucesso:', result._id);
                 setCurrentUserDocument(result);
                 setShowPreview(true);
             } else {
+                console.error('❌ Falha ao gerar documento');
                 toast.error("Falha ao gerar documento");
             }
 
         } catch (error) {
+            console.error("💥 Erro ao gerar documento:", error);
             toast.error("Erro ao conectar com o servidor. Verifique se a API está rodando.");
         } finally {
             setIsGenerating(false);

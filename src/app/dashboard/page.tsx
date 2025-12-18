@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Check, CheckCircle, File, FilePen, FileText, Pencil, Zap } from "lucide-react";
 import { useUserContext } from '@/contexts/UserContext';
-import { useUserDocumentContext } from '@/contexts/UserDocumentContext';
 import { useUsers } from '@/hooks/users';
 import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast";
@@ -19,7 +18,7 @@ import DocumentCreationModal from "@/components/dashboard/DocumentCreationModal"
 
 import { quickActionsData } from "@/data/quickActionData";
 
-import { useUserDocuments } from "@/hooks/userDocuments";
+import { useUserDocuments } from "@/contexts/UserDocumentContext";
 import { useDocuments } from "@/hooks/document";
 import React from "react";
 import { UserDocument } from "@/types/userDocument";
@@ -34,7 +33,7 @@ import ProfileModal from "@/components/dashboard/ProfileModal";
 export default function Dashboard() {
     const router = useRouter();
     const { user, isLoading: isUserLoading, isAuthenticated, loadUserProfile } = useUserContext();
-    const { stats, isFetchingStats } = useUserDocumentContext();
+    const { stats, isFetchingStats } = useUserDocuments();
     const { userDocuments, getUserDocumentDraft, getUserDocumentStats, refreshStats } = useUserDocuments();
     const { documents, getDocuments, isLoadingDocuments } = useDocuments();
 

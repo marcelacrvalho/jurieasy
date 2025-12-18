@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useUserContext } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import { plans } from "@/data/pricesAndPlans";
-import { useUserDocumentContext } from "@/contexts/UserDocumentContext";
+import { useUserDocuments } from "@/contexts/UserDocumentContext";
 import { AddTeamMemberData, TeamMember, useTeamMembers } from "@/hooks/teamMembers";
 import toast from "react-hot-toast";
 import LoadingAnimation from "../shared/LoadingAnimation";
@@ -18,7 +18,7 @@ interface ProfileModalProps {
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const { user, logout } = useUserContext();
-    const { stats } = useUserDocumentContext();
+    const { stats } = useUserDocuments();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'profile' | 'team' | 'billing'>('profile');
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);

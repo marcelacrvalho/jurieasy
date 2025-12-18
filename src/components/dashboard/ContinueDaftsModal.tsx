@@ -5,7 +5,7 @@ import { X, FileText, Clock, Search } from "lucide-react";
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { useState, useEffect } from "react";
-import { useUserDocuments } from "@/hooks/userDocuments";
+import { useUserDocuments } from "@/contexts/UserDocumentContext";
 import { useUserContext } from "@/contexts/UserContext";
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { DocumentCard } from "@/components/shared/DocumentCard";

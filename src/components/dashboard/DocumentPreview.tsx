@@ -13,9 +13,10 @@ interface DocumentPreviewProps {
     onBack: () => void;
     onSave: (updatedAnswers: Record<string, any>) => void;
     onComplete?: (completedDocument: UserDocument) => void;
+    onDownloadStart?: () => void;
 }
 
-export default function DocumentPreview({ userDocument, template, plan, onBack, onSave, onComplete }: DocumentPreviewProps) {
+export default function DocumentPreview({ userDocument, template, plan, onBack, onSave, onComplete, onDownloadStart }: DocumentPreviewProps) {
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadType, setDownloadType] = useState<'pdf' | 'doc' | 'docuSign' | null>(null);
     const [editingAnswers, setEditingAnswers] = useState<Record<string, any>>({ ...userDocument.answers });
@@ -628,6 +629,14 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
 
     const handleDownload = async (format: 'pdf' | 'doc' | 'docuSign') => {
         setIsDownloading(true);
+
+        // ✅ Notifica o DocumentWizard para parar auto-save
+        if (onDownloadStart) {
+            onDownloadStart();
+        }
+
+        // ✅ Pequeno delay para garantir que o auto-save parou
+        await new Promise(resolve => setTimeout(resolve, 300));
         setDownloadType(format);
 
         try {
