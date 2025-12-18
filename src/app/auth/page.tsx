@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
-import { useUsers } from '@/hooks/users';
+import { useUserContext } from '@/contexts/UserContext';
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager';
 import { Eye, EyeOff } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function AuthPage() {
         isLoggingIn,
         error,
         clearError
-    } = useUsers();
+    } = useUserContext();
 
     useEffect(() => {
         const checkExistingAuth = async () => {

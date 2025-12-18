@@ -45,7 +45,7 @@ export default function DocumentCreationModal({
 
             if (remaining <= 0) {
                 setTimeout(() => {
-                    toast.error(`Limite de documentos atingido! Seu plano ${user.plan} permite ${user.usage.documentsCreated} documentos por mês.`, {
+                    toast.error(`Limite de documentos atingido! Seu plano ${user.plan} permite ${user.usage.documentsCreatedThisMonth} documentos por mês.`, {
                         duration: 6000,
                         position: 'top-center'
                     });
@@ -102,15 +102,9 @@ export default function DocumentCreationModal({
                             Limite Atingido
                         </h3>
                         <p className="text-slate-600 mb-4">
-                            Você atingiu o limite de {user?.usage.documentsCreated} documentos do seu plano {user?.plan}.
-                            Faça upgrade para criar mais documentos.
+                            Você atingiu o limite de {user?.usage.documentsCreatedThisMonth} documentos do seu plano {user?.plan}.
+                            Vá em <b>Perfil</b> e faça upgrade para criar mais documentos.
                         </p>
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            Entendi
-                        </button>
                     </div>
                 </div>
             );

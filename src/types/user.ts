@@ -10,7 +10,7 @@ export interface UserPreferences {
 }
 
 export interface UserUsage {
-    documentsCreated: number;
+    documentsCreatedThisMonth: number;
     documentsRemaining: number;
     canSaveDocuments: boolean;
     canHaveTeamMembers: boolean;
