@@ -6,7 +6,8 @@ import {
     ChevronDown,
     ChevronLeft,
     ChevronRight,
-    FileText
+    FileText,
+    AlertTriangle
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { UserDocument } from "@/types/userDocument";
@@ -226,40 +227,62 @@ export default function DocumentManagerModal({
 
     if (!isOpen) return null;
 
-    const renderWizardContent = () => (
-        <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold text-gray-900">
-                        {selectedDocument?.title || selectedDraft?.documentId?.title || 'Criando Documento'}
-                    </h2>
-                    {user != null ? (
-                        <span className={`text-xs px-3 py-1.5 rounded-full ${user.usage.documentsRemaining > 0
-                            ? 'bg-green-100 text-green-600'
-                            : 'bg-red-100 text-red-600'
-                            }`}>
-                            {user.usage.documentsRemaining} {user.usage.documentsRemaining === 1 ? 'documento' : 'documentos'} restante{user.usage.documentsRemaining !== 1 ? 's' : ''}
-                        </span>
-                    ) : ''}
+    const renderWizardContent = () => {
+        const isQuotaExceeded = user && user.usage.documentsRemaining <= 0;
+
+        return (
+            <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-xl font-bold text-gray-900">
+                            {selectedDocument?.title || selectedDraft?.documentId?.title || 'Criando Documento'}
+                        </h2>
+                        {user != null && user.plan != 'escritorio' && (
+                            <span className={`text-xs px-3 py-1.5 rounded-full ${!isQuotaExceeded
+                                ? 'bg-green-100 text-green-600'
+                                : 'bg-red-100 text-red-600'
+                                }`}>
+                                {user.usage.documentsRemaining} {user.usage.documentsRemaining === 1 ? 'documento' : 'documentos'} restante{user.usage.documentsRemaining !== 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                    <button
+                        onClick={handleCloseAll}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <X className="w-6 h-6 text-gray-600" />
+                    </button>
                 </div>
-                <button
-                    onClick={handleCloseAll}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                    <X className="w-6 h-6 text-gray-600" />
-                </button>
+
+                <div className="flex-1 overflow-hidden">
+                    {isQuotaExceeded ? (
+                        /* MENSAGEM DE COTA EXCEDIDA */
+                        <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                Sua cota foi excedida
+                            </h3>
+                            <p className="text-gray-600 max-w-sm mb-8">
+                                Você utilizou todos os seus documentos disponíveis. Vá até <b>Perfil</b>
+                                Atualize para o plano <b>escritório</b> para continuar criando sem limites
+                            </p>
+                        </div>
+                    ) : (
+                        /* WIZARD NORMAL COM AS PERGUNTAS */
+                        <DocumentWizard
+                            documentTemplate={selectedDocument || undefined}
+                            userDocument={selectedDraft || undefined}
+                            onComplete={handleWizardComplete}
+                            onCancel={handleWizardCancel}
+                            onClose={handleCloseAll}
+                        />
+                    )}
+                </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-                <DocumentWizard
-                    documentTemplate={selectedDocument || undefined}
-                    userDocument={selectedDraft || undefined}
-                    onComplete={handleWizardComplete}
-                    onCancel={handleWizardCancel}
-                    onClose={handleCloseAll}
-                />
-            </div>
-        </div>
-    );
+        );
+    };
 
     const renderSelectionContent = () => (
         <>

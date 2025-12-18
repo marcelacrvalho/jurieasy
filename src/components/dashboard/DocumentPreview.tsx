@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document, Witness } from "@/types/document";
-import { useUserDocuments } from "@/hooks/userDocuments";
+import { useUserDocuments } from '@/contexts/UserDocumentContext';
 import { Download, FolderOpen, ImageIcon, Trash2, Upload } from "lucide-react";
 
 interface DocumentPreviewProps {
@@ -22,7 +22,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
     const [logo, setLogo] = useState<string | null>(null);
-
     const { updateDocument, refreshDocuments } = useUserDocuments();
 
     // -------------------- FUNÇÕES --------------------
@@ -464,16 +463,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         pdf.save(`${filename}.pdf`);
     };
 
-    const handleGoToDocuSign = async () => {
-        await generatePDF(
-            textoEditavel, // ✅ Usar texto editado
-            template.title,
-            template.title.replace(/\s+/g, '_'),
-            template.witnesses
-        );
-        window.open("https://app.docusign.com/send", "_blank");
-    };
-
     const generateDOC = async (
         content: string,
         title: string,
@@ -645,7 +634,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
             // 1. Atualizar o documento para status "completed" com o texto EDITADO
             const updatedDocument = await updateDocument(userDocument._id, {
                 answers: editingAnswers,
-                generatedText: textoEditavel, // ✅ Usar o texto editado, não o original
+                generatedText: textoEditavel,
                 status: "completed",
                 currentStep: userDocument.currentStep,
                 totalSteps: userDocument.totalSteps,
@@ -653,31 +642,30 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
             });
 
             if (updatedDocument) {
-                // 2. Gerar e baixar no formato escolhido usando o texto EDITADO
-                const textoParaDownload = textoEditavel; // ✅ Usar texto editado
+                // 2. Gerar e baixar/abrir no formato escolhido
+                const textoParaDownload = textoEditavel;
 
                 if (format === 'pdf') {
                     await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
-                } else if (format == 'doc') {
+                } else if (format === 'doc') {
                     await generateDOC(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'), template.witnesses);
-                } else {
-                    await handleGoToDocuSign();
+                } else if (format === 'docuSign') {
+                    // 3. Gerar PDF primeiro, depois abrir DocuSign
+                    await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
+                    window.open("https://app.docusign.com/send", "_blank");
                 }
 
-                // 3. ✅ CORREÇÃO: Aguardar um pouco antes do refresh para garantir que o backend processou
+                // 4. Aguardar um pouco antes do refresh
                 setTimeout(() => {
                     refreshDocuments();
-                }, 500);
+                }, 300);
 
-                // 4. Notificar componente pai sobre conclusão
+                // 5. Notificar componente pai sobre conclusão
                 if (onComplete) {
                     onComplete(updatedDocument);
                 }
-
-                console.log(`✅ Documento concluído e ${format.toUpperCase()} baixado com sucesso!`);
             }
         } catch (error) {
-            console.error(`❌ Erro no download ${format.toUpperCase()}:`, error);
         } finally {
             setIsDownloading(false);
             setDownloadType(null);
@@ -686,8 +674,8 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-            <div className="max-w-4xl mx-auto px-4">
+        <div className="h-full w-full overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+            <div className="max-w-4xl mx-auto px-4 pb-5"> {/* Adicionado pb-5 para não cortar o final */}
 
                 {/* Header Moderno */}
                 <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-200/50 p-6 mb-6 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
