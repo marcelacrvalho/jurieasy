@@ -45,6 +45,7 @@ interface UserContextType {
     getUserProfile: () => Promise<User | null>;
     upgradePlan: (plan: 'free' | 'pro' | 'escritorio') => Promise<boolean>;
     updateUser: (data: Partial<User>) => Promise<boolean>;
+    refreshUser: () => Promise<void>;
 
     // Team operations
     addTeamMember: (data: { email: string; name: string; password: string }) => Promise<boolean>;
@@ -104,6 +105,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const clearError = useCallback(() => setError(null), []);
+
+    const refreshUser = useCallback(async () => {
+        if (!user?.id) return;
+
+        try {
+            console.log('🔄 Atualizando dados do usuário...');
+            const response = await apiClient.get(`/users/${user.id}`);
+
+            if (response.data.success) {
+                setUser(response.data.data);
+                console.log('✅ Dados do usuário atualizados:', {
+                    remaining: response.data.data.usage?.documentsRemaining
+                });
+            }
+        } catch (error) {
+            console.error('❌ Erro ao atualizar usuário:', error);
+        }
+    }, [user?.id]);
 
     // Helper para informações de uso
     const getUsageInfo = useCallback(() => {
@@ -613,6 +632,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         getUserProfile,
         upgradePlan,
         updateUser,
+        refreshUser,
 
         // Team operations
         addTeamMember,

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Check, CheckCircle, File, FilePen, FileText, Pencil, Zap } from "lucide-react";
 import { useUserContext } from '@/contexts/UserContext';
-import { useUsers } from '@/hooks/users';
 import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast";
 
@@ -32,7 +31,7 @@ import ProfileModal from "@/components/dashboard/ProfileModal";
 
 export default function Dashboard() {
     const router = useRouter();
-    const { user, isLoading: isUserLoading, isAuthenticated, loadUserProfile } = useUserContext();
+    const { user, isLoading: isUserLoading, isAuthenticated, getUserProfile } = useUserContext();
     const { stats, isFetchingStats } = useUserDocuments();
     const { userDocuments, getUserDocumentDraft, getUserDocumentStats, refreshStats } = useUserDocuments();
     const { documents, getDocuments, isLoadingDocuments } = useDocuments();
@@ -58,7 +57,7 @@ export default function Dashboard() {
 
             if (tokenManager.hasToken() && !user) {
                 try {
-                    await loadUserProfile();
+                    await getUserProfile();
                 } catch (error) {
                     tokenManager.clearToken();
                     router.push('/auth');
@@ -70,7 +69,7 @@ export default function Dashboard() {
         };
 
         checkAuthentication();
-    }, [user, isAuthenticated, router, loadUserProfile]);
+    }, [user, isAuthenticated, router, getUserProfile]);
 
     useEffect(() => {
         if (!isCheckingAuth) {
@@ -228,8 +227,11 @@ export default function Dashboard() {
     }
 
     const recentDocuments = (userDocuments ?? []).slice(0, 4);
-    const featuredDocuments = (documents ?? []).slice(0, 4);
-
+    const featuredDocuments = (documents ?? [])
+        .sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        })
+        .slice(0, 4);
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-6 sm:py-10">
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">

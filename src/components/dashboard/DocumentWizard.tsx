@@ -13,6 +13,7 @@ import DocumentPreview from "./DocumentPreview";
 import React from "react";
 import LoadingAnimation from "../shared/LoadingAnimation";
 
+
 interface DocumentWizardProps {
     documentTemplate?: Document;
     userDocument?: UserDocument;

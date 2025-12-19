@@ -5,6 +5,7 @@ import { UserDocument } from "@/types/userDocument";
 import { Document, Witness } from "@/types/document";
 import { useUserDocuments } from '@/contexts/UserDocumentContext';
 import { Download, FolderOpen, ImageIcon, Trash2, Upload } from "lucide-react";
+import { useUserContext } from "@/contexts/UserContext";
 
 interface DocumentPreviewProps {
     userDocument: UserDocument;
@@ -24,6 +25,8 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
     const [editValue, setEditValue] = useState<string>("");
     const [logo, setLogo] = useState<string | null>(null);
     const { updateDocument, refreshDocuments } = useUserDocuments();
+    // const { refreshUser, refreshUsage } = useUserContext();
+
 
     // -------------------- FUNÇÕES --------------------
 
@@ -652,6 +655,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
             if (updatedDocument) {
                 // 2. Gerar e baixar/abrir no formato escolhido
                 const textoParaDownload = textoEditavel;
+                //refreshUsage();
 
                 if (format === 'pdf') {
                     await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
