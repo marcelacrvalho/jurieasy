@@ -1,7 +1,9 @@
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { getIconByCategory } from "@/utils/documentCategoriesIcons";
-import { ChevronRight, Clock, Plus, Star } from "lucide-react";
+import { ChevronRight, Clock, Plus, Star, Eye } from "lucide-react";
+import { useState } from "react";
+import TemplatePreviewDrawer from "@/components/dashboard/TemplatPreviewDrawer";
 
 interface DocumentCardProps {
     item: Document | UserDocument;
@@ -10,59 +12,105 @@ interface DocumentCardProps {
 }
 
 export function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
+    const [showTemplatePreview, setShowTemplatePreview] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<{
+        text: string;
+        title: string;
+    } | null>(null);
+
+    const handlePreviewTemplate = (e: React.MouseEvent, document: Document) => {
+        e.stopPropagation(); // Impede que o clique dispare o onSelect
+
+        if (document.templateText) {
+            setSelectedTemplate({
+                text: document.templateText,
+                title: document.title
+            });
+            setShowTemplatePreview(true);
+        }
+    };
+
+    const handleClosePreview = () => {
+        setShowTemplatePreview(false);
+        setSelectedTemplate(null);
+    };
+
     if (mode === 'create') {
         const document = item as Document;
         const IconComponent = getIconByCategory(document.category);
 
         return (
-            <div
-                className="group relative p-4 sm:p-6 border border-slate-200 rounded-xl sm:rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
-                onClick={() => onSelect(document)}
-            >
-                <div className="flex items-start gap-3 sm:gap-4">
-                    {/* Ícone */}
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    </div>
+            <>
+                <div
+                    className="group relative p-4 sm:p-6 border border-slate-200 rounded-xl sm:rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
+                    onClick={() => onSelect(document)}
+                >
+                    {/* Ícone de visualização do template - Aparece no hover */}
+                    {document.templateText && (
+                        <button
+                            onClick={(e) => handlePreviewTemplate(e, document)}
+                            className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-blue-50 hover:scale-105 z-10 shadow-sm border border-slate-200"
+                            title="Visualizar template do contrato"
+                        >
+                            <Eye className="w-4 h-4 text-slate-600 hover:text-blue-600 transition-colors" />
+                        </button>
+                    )}
 
-                    {/* Conteúdo */}
-                    <div className="flex-1 min-w-0">
-                        {/* Cabeçalho com título e badge popular */}
-                        <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-2">
-                            <h3 className="font-semibold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2 xs:line-clamp-1">
-                                {document.title}
-                            </h3>
-                            {document.isPopular && (
-                                <span className="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full w-fit">
-                                    <Star className="w-3 h-3 fill-amber-500" />
-                                    Popular
-                                </span>
-                            )}
-
-                            <span className="flex items-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full w-fit">
-                                <Clock className="w-3 h-3" />
-                                {document.estimatedCompletionTime} minutos
-                            </span>
+                    <div className="flex items-start gap-3 sm:gap-4">
+                        {/* Ícone */}
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                            <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
 
-                        {/* Descrição */}
-                        <p className="text-slate-600 text-xs sm:text-sm mb-3 line-clamp-2">
-                            {document.description}
-                        </p>
+                        {/* Conteúdo */}
+                        <div className="flex-1 min-w-0">
+                            {/* Cabeçalho com título e badge popular */}
+                            <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-2">
+                                <h3 className="font-semibold text-slate-900 text-base sm:text-lg leading-tight line-clamp-2 xs:line-clamp-1 pr-8">
+                                    {document.title}
+                                </h3>
+                                {document.isPopular && (
+                                    <span className="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full w-fit">
+                                        <Star className="w-3 h-3 fill-amber-500" />
+                                        Popular
+                                    </span>
+                                )}
 
-                        {/* Rodapé */}
-                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0">
-                            <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded-full w-fit">
-                                {document.category.charAt(0).toUpperCase() + document.category.slice(1)}
-                            </span>
-                            <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center justify-end gap-1">
-                                Criar <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <span className="flex items-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full w-fit">
+                                    <Clock className="w-3 h-3" />
+                                    {document.estimatedCompletionTime} minutos
+                                </span>
+                            </div>
+
+                            {/* Descrição */}
+                            <p className="text-slate-600 text-xs sm:text-sm mb-3 line-clamp-2">
+                                {document.description}
+                            </p>
+
+                            {/* Rodapé */}
+                            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 xs:gap-0">
+                                <span className="text-xs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded-full w-fit">
+                                    {document.category.charAt(0).toUpperCase() + document.category.slice(1)}
+                                </span>
+                                <div className="text-blue-600 text-xs sm:text-sm font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center justify-end gap-1">
+                                    Criar <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-xl sm:rounded-2xl transition-opacity duration-300 -z-10" />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-50 opacity-0 group-hover:opacity-100 rounded-xl sm:rounded-2xl transition-opacity duration-300 -z-10" />
-            </div>
+
+                {/* Drawer de preview do template */}
+                {selectedTemplate && (
+                    <TemplatePreviewDrawer
+                        isOpen={showTemplatePreview}
+                        onClose={handleClosePreview}
+                        templateText={selectedTemplate.text}
+                        documentTitle={selectedTemplate.title}
+                    />
+                )}
+            </>
         );
     } else {
         const document = item as UserDocument;
