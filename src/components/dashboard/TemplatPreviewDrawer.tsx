@@ -73,12 +73,12 @@ export default function TemplatePreviewDrawer({
 
                                 {/* Informações */}
                                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                    <h3 className="font-medium text-blue-900 mb-2">
+                                    <h3 className="font-medium text-gray-900 mb-2">
                                         Sobre este template
                                     </h3>
-                                    <ul className="text-blue-700 text-sm space-y-1">
+                                    <ul className="text-gray-700 text-sm space-y-1">
                                         <li>• Este é o template base que será utilizado para gerar seu contrato</li>
-                                        <li>• As variáveis entre {`{{ }}`} serão substituídas pelos dados informados</li>
+                                        <li>• As variáveis entre <code className="px-2 py-1 bg-gray-100 rounded">&#123;&#123;</code> serão substituídas pelos dados informados</li>
                                     </ul>
                                 </div>
                             </div>

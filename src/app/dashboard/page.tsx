@@ -166,7 +166,7 @@ export default function Dashboard() {
 
     const handleQuickAction = (actionLabel: string) => {
         if (user?.plan === 'free' &&
-            (actionLabel === "Meus Documentos" || actionLabel === "Favoritos")) {
+            (actionLabel === "Meus Documentos" || actionLabel === "Biblioteca")) {
             toast.error('Faça upgrade para acessar esta funcionalidade');
             return;
         }
@@ -175,14 +175,12 @@ export default function Dashboard() {
             setIsDocumentModalOpen(true);
         } else if (actionLabel === "Meus Documentos") {
             setIsMyDocumentsModalOpen(true);
-        } else if (actionLabel === "Favoritos") {
-            //TODO: Implementar lógica para favoritos
-            toast.success('Funcionalidade em desenvolvimento');
+        } else if (actionLabel === "Biblioteca") {
+            window.open('/library', '_blank', 'noopener,noreferrer');
         } else {
             setIsProfileModalOpen(true);
         }
     };
-
 
     if (isCheckingAuth || isUserLoading) {
         return (

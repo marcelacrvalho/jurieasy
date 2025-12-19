@@ -1,5 +1,5 @@
 import {
-    Plus, Folder, Star, User,
+    Plus, Folder, Library, User,
 } from "lucide-react";
 import { QuickAction } from "@/components/dashboard/Types";
 
@@ -19,11 +19,11 @@ export const quickActionsData: QuickAction[] = [
         description: "Acessar seus contratos"
     },
     {
-        icon: Star,
-        label: "Favoritos",
+        icon: Library,
+        label: "Biblioteca",
         color: "from-amber-500 to-amber-600",
         iconColor: "text-white",
-        description: "Seus preferidos"
+        description: "Seu banco de dados pessoal"
     },
     {
         icon: User,
