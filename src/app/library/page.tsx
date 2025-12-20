@@ -363,7 +363,7 @@ export default function LibraryPage() {
             {/* Conteúdo Principal */}
             <main className="max-w-7xl mx-auto px-4 py-8">
                 {/* Estatísticas */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                     <div className="bg-white p-4 rounded-xl border border-gray-200">
                         <div className="text-2xl font-bold text-gray-900">{itens.length}</div>
                         <div className="text-sm text-gray-600">Itens totais</div>

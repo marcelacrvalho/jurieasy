@@ -87,7 +87,7 @@ export default function Footer({ onLegalClick }: FooterProps) {
                                 <Phone className="h-3 w-3 text-gray-500" />
                                 <div>
                                     <div>(35) 99938-5136</div>
-                                    <div className="text-gray-500 text-xs">Segunda a Sexta, 9h-18h</div>
+                                    <div className="text-gray-500 text-xs">Segunda à Sexta, 09:00-18:00</div>
                                 </div>
                             </li>
                         </ul>
