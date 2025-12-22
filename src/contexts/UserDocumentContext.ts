@@ -26,7 +26,7 @@ interface UserDocumentContextType {
     // Document operations (MESMA ASSINATURA DO HOOK)
     getUserDocuments: (filters?: DocumentFilters) => Promise<UserDocument[]>;
     getUserDocumentDraft: (userId: string, page?: number, limit?: number) => Promise<UserDocument[]>;
-    getUserCompletedDocuments: (userId: string, page?: number, limit?: number) => Promise<UserDocument[]>;
+    getUserCompletedDocuments: (userId: string, page?: number, limit?: number, search?: string) => Promise<{ documents: UserDocument[], total: number, totalPages: number }>;
     getUserDocument: (documentId: string) => Promise<UserDocument | null>;
     createDocument: (data: CreateDocumentData) => Promise<UserDocument | null>;
     updateDocument: (documentId: string, data: UpdateDocumentData) => Promise<UserDocument | null>;
@@ -162,25 +162,52 @@ export function UserDocumentProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const getUserCompletedDocuments = useCallback(async (userId: string, page: number = 1, limit: number = 20): Promise<UserDocument[]> => {
+    // No seu UserDocumentContext, ajuste a função getUserCompletedDocuments:
+    const getUserCompletedDocuments = useCallback(async (
+        userId: string,
+        page: number = 1,
+        limit: number = 10,
+        search: string = ""  // Adicione este parâmetro
+    ): Promise<{ documents: UserDocument[], total: number, totalPages: number }> => {
         setIsLoadingUserDocument(true);
         setError(null);
 
         try {
-            const axiosResponse = await apiClient.get<any>(
-                `/user-documents/${userId}/completed?page=${page}&limit=${limit}`
-            );
+            // Construir URL com parâmetros
+            let url = `/user-documents/${userId}/completed?page=${page}&limit=${limit}`;
+
+            // Adicionar search se não estiver vazio
+            if (search && search.trim() !== "") {
+                url += `&search=${encodeURIComponent(search.trim())}`;
+            }
+
+            console.log('🔍 Buscando documentos completados:', { userId, page, limit, search, url });
+
+            const axiosResponse = await apiClient.get<any>(url);
             const responseData = axiosResponse.data;
 
+            console.log('📨 Resposta dos documentos completados:', {
+                success: responseData.success,
+                count: responseData.data?.length || 0,
+                total: responseData.pagination?.total || 0,
+                pages: responseData.pagination?.pages || 1,
+                search
+            });
+
             if (responseData.success && responseData.data) {
-                return Array.isArray(responseData.data) ? responseData.data : [];
+                return {
+                    documents: Array.isArray(responseData.data) ? responseData.data : [],
+                    total: responseData.pagination?.total || 0,
+                    totalPages: responseData.pagination?.pages || 1
+                };
             } else {
                 setError(responseData.error || 'Erro ao carregar documentos completados');
-                return [];
+                return { documents: [], total: 0, totalPages: 1 };
             }
         } catch (err: any) {
+            console.error('💥 Erro na requisição dos documentos completados:', err);
             setError(err.message || 'Erro de conexão');
-            return [];
+            return { documents: [], total: 0, totalPages: 1 };
         } finally {
             setIsLoadingUserDocument(false);
         }

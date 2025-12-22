@@ -61,7 +61,7 @@ const FormularioItem: React.FC<FormularioItemProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 backdrop-blur-md bg-white/10 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-gray-800">
@@ -165,13 +165,13 @@ const FormularioItem: React.FC<FormularioItemProps> = ({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+                            className="flex-1 py-3 px-4 border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-50"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                            className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700"
                         >
                             {modoEdicao ? 'Salvar Alterações' : 'Adicionar à Biblioteca'}
                         </button>

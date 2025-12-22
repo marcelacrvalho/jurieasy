@@ -300,7 +300,9 @@ function ProfileTab({ user, stats }: { user: any, stats: any }) {
                         <div className="text-xs md:text-sm text-slate-600">Em andamento</div>
                     </div>
                     <div className="text-center p-3 md:p-4 bg-purple-50 rounded-lg md:rounded-xl">
-                        <div className="text-lg md:text-2xl font-bold text-purple-600">{stats.completionRate}%</div>
+                        <div className="text-lg md:text-2xl font-bold text-purple-600">
+                            {Math.round(stats.completionRate)}%
+                        </div>
                         <div className="text-xs md:text-sm text-slate-600">Taxa de finalização</div>
                     </div>
                 </div>
