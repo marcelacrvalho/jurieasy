@@ -22,6 +22,7 @@ export const plans = [
             "Logo personalizada",
             "Documentos na nuvem",
             "Exportar PDF e Word",
+            "Biblioteca de dados",
             "Suporte prioritário"
         ],
         button: "Assinar plano",
@@ -37,6 +38,7 @@ export const plans = [
             "Logo personalizada",
             "Documentos na nuvem",
             "Exportar PDF e Word",
+            "Biblioteca de dados",
             "Até 10 usuários no mesmo plano",
             "Fluxo de aprovação",
             "Painel administrativo",

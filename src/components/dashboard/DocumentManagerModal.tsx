@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
-import { DocumentCard } from "../shared/DocumentCard";
+import { DocumentCard } from "./DocumentCard";
 import DocumentWizard from "./DocumentWizard";
 import { User } from "@/types/user";
 import { useDocuments } from "@/hooks/document";

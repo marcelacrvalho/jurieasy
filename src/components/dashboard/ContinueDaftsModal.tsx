@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useUserDocuments } from "@/contexts/UserDocumentContext";
 import { useUserContext } from "@/contexts/UserContext";
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
-import { DocumentCard } from "@/components/shared/DocumentCard";
+import { DocumentCard } from "@/components/dashboard/DocumentCard";
 
 interface ContinueDraftsModalProps {
     isOpen: boolean;

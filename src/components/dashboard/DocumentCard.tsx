@@ -1,9 +1,9 @@
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
 import { getIconByCategory } from "@/utils/documentCategoriesIcons";
-import { ChevronRight, Clock, Plus, Star, Eye } from "lucide-react";
+import { ChevronRight, Clock, Plus, Star, Eye, HelpCircle } from "lucide-react";
 import { useState } from "react";
-import TemplatePreviewDrawer from "@/components/dashboard/TemplatPreviewDrawer";
+import TemplatePreviewDrawer from "@/components/dashboard/TemplatePreviewDrawer";
 
 interface DocumentCardProps {
     item: Document | UserDocument;
@@ -45,16 +45,55 @@ export function DocumentCard({ item, mode, onSelect }: DocumentCardProps) {
                     className="group relative p-4 sm:p-6 border border-slate-200 rounded-xl sm:rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
                     onClick={() => onSelect(document)}
                 >
-                    {/* Ícone de visualização do template - Aparece no hover */}
-                    {document.templateText && (
-                        <button
-                            onClick={(e) => handlePreviewTemplate(e, document)}
-                            className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-blue-50 hover:scale-105 z-10 shadow-sm border border-slate-200"
-                            title="Visualizar template do contrato"
-                        >
-                            <Eye className="w-4 h-4 text-slate-600 hover:text-blue-600 transition-colors" />
-                        </button>
+                    {/* Ícones flutuantes - Aparecem no hover */}
+                    {(document.templateText || document.whyUseThis || document.requiredDocuments) && (
+                        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+                            {document.templateText && (
+                                <button
+                                    onClick={(e) => handlePreviewTemplate(e, document)}
+                                    className="p-2 bg-white/80 backdrop-blur-sm rounded-lg hover:bg-blue-50 hover:scale-105 transition-all shadow-sm border border-slate-200"
+                                    title="Visualizar template do contrato"
+                                >
+                                    <Eye className="w-4 h-4 text-slate-600 hover:text-blue-600 transition-colors" />
+                                </button>
+                            )}
+
+                            {(document.whyUseThis || document.requiredDocuments) && (
+                                <div className="relative group/question">
+                                    <div className="p-2 bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-slate-200 cursor-help">
+                                        <HelpCircle className="w-4 h-4 text-slate-600" />
+                                    </div>
+
+                                    {/* Tooltip */}
+                                    <div className="absolute right-0 top-full mt-2 w-64 sm:w-80 p-4 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover/question:opacity-100 group-hover/question:visible transition-all duration-200 z-20">
+                                        <div className="space-y-3">
+                                            {document.whyUseThis && (
+                                                <div>
+                                                    <h4 className="font-semibold text-slate-900 text-sm mb-1">Por que usar?</h4>
+                                                    <p className="text-slate-600 text-xs">{document.whyUseThis}</p>
+                                                </div>
+                                            )}
+
+                                            {document.requiredDocuments && (
+                                                <div>
+                                                    <h4 className="font-semibold text-slate-900 text-sm mb-1">Documentos necessários:</h4>
+                                                    <p className="text-slate-600 text-xs">
+                                                        {Array.isArray(document.requiredDocuments)
+                                                            ? document.requiredDocuments.join(', ')
+                                                            : document.requiredDocuments}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Seta do tooltip */}
+                                        <div className="absolute -top-2 right-3 w-4 h-4 bg-white border-t border-l border-slate-200 transform rotate-45"></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
+
 
                     <div className="flex items-start gap-3 sm:gap-4">
                         {/* Ícone */}

@@ -437,7 +437,7 @@ function TeamTab() {
                                 onClick={() => setShowAddForm(false)}
                                 className="p-1 hover:bg-slate-100 rounded"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-5 h-5 text-gray-700" />
                             </button>
                         </div>
 
@@ -553,7 +553,7 @@ function TeamTab() {
                     <div className="p-8 text-center text-slate-500">
                         <Users className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                         <p>Nenhum membro na equipe</p>
-                        <p className="text-sm">Adicione o primeiro membro clicando no botão acima.</p>
+                        <p className="text-sm">Adicione o primeiro membro clicando no botão acima</p>
                     </div>
                 ) : (
                     teamMembers.map((member) => (

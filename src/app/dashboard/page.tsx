@@ -22,7 +22,7 @@ import { useDocuments } from "@/hooks/document";
 import React from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document } from "@/types/document";
-import { DocumentCard } from "@/components/shared/DocumentCard";
+import { DocumentCard } from "@/components/dashboard/DocumentCard";
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager';
 import ContinueDraftsModal from "@/components/dashboard/ContinueDaftsModal";
