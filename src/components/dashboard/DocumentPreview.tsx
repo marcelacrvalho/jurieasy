@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { UserDocument } from "@/types/userDocument";
 import { Document, Witness } from "@/types/document";
 import { useUserDocuments } from '@/contexts/UserDocumentContext';
@@ -19,7 +19,7 @@ interface DocumentPreviewProps {
 
 export default function DocumentPreview({ userDocument, template, plan, onBack, onSave, onComplete, onDownloadStart }: DocumentPreviewProps) {
     const [isDownloading, setIsDownloading] = useState(false);
-    const [downloadType, setDownloadType] = useState<'pdf' | 'doc' | 'docuSign' | null>(null);
+    const [downloadType, setDownloadType] = useState<'pdf' | 'doc' | 'docuSign' | 'gov' | null>(null);
     const [editingAnswers, setEditingAnswers] = useState<Record<string, any>>({ ...userDocument.answers });
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
@@ -240,19 +240,12 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         setEditValue("");
     };
 
-    const handleSaveAll = () => {
-        onSave(editingAnswers);
-    };
-
     const documentText = useMemo(() => {
-        if (userDocument.generatedText) {
-            return userDocument.generatedText;
-        }
-
-        // ✅ FALLBACK: Gera o texto se não existir no banco (para documentos antigos)
+        // Sempre gerar o texto a partir das respostas atuais
         let text = template.templateText || "";
 
         if (!text) {
+            // Fallback para templates sem templateText
             text = `\n\n\t\t${template.title.toUpperCase()}\n\n`;
 
             template.variables?.forEach((variable) => {
@@ -268,6 +261,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
 
             text += `\n\nDocumento gerado em ${new Date().toLocaleDateString("pt-BR")}\n`;
         } else {
+            // Substituir placeholders no template com as respostas atuais
             Object.entries(editingAnswers).forEach(([key, value]) => {
                 const placeholder = `{{${key}}}`;
                 let f = String(value || "");
@@ -281,23 +275,71 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         }
 
         return text;
-    }, [userDocument.generatedText, template.templateText, template.variables, editingAnswers]); // ✅ Adicione userDocument.generatedText nas dependências
+    }, [template.templateText, template.variables, template.title, editingAnswers]); // Removido userDocument.generatedText
 
     const [textoEditavel, setTextoEditavel] = useState(documentText || "");
 
+    // 1. Primeiro, crie a função para gerar o texto baseado nas respostas
+    const gerarTextoDasRespostas = useCallback(() => {
+        let text = template.templateText || "";
+
+        if (!text) {
+            // Fallback para templates sem templateText
+            text = `\n\n\t\t${template.title.toUpperCase()}\n\n`;
+
+            template.variables?.forEach((variable) => {
+                let value = editingAnswers[variable.id] || "Não informado";
+                let f = String(value);
+
+                if (variable.type === "date") f = formatarDataABNT(f);
+                if (variable.label.toLowerCase().includes("nome")) f = capitalizarNomeProprio(f);
+                if (variable.label.toLowerCase().includes("cidade")) f = capitalizarLocal(f);
+
+                text += `${variable.label}: ${f}\n`;
+            });
+
+            text += `\n\nDocumento gerado em ${new Date().toLocaleDateString("pt-BR")}\n`;
+        } else {
+            // Substituir placeholders no template com as respostas atuais
+            Object.entries(editingAnswers).forEach(([key, value]) => {
+                const placeholder = `{{${key}}}`;
+                let f = String(value || "");
+
+                if (key.includes("data")) f = formatarDataABNT(f);
+                if (key.includes("nome")) f = capitalizarNomeProprio(f);
+                if (key.includes("cidade")) f = capitalizarLocal(f);
+
+                text = text.replace(new RegExp(placeholder, "g"), f);
+            });
+        }
+
+        return text;
+    }, [template.templateText, template.variables, template.title, editingAnswers]);
+
+    // 2. Use memo para o texto baseado nas respostas
+    const textoBase = useMemo(() => {
+        return gerarTextoDasRespostas();
+    }, [gerarTextoDasRespostas]);
+
+    // 5. Efeito para sincronizar quando o texto base mudar (apenas na inicialização)
     useEffect(() => {
-        setTextoEditavel(documentText || "");
-    }, [documentText]);
+        // Só atualiza se o textoEditavel ainda não foi modificado pelo usuário
+        // Verifica se o textoEditavel ainda é igual ao textoBase anterior
+        if (textoEditavel === textoRef.current) {
+            setTextoEditavel(textoBase || "");
+            textoRef.current = textoBase || "";
+        }
+    }, [textoBase]);
 
-    // 3. (Opcional) Referência para pegar o texto na hora do download sem precisar re-renderizar tudo
-    const textoRef = useRef(documentText || "");
-
-    // Função para atualizar o texto conforme o usuário digita
+    // 6. Função para atualizar o texto conforme o usuário digita
     const handleTextChange = (e: { currentTarget: { innerText: any; }; }) => {
         const novoTexto = e.currentTarget.innerText;
         setTextoEditavel(novoTexto);
         textoRef.current = novoTexto;
     };
+
+    // 3. (Opcional) Referência para pegar o texto na hora do download sem precisar re-renderizar tudo
+    const textoRef = useRef(documentText || "");
 
     const generatePDF = async (
         content: string,
@@ -629,7 +671,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         URL.revokeObjectURL(url);
     };
 
-    const handleDownload = async (format: 'pdf' | 'doc' | 'docuSign') => {
+    const handleDownload = async (format: 'pdf' | 'doc' | 'docuSign' | 'gov') => {
         setIsDownloading(true);
 
         // ✅ Notifica o DocumentWizard para parar auto-save
@@ -655,7 +697,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
             if (updatedDocument) {
                 // 2. Gerar e baixar/abrir no formato escolhido
                 const textoParaDownload = textoEditavel;
-                //refreshUsage();
 
                 if (format === 'pdf') {
                     await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
@@ -665,25 +706,30 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                     // 3. Gerar PDF primeiro, depois abrir DocuSign
                     await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
                     window.open("https://app.docusign.com/send", "_blank");
+                } else if (format === 'gov') {
+                    // 4. Gerar PDF primeiro, depois abrir Assinador Gov
+                    await generatePDF(textoParaDownload, template.title, template.title.replace(/\s+/g, '_'));
+                    window.open("https://assinador.iti.br", "_blank");
                 }
 
-                // 4. Aguardar um pouco antes do refresh
+                // 5. Aguardar um pouco antes do refresh
                 setTimeout(() => {
                     refreshDocuments();
                 }, 300);
 
-                // 5. Notificar componente pai sobre conclusão
+                // 6. Notificar componente pai sobre conclusão
                 if (onComplete) {
                     onComplete(updatedDocument);
                 }
             }
         } catch (error) {
+            console.error("Erro ao baixar documento:", error);
+            // Você pode adicionar uma notificação de erro aqui
         } finally {
             setIsDownloading(false);
             setDownloadType(null);
         }
     };
-
 
     return (
         <div className="h-full w-full overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 py-8">
@@ -728,59 +774,125 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                             </p>
                         </div>
 
-                        {/* BOTÕES DE DOWNLOAD - Mesmo layout para todas as telas */}
-                        <div className="flex items-center gap-3 justify-center sm:justify-end">
-                            {/* BOTÃO BAIXAR PDF */}
-                            <button
-                                onClick={() => handleDownload('pdf')}
-                                disabled={isDownloading}
-                                className="px-4 py-2 rounded-xl text-white font-medium
-                                bg-slate-600 hover:bg-slate-700
-                                disabled:opacity-50
-                                transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
-                            >
-                                {isDownloading && downloadType === 'pdf' ? (
-                                    <span className="text-sm">Baixando...</span>
-                                ) : (
-                                    <>
-                                        <Download className="w-4 h-4" />
-                                        <span className="hidden sm:inline">PDF</span>
-                                        <span className="sm:hidden">PDF</span>
-                                    </>
-                                )}
-                            </button>
-
-                            {/* BOTÃO BAIXAR DOC */}
-                            <button
-                                onClick={() => handleDownload('doc')}
-                                disabled={isDownloading}
-                                className="px-4 py-2 rounded-xl text-white font-medium
-                                bg-blue-600 hover:bg-blue-700
-                                disabled:opacity-50
-                                transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
-                            >
-                                {isDownloading && downloadType === 'doc' ? (
-                                    <span className="text-sm">Baixando...</span>
-                                ) : (
-                                    <>
-                                        <Download className="w-4 h-4" />
-                                        <span className="hidden sm:inline">DOC</span>
-                                        <span className="sm:hidden">DOC</span>
-                                    </>
-                                )}
-                            </button>
-
-                            {plan == 'escritório' && (
+                        {/* BOTÕES DE DOWNLOAD - Design moderno com tamanhos iguais */}
+                        <div className="flex flex-col items-start gap-3">
+                            {/* PRIMEIRA LINHA - BOTÕES PDF E DOC */}
+                            <div className="flex items-center gap-3">
+                                {/* BOTÃO BAIXAR PDF */}
                                 <button
-                                    onClick={() => handleDownload('docuSign')}
-                                    className="px-4 py-2 rounded-xl text-white font-medium
-        bg-amber-500 hover:bg-amber-600
-        transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
+                                    onClick={() => handleDownload('pdf')}
+                                    disabled={isDownloading}
+                                    className="group relative min-w-[120px] px-5 py-2.5 rounded-xl text-white font-medium
+        bg-gradient-to-r from-slate-600 to-slate-700 
+        hover:from-slate-700 hover:to-slate-800
+        disabled:opacity-60 disabled:cursor-not-allowed
+        transition-all duration-300 active:scale-[0.98] 
+        shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5
+        border border-slate-500/20 h-[44px]"
                                 >
-                                    <FolderOpen className="w-4 h-4" />
-                                    <span className="hidden sm:inline">DocuSign</span>
-                                    <span className="sm:hidden">Sign</span>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    {isDownloading && downloadType === 'pdf' ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span className="text-sm font-medium">Baixando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="w-5 h-5 relative z-10" />
+                                            <span className="relative z-10">PDF</span>
+                                        </>
+                                    )}
                                 </button>
+
+                                {/* BOTÃO BAIXAR DOC */}
+                                <button
+                                    onClick={() => handleDownload('doc')}
+                                    disabled={isDownloading}
+                                    className="group relative min-w-[120px] px-5 py-2.5 rounded-xl text-white font-medium
+        bg-gradient-to-r from-blue-600 to-blue-700
+        hover:from-blue-700 hover:to-blue-800
+        disabled:opacity-60 disabled:cursor-not-allowed
+        transition-all duration-300 active:scale-[0.98]
+        shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5
+        border border-blue-500/20 h-[44px]"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    {isDownloading && downloadType === 'doc' ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span className="text-sm font-medium">Baixando...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="w-5 h-5 relative z-10" />
+                                            <span className="relative z-10">DOC</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* SEGUNDA LINHA - BOTÕES ASSINATURA */}
+                            {(plan === 'escritório' || plan === 'escritorio') && (
+                                <div className="flex items-center gap-3">
+                                    {/* BOTÃO DOCUSIGN */}
+                                    <button
+                                        onClick={() => handleDownload('docuSign')}
+                                        disabled={isDownloading}
+                                        className="group relative min-w-[120px] px-5 py-2.5 rounded-xl text-white font-medium
+          bg-gradient-to-r from-amber-500 to-amber-600
+          hover:from-amber-600 hover:to-amber-700
+          disabled:opacity-60 disabled:cursor-not-allowed
+          transition-all duration-300 active:scale-[0.98]
+          shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5
+          border border-amber-400/20 h-[44px]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        {isDownloading && downloadType === 'docuSign' ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <span className="text-sm font-medium">Processando...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="relative z-10 p-1 bg-white/10 rounded-lg">
+                                                    <FolderOpen className="w-4 h-4" />
+                                                </div>
+                                                <span className="relative z-10 hidden sm:inline">DocuSign</span>
+                                                <span className="relative z-10 sm:hidden">Sign</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* BOTÃO GOV */}
+                                    <button
+                                        onClick={() => handleDownload('gov')}
+                                        disabled={isDownloading}
+                                        className="group relative min-w-[120px] px-5 py-2.5 rounded-xl text-white font-medium
+          bg-gradient-to-r from-emerald-600 to-emerald-700
+          hover:from-emerald-700 hover:to-emerald-800
+          disabled:opacity-60 disabled:cursor-not-allowed
+          transition-all duration-300 active:scale-[0.98]
+          shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5
+          border border-emerald-500/20 h-[44px]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        {isDownloading && downloadType === 'gov' ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <span className="text-sm font-medium">Processando...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="relative z-10 p-1 bg-white/10 rounded-lg">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                                    </svg>
+                                                </div>
+                                                <span className="relative z-10">GovBR</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
