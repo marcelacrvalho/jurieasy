@@ -30,6 +30,7 @@ export default function QuestionStep({
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
+    const hasShownSuggestionsRef = useRef(false);
 
     // Atualiza o valor quando o currentAnswer muda
     useEffect(() => {
@@ -46,12 +47,32 @@ export default function QuestionStep({
                 !inputRef.current.contains(event.target as Node)
             ) {
                 setShowSuggestions(false);
+                hasShownSuggestionsRef.current = false;
             }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // CAPTURAR A TECLA ENTER
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" && !showSuggestions) {
+                e.preventDefault();
+
+                if (!(question.required && !value.trim())) {
+                    onAnswer(value);
+                }
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [value, showSuggestions, question.required, onAnswer]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const newValue = e.target.value;
@@ -64,40 +85,49 @@ export default function QuestionStep({
 
             // Não mostra sugestões se já fechou com }}
             if (!textAfterBracket.includes("}}")) {
-                const searchTerm = textAfterBracket;
-                const sugestoes = getSugestoesBiblioteca(searchTerm, 5);
-                setSuggestions(sugestoes);
-                setShowSuggestions(sugestoes.length > 0);
+                // MOSTRA SUGESTÕES IMEDIATAMENTE QUANDO DIGITA {{
+                if (!hasShownSuggestionsRef.current) {
+                    // Carrega TODAS as sugestões da biblioteca
+                    const todasSugestoes = getSugestoesBiblioteca("", 5); // "" busca todas
+                    setSuggestions(todasSugestoes);
+                    setShowSuggestions(true);
+                    hasShownSuggestionsRef.current = true;
+                }
+
+                // Se o usuário continuou digitando após {{, filtra as sugestões
+                if (textAfterBracket.trim()) {
+                    const termoBusca = textAfterBracket.toLowerCase();
+                    const sugestoesFiltradas = suggestions.filter(item =>
+                        item.nome.toLowerCase().includes(termoBusca) ||
+                        item.valor.toLowerCase().includes(termoBusca)
+                    );
+                    setSuggestions(sugestoesFiltradas);
+                }
             } else {
                 setShowSuggestions(false);
+                hasShownSuggestionsRef.current = false;
             }
         } else {
             setShowSuggestions(false);
+            hasShownSuggestionsRef.current = false;
         }
     };
 
     const handleSuggestionClick = (suggestion: any) => {
         const currentValue = value;
-
-        // Encontra a posição do último {{
         const lastOpenBracket = currentValue.lastIndexOf("{{");
 
         if (lastOpenBracket !== -1) {
-            // Encontra a posição do próximo }} após o {{
             let closingBracket = currentValue.indexOf("}}", lastOpenBracket);
             if (closingBracket === -1) {
                 closingBracket = currentValue.length;
             }
 
-            // Substitui apenas o conteúdo entre {{ e }} (ou até o final se não tiver }})
             const before = currentValue.substring(0, lastOpenBracket);
             const after = currentValue.substring(closingBracket + 2);
-
-            // Insere o VALOR da sugestão
             const newValue = before + suggestion.valor + after;
             setValue(newValue);
 
-            // Foca no input
             if (inputRef.current) {
                 inputRef.current.focus();
                 const cursorPos = before.length + suggestion.valor.length;
@@ -109,6 +139,7 @@ export default function QuestionStep({
             }
 
             setShowSuggestions(false);
+            hasShownSuggestionsRef.current = false;
         }
     };
 
@@ -119,18 +150,17 @@ export default function QuestionStep({
         onAnswer(value);
     };
 
-    // Renderização por tipo de pergunta
     const renderInput = () => {
         const commonProps = {
             value,
             onChange: handleChange,
             onFocus: () => {
+                // Mostra sugestões imediatamente ao focar se tiver {{
                 if (value.includes("{{") && !value.includes("}}", value.lastIndexOf("{{"))) {
-                    const lastOpen = value.lastIndexOf("{{");
-                    const search = value.substring(lastOpen + 2);
-                    const sugestoes = getSugestoesBiblioteca(search, 5);
-                    setSuggestions(sugestoes);
-                    setShowSuggestions(sugestoes.length > 0);
+                    const todasSugestoes = getSugestoesBiblioteca("", 50);
+                    setSuggestions(todasSugestoes);
+                    setShowSuggestions(true);
+                    hasShownSuggestionsRef.current = true;
                 }
             },
             className: "w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
@@ -147,7 +177,7 @@ export default function QuestionStep({
                             rows={4}
                             className={`${commonProps.className} resize-none`}
                         />
-                        {showSuggestions && suggestions.length > 0 && (
+                        {showSuggestions && (
                             <SuggestionsDropdown
                                 suggestions={suggestions}
                                 onSelect={handleSuggestionClick}
@@ -237,7 +267,7 @@ export default function QuestionStep({
                             {...commonProps}
                             placeholder={question.placeholder}
                         />
-                        {showSuggestions && suggestions.length > 0 && (
+                        {showSuggestions && (
                             <SuggestionsDropdown
                                 suggestions={suggestions}
                                 onSelect={handleSuggestionClick}
@@ -279,7 +309,6 @@ export default function QuestionStep({
     );
 }
 
-// Componente dropdown de sugestões
 interface SuggestionsDropdownProps {
     suggestions: any[];
     onSelect: (suggestion: any) => void;
@@ -299,25 +328,31 @@ const SuggestionsDropdown = React.forwardRef<HTMLDivElement, SuggestionsDropdown
                     <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50">
                         Sugestões da sua biblioteca
                     </div>
-                    {suggestions.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => onSelect(item)}
-                            className="w-full text-left px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors flex items-center justify-between border-b border-gray-100 last:border-b-0"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="text-left">
-                                    <div className="font-medium text-gray-900">{item.nome}</div>
-                                    <div className="text-sm text-gray-500 truncate max-w-xs">{item.valor}</div>
+                    {suggestions.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                            Digite para filtrar sugestões
+                        </div>
+                    ) : (
+                        suggestions.map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => onSelect(item)}
+                                className="w-full text-left px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none transition-colors flex items-center justify-between border-b border-gray-100 last:border-b-0"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="text-left">
+                                        <div className="font-medium text-gray-900">{item.nome}</div>
+                                        <div className="text-sm text-gray-500 truncate max-w-xs">{item.valor}</div>
+                                    </div>
                                 </div>
-                            </div>
-                            {item.usoFrequente && (
-                                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
-                                    Frequente
-                                </span>
-                            )}
-                        </button>
-                    ))}
+                                {item.usoFrequente && (
+                                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
+                                        Frequente
+                                    </span>
+                                )}
+                            </button>
+                        ))
+                    )}
                 </div>
             </motion.div>
         );
