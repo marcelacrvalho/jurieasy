@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode } from 'react';
+import { useTouchScale } from "@/contexts/TouchScale";
 import { Search, Plus, Tag, User, MapPin, FileText, Trash2, Edit, X, Library } from 'lucide-react';
 
 // Interfaces para tipagem
@@ -184,6 +185,8 @@ const FormularioItem: React.FC<FormularioItemProps> = ({
 
 // Componente principal
 export default function LibraryPage() {
+    const touchHandlers = useTouchScale();
+
     // Estado dos itens da biblioteca
     const [itens, setItens] = useState<BibliotecaItem[]>([]);
 
@@ -364,23 +367,52 @@ export default function LibraryPage() {
             <main className="max-w-7xl mx-auto px-4 py-8">
                 {/* Estatísticas */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                    <div className="bg-white p-4 rounded-xl border border-gray-200">
-                        <div className="text-2xl font-bold text-gray-900">{itens.length}</div>
-                        <div className="text-sm text-gray-600">Itens totais</div>
+                    {/* Itens totais */}
+                    <div
+                        onTouchStart={touchHandlers.onTouchStart}
+                        onTouchEnd={touchHandlers.onTouchEnd}
+                        className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm transition-all duration-300 active:scale-95 lg:hover:scale-[1.02] lg:hover:shadow-lg"
+                    >
+                        <div className="text-sm font-medium text-slate-600 mt-1">
+                            Itens totais
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-700">
+                            {itens.length}
+                        </div>
+
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-gray-200">
-                        <div className="text-2xl font-bold text-gray-900">
+
+                    {/* Uso frequente */}
+                    <div
+                        onTouchStart={touchHandlers.onTouchStart}
+                        onTouchEnd={touchHandlers.onTouchEnd}
+                        className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm transition-all duration-300 active:scale-95 lg:hover:scale-[1.02] lg:hover:shadow-lg"
+                    >
+                        <div className="text-sm font-medium text-slate-600 mt-1">
+                            Uso frequente
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-700">
                             {itens.filter(i => i.usoFrequente).length}
                         </div>
-                        <div className="text-sm text-gray-600">Uso frequente</div>
+
                     </div>
-                    <div className="bg-white p-4 rounded-xl border border-gray-200">
-                        <div className="text-2xl font-bold text-gray-900">
+
+                    {/* Tags únicas */}
+                    <div
+                        onTouchStart={touchHandlers.onTouchStart}
+                        onTouchEnd={touchHandlers.onTouchEnd}
+                        className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm transition-all duration-300 active:scale-95 lg:hover:scale-[1.02] lg:hover:shadow-lg"
+                    >
+                        <div className="text-sm font-medium text-slate-600 mt-1">
+                            Tags únicas
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-700">
                             {[...new Set(itens.flatMap(i => i.tags))].length}
                         </div>
-                        <div className="text-sm text-gray-600">Tags únicas</div>
+
                     </div>
                 </div>
+
 
                 {/* Barra de Filtros e Busca */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
@@ -456,15 +488,25 @@ export default function LibraryPage() {
                                         return (
                                             <div
                                                 key={item.id}
-                                                className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all"
+                                                className="border border-gray-200 rounded-xl p-4 border-slate-200 rounded-xl sm:rounded-2xl hover:border-blue-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white"
                                             >
-                                                <div className="flex justify-between items-start mb-3">
+                                                <div className="group flex justify-between items-start mb-3">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-full ${categoria?.cor || 'bg-gray-100'}`}>
+                                                        <div
+                                                            className={`
+                p-2
+                rounded-lg
+                ${categoria?.cor || 'bg-gray-100'}
+                transition-transform duration-300
+                group-hover:scale-110
+            `}
+                                                        >
                                                             {categoria?.icone || <Tag size={16} />}
                                                         </div>
+
                                                         <div>
                                                             <h4 className="font-bold text-gray-800">{item.nome}</h4>
+
                                                             {item.usoFrequente && (
                                                                 <span className="inline-block px-2 py-0.5 text-xs bg-amber-100 text-amber-800 rounded-full">
                                                                     Uso Frequente
@@ -519,9 +561,6 @@ export default function LibraryPage() {
                                     })}
                                 </div>
 
-                                <div className="text-center text-sm text-gray-500 pt-4">
-                                    {itensOrdenados.length} item{itensOrdenados.length !== 1 ? 's' : ''} encontrado{itensOrdenados.length !== 1 ? 's' : ''}
-                                </div>
                             </>
                         )}
                     </div>
@@ -537,15 +576,15 @@ export default function LibraryPage() {
                             <h4 className="font-bold text-gray-900 mb-1">Como usar sua biblioteca</h4>
                             <ul className="text-gray-700 space-y-2">
                                 <li className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div className="w-1 h-1 bg-gray-700 rounded-full"></div>
                                     <span>Ao responder as perguntas do template de contrato escolhido, digite <code className="px-2 py-1 bg-gray-100 rounded">&#123;&#123;</code> para ver sugestões da biblioteca</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div className="w-1 h-1 bg-gray-700 rounded-full"></div>
                                     <span>Itens marcados como "Uso Frequente" aparecem primeiro</span>
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div className="w-1 h-1 bg-gray-700 rounded-full"></div>
                                     <span>Os dados ficam salvos apenas neste dispositivo (cache local)</span>
                                 </li>
                             </ul>

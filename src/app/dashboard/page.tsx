@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from "react-hot-toast";
 
 // Components
-import MetricCard from "@/components/dashboard/MetricsGrid";
+import MetricsGrid from "@/components/dashboard/MetricsGrid";
 import QuickActionButton from "@/components/dashboard/QuickActionButton";
 import StatusBanner from "@/components/dashboard/StatusBanner";
 import MobileMenu from "@/components/dashboard/MobileMenu";
@@ -245,7 +245,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
                     {stats && !isFetchingStats ? (
                         <>
-                            <MetricCard
+                            <MetricsGrid
                                 metric={{
                                     label: "Total de Documentos",
                                     value: (stats.total ?? 0).toString(),
@@ -258,7 +258,7 @@ export default function Dashboard() {
                                 onTouchEnd={handleTouchEnd}
                             />
 
-                            <MetricCard
+                            <MetricsGrid
                                 metric={{
                                     label: "Em Andamento",
                                     value: (stats.inProgress ?? 0).toString(),
@@ -271,7 +271,7 @@ export default function Dashboard() {
                                 onTouchEnd={handleTouchEnd}
                             />
 
-                            <MetricCard
+                            <MetricsGrid
                                 metric={{
                                     label: "Finalizados",
                                     value: (stats.completed ?? 0).toString(),
