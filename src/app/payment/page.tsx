@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CreditCard, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useUsers } from '@/hooks/users';
+import { useUserContext } from '@/contexts/UserContext';
 import LoadingAnimation from "@/components/shared/LoadingAnimation";
 
 export default function PaymentPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const { upgradePlan, error: apiError, clearError } = useUsers();
+    const { upgradePlan, error: apiError, clearError } = useUserContext();
 
     useEffect(() => {
         const plan = localStorage.getItem("selectedPlan");

@@ -12,6 +12,7 @@ import SocialProof from "@/components/landing/SocialProof";
 import Testimonial from "@/components/landing/Testimonial";
 import Header from "@/components/landing/Header";
 import LegalSections from "@/components/landing/LegalSections";
+import ROICalculator from "@/components/landing/ROICalculator";
 
 export default function LandingPage() {
   const [activeLegalSection, setActiveLegalSection] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export default function LandingPage() {
       <Benefits />
       <HowItWorks />
       <Testimonial />
+      <ROICalculator />
       <Prices />
       <FAQ />
       <Footer onLegalClick={handleLegalClick} />
