@@ -7,6 +7,7 @@ import GoogleProvider from "./providers/GoogleProvider";
 import { UserProvider } from "@/contexts/UserContext";
 import { UserDocumentProvider } from "@/contexts/UserDocumentContext";
 import { DocumentProvider } from "@/contexts/DocumentContext";
+import { Analytics } from "@vercel/analytics/next"
 
 const suravaram = Suravaram({
   subsets: ["latin"],
@@ -208,6 +209,7 @@ export default function RootLayout({
             </UserDocumentProvider>
           </UserProvider>
         </GoogleProvider>
+        <Analytics />
       </body>
     </html>
   );
