@@ -8,8 +8,6 @@ import { useRouter } from "next/navigation";
 import { plans } from "@/data/pricesAndPlans";
 import { useUserDocuments } from "@/contexts/UserDocumentContext";
 import { AddTeamMemberData, TeamMember, useTeamMembers } from "@/hooks/teamMembers";
-import toast from "react-hot-toast";
-import LoadingAnimation from "../shared/LoadingAnimation";
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -596,115 +594,36 @@ function TeamTab() {
 function BillingTab({ user }: { user: any }) {
     const { upgradePlan, isUpgradingPlan, error: upgradeError } = useUserContext();
     const [localError, setLocalError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handlePlanChange = async (plan: 'free' | 'pro' | 'escritorio') => {
         // Não fazer nada se já estiver no plano selecionado
         if (user.plan === plan) {
-            toast.success('Você já está neste plano!');
             return;
         }
 
-        const planNames = {
-            free: 'Free',
-            pro: 'Pro',
-            escritorio: 'Escritório'
-        };
-
-        const currentPlanName = planNames[user.plan as keyof typeof planNames] || user.plan;
-        const newPlanName = planNames[plan] || plan;
-
-        const confirmationMessage = plan === 'free'
-            ? 'Tem certeza que deseja fazer downgrade para o plano Free? Você perderá algumas funcionalidades.'
-            : `Tem certeza que deseja ${user.plan === 'free' ? 'fazer upgrade' : 'mudar'} para o plano ${newPlanName}?`;
-
-        // Confirmação com React Hot Toast customizado
-        toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} 
-            max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-                <div className="flex-1 w-0 p-4">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0 pt-0.5">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${plan === 'free' ? 'bg-yellow-100' : 'bg-blue-100'
-                                }`}>
-                                <svg className={`w-5 h-5 ${plan === 'free' ? 'text-yellow-600' : 'text-blue-600'}`}
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div className="ml-3 flex-1">
-                            <p className="text-sm font-medium text-gray-900">
-                                {plan === 'free' ? 'Confirmar Downgrade' : 'Confirmar Alteração'}
-                            </p>
-                            <p className="mt-1 text-sm text-gray-500">
-                                {confirmationMessage}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex border-l border-gray-200">
-                    <button
-                        onClick={async () => {
-                            toast.dismiss(t.id);
-                            await processPlanChange(plan, newPlanName);
-                        }}
-                        className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        Confirmar
-                    </button>
-                    <button
-                        onClick={() => toast.dismiss(t.id)}
-                        className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    >
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        ), {
-            duration: 5000,
-        });
-    };
-
-    const processPlanChange = async (plan: 'free' | 'pro' | 'escritorio', planName: string) => {
-        const toastId = toast.loading(`Alterando para o plano ${planName}...`);
-
         try {
-            const success = await upgradePlan(plan);
+            const result = await upgradePlan(plan);
 
-            if (success) {
-                toast.success(`Plano alterado para ${planName} com sucesso!`, {
-                    id: toastId,
-                    duration: 5000
-                });
-            } else {
-                toast.error('Erro ao alterar plano. Tente novamente.', {
-                    id: toastId,
-                    duration: 5000
-                });
+            // Se for plano FREE
+            if (plan === 'free') {
+                // Recarrega para atualizar os dados do usuário
+                window.location.reload();
+            }
+            // Se for plano PAGO
+            else if (result.data?.paymentUrl) {
+                // Redireciona diretamente para o Stripe
+                window.open(result.data.paymentUrl, '_blank', 'noopener,noreferrer');
             }
         } catch (err) {
-            toast.error('Erro ao processar a solicitação', {
-                id: toastId,
-                duration: 5000
-            });
-        } finally {
-            setTimeout(() => {
-                toast.dismiss(toastId);
-            }, 6000); // 1 segundo a mais que a duração máxima
+            console.error('Erro ao alterar plano:', err);
+            setLocalError('Erro ao processar a solicitação');
         }
     };
 
     return (
-        <div className="max-w-4xl space-y-4 md:space-y-6">
-            {/* Mensagens de feedback */}
-            {successMessage && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
-                    <p className="text-green-700 text-sm">{successMessage}</p>
-                </div>
-            )}
-
+        /* Adicionado 'mx-auto' na div pai para centralizar o bloco todo */
+        <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
+            {/* Erro */}
             {(localError || upgradeError) && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                     <p className="text-red-700 text-sm">{localError || upgradeError}</p>
@@ -713,105 +632,110 @@ function BillingTab({ user }: { user: any }) {
 
             {/* Grid de Planos */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-stretch">
-                {plans.map((plan) => (
-                    <div
-                        key={plan.label}
-                        className={`border rounded-xl md:rounded-2xl p-4 md:p-6 transition-all duration-300 flex flex-col h-full ${plan.label === user.plan
-                            ? 'border-blue-500 bg-blue-50 shadow-lg'
-                            : 'border-slate-200 bg-white hover:shadow-md'
-                            } ${isUpgradingPlan ? 'opacity-50 pointer-events-none' : ''}`}
-                    >
+                {plans.map((plan) => {
+                    const isCurrentPlan = plan.label === user.plan;
+                    const isDowngrade = user.plan === 'escritorio' && plan.label === 'pro';
+                    const isUpgrade = (user.plan === 'free' && plan.label !== 'free') ||
+                        (user.plan === 'pro' && plan.label === 'escritorio');
 
-                        {/* Header do Plano */}
-                        <div className="text-center mb-4 md:mb-6">
-                            <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">
-                                {plan.name}
-                            </h3>
-                            <div className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">
-                                {plan.price}
-                            </div>
-                            <div className="text-xs md:text-sm text-slate-600">
-                                {plan.description}
-                            </div>
-                        </div>
-
-                        {/* Lista de Features */}
-                        <div className="flex-1 mb-4 md:mb-6">
-                            <ul className="space-y-2 md:space-y-3">
-                                {plan.features.map((feature, index) => (
-                                    <li key={index} className="text-xs md:text-sm text-slate-700 flex items-start">
-                                        <svg
-                                            className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M5 13l4 4L19 7"
-                                            />
-                                        </svg>
-                                        <span className="leading-tight">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Botão de Ação */}
-                        <button
-                            onClick={() => handlePlanChange(plan.label as 'free' | 'pro' | 'escritorio')}
-                            disabled={isUpgradingPlan}
-                            className={`w-full py-2 md:py-3 rounded-full font-medium transition-colors text-sm md:text-base ${plan.label === user.plan
-                                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                :
-                                'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    return (
+                        <div
+                            key={plan.label}
+                            className={`border rounded-xl md:rounded-2xl p-4 md:p-6 transition-all duration-300 flex flex-col h-full ${isCurrentPlan
+                                ? 'border-blue-500 bg-blue-50 shadow-lg'
+                                : 'border-slate-200 bg-white hover:shadow-md'
+                                } ${isUpgradingPlan ? 'opacity-50 pointer-events-none' : ''}`}
                         >
-                            {isUpgradingPlan ? (
-                                <div className="flex items-center justify-center gap-2">
-                                    <div className="text-center">
-                                        <LoadingAnimation />
 
-                                        <p className="mt-4 text-slate-600"> Processando...</p>
-                                    </div>
+                            {/* Header do Plano */}
+                            <div className="text-center mb-4 md:mb-6">
+                                <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">
+                                    {plan.name}
+                                </h3>
+                                <div className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">
+                                    {plan.price}
+                                    {plan.label !== 'free' && <span className="text-sm text-slate-600">/mês</span>}
                                 </div>
-                            ) : plan.label === user.plan ? (
-                                'Plano Atual'
-                            ) : (
-                                plan.button
-                            )}
-                        </button>
+                                <div className="text-xs md:text-sm text-slate-600">
+                                    {plan.description}
+                                </div>
+                            </div>
 
-                    </div>
-                ))}
-            </div>
+                            {/* Lista de Features */}
+                            <div className="flex-1 mb-4 md:mb-6">
+                                <ul className="space-y-2 md:space-y-3">
+                                    {plan.features.map((feature, index) => (
+                                        <li key={index} className="text-xs md:text-sm text-slate-700 flex items-start">
+                                            <svg
+                                                className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M5 13l4 4L19 7"
+                                                />
+                                            </svg>
+                                            <span className="leading-tight">{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
 
-            {/* Informações Adicionais */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl p-4 md:p-6">
-                <h4 className="font-semibold text-slate-900 mb-2 md:mb-3 text-sm md:text-base">
-                    Como funciona a cobrança?
-                </h4>
-                <ul className="text-xs md:text-sm text-slate-600 space-y-1 md:space-y-2">
-                    <li>• Cobrança mensal recorrente</li>
-                    <li>• Você pode cancelar a qualquer momento</li>
-                    <li>• Upgrade/downgrade imediato</li>
-                    <li>• Suporte incluído em todos os planos</li>
-                    <li>• Alterações são refletidas instantaneamente</li>
-                </ul>
+                            {/* Botão de Ação */}
+                            <button
+                                onClick={() => handlePlanChange(plan.label as 'free' | 'pro' | 'escritorio')}
+                                disabled={isUpgradingPlan || isCurrentPlan}
+                                className={`w-full py-2 md:py-3 rounded-xl font-medium transition-colors text-sm md:text-base ${isCurrentPlan
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                    : isUpgrade
+                                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                                        : isDowngrade
+                                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md`}
+                            >
+                                {isUpgradingPlan ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span>Processando...</span>
+                                    </div>
+                                ) : isCurrentPlan ? (
+                                    'Plano Atual ✓'
+                                ) : isUpgrade ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                        </svg>
+                                        {plan.button}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        </svg>
+                                        Downgrade
+                                    </div>
+                                )}
+                            </button>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Aviso sobre downgrade */}
             {user.plan !== 'free' && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl md:rounded-2xl p-4 md:p-6">
                     <h4 className="font-semibold text-yellow-900 mb-2 text-sm md:text-base">
-                        ⚠️ Atenção ao fazer downgrade
+                        ⚠️ Importante sobre downgrade
                     </h4>
                     <ul className="text-xs md:text-sm text-yellow-700 space-y-1">
-                        <li>• Ao voltar para o plano Free, algumas funcionalidades ficarão indisponíveis</li>
-                        <li>• Seus documentos existentes serão mantidos</li>
-                        <li>• Limites do plano Free serão aplicados imediatamente</li>
+                        <li>• Ao voltar para o plano Free, funcionalidades avançadas serão desativadas</li>
+                        <li>• Seus documentos existentes permanecerão acessíveis</li>
+                        <li>• Limites do plano Free serão aplicados imediatamente (3 docs/mês, 10MB)</li>
+                        <li>• Cancelamento automático da assinatura no Stripe</li>
                     </ul>
                 </div>
             )}

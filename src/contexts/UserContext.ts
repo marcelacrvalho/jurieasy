@@ -14,6 +14,30 @@ interface TeamMember {
     joinedAt: string;
 }
 
+interface UpgradeResult {
+    success: boolean;
+    data?: {
+        id: string;
+        paymentUrl?: string;
+        plan?: string;
+        price?: string;
+        email?: string;
+    };
+    message?: string;
+}
+
+interface PaymentVerification {
+    success: boolean;
+    data?: {
+        currentPlan: string;
+        isPaid: boolean;
+        message: string;
+        hasActiveSubscription: boolean;
+    };
+    needsVerification?: boolean;
+    message?: string;
+}
+
 interface UserContextType {
     // Data states
     user: User | null;
@@ -36,14 +60,14 @@ interface UserContextType {
     isAuthenticated: boolean;
 
     // Auth operations
-    registerEmail: (data: { name: string; email: string; password: string }) => Promise<boolean>;
+    registerEmail: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; message?: string }>;
     login: (data: { email: string; password: string }) => Promise<boolean>;
     registerGoogle: (accessToken: string) => Promise<boolean>;
     logout: () => void;
 
     // User operations
     getUserProfile: () => Promise<User | null>;
-    upgradePlan: (plan: 'free' | 'pro' | 'escritorio') => Promise<boolean>;
+    upgradePlan: (plan: 'free' | 'pro' | 'escritorio') => Promise<UpgradeResult>;
     updateUser: (data: Partial<User>) => Promise<boolean>;
     refreshUser: () => Promise<void>;
 
@@ -169,15 +193,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
         name: string;
         email: string;
         password: string
-    }): Promise<boolean> => {
+    }): Promise<{ success: boolean; message?: string }> => {
         setIsRegistering(true);
         setError(null);
 
         try {
+            console.log('📤 [CONTEXT] Enviando dados para registro:', data);
+
             const axiosResponse = await apiClient.post('/users/register', data);
             const responseData = axiosResponse.data;
 
-            console.log('🎯 [CONTEXT] Register response:', responseData);
+            console.log('✅ [CONTEXT] Register response:', responseData);
+
+            // Verifica se a API retornou success: false
+            if (!responseData.success) {
+                console.log('❌ [CONTEXT] API retornou success: false');
+                setError(responseData.error || 'Erro no registro');
+                return {
+                    success: false,
+                    message: responseData.error || 'Erro no registro'
+                };
+            }
 
             // Extrai user e token da resposta
             let userData: User | null = null;
@@ -208,23 +244,54 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
                 console.log('✅ [CONTEXT] Register successful:', {
                     email: userData.email,
-                    usage: userData.usage,
-                    documentsRemaining: userData.usage?.documentsRemaining
+                    plan: userData.plan,
+                    emailVerified: userData.emailVerified
                 });
 
-                return true;
+                return {
+                    success: true,
+                    message: responseData.message || 'Registro realizado com sucesso!'
+                };
             } else {
-                setError('Usuário não retornado na resposta');
-                return false;
+                const errorMsg = 'Usuário não retornado na resposta';
+                setError(errorMsg);
+                return {
+                    success: false,
+                    message: errorMsg
+                };
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('❌ [CONTEXT] Erro no registro:', err);
-            setError('Erro de conexão');
-            return false;
+
+            // Captura mensagem de erro da API
+            let errorMessage = 'Erro de conexão';
+
+            if (err.response) {
+                // Erro 400, 500, etc
+                console.log('📋 Status do erro:', err.response.status);
+                console.log('📝 Dados do erro:', err.response.data);
+
+                if (err.response.data?.error) {
+                    errorMessage = err.response.data.error;
+                } else if (err.response.data?.message) {
+                    errorMessage = err.response.data.message;
+                } else if (err.response.status === 400) {
+                    errorMessage = 'Dados inválidos. Verifique as informações.';
+                }
+            } else if (err.request) {
+                // A requisição foi feita mas não houve resposta
+                errorMessage = 'Sem resposta do servidor. Verifique sua conexão.';
+            }
+
+            setError(errorMessage);
+            return {
+                success: false,
+                message: errorMessage
+            };
         } finally {
             setIsRegistering(false);
         }
-    }, [setToken]);
+    }, [setToken, setUser, setError]);
 
     const login = useCallback(async (data: {
         email: string;
@@ -408,33 +475,116 @@ export function UserProvider({ children }: { children: ReactNode }) {
         console.log("✅ [CONTEXT] Logout completo");
     }, []);
 
-    const upgradePlan = useCallback(async (plan: 'free' | 'pro' | 'escritorio'): Promise<boolean> => {
+    const upgradePlan = useCallback(async (plan: 'free' | 'pro' | 'escritorio'): Promise<UpgradeResult> => {
         setIsUpgradingPlan(true);
         setError(null);
 
         try {
             if (!tokenManager.hasToken()) {
-                setError('Usuário não autenticado');
-                return false;
+                throw new Error('Usuário não autenticado');
             }
+
+            console.log(`🔄 Solicitando upgrade para: ${plan}`);
 
             const response = await apiClient.post('/users/upgrade', { plan });
             const responseData = response.data;
 
-            if (responseData.success && responseData.data) {
-                setUser(responseData.data);
-                return true;
-            } else {
-                setError(responseData.error || 'Erro ao atualizar plano');
-                return false;
+            console.log('📦 Resposta do upgrade:', responseData);
+
+            if (!responseData.success) {
+                throw new Error(responseData.error || 'Erro no servidor');
             }
-        } catch (err) {
-            setError('Erro de conexão');
-            return false;
+
+            // Para plano FREE - já retorna usuário atualizado
+            if (plan === 'free') {
+                if (responseData.data?.user) {
+                    setUser(responseData.data.user);
+                }
+                return {
+                    success: true,
+                    data: responseData.data,
+                    message: responseData.message || 'Plano FREE ativado'
+                };
+            }
+
+            // Para planos PAGOS - retorna link do Stripe
+            if (!responseData.data?.paymentUrl) {
+                throw new Error('Link de pagamento não recebido');
+            }
+
+            return {
+                success: true,
+                data: {
+                    paymentUrl: responseData.data.paymentUrl,
+                    plan: responseData.data.plan,
+                    price: responseData.data.price,
+                    email: responseData.data.email,
+                    id: responseData.data.userId,
+                },
+                message: 'Redirecione para o link de pagamento'
+            };
+
+        } catch (err: any) {
+            console.error('❌ Erro no upgradePlan:', err);
+            const errorMsg = err.response?.data?.error || err.message || 'Erro ao processar';
+            setError(errorMsg);
+
+            return {
+                success: false,
+                message: errorMsg
+            };
         } finally {
             setIsUpgradingPlan(false);
         }
-    }, []);
+    }, [tokenManager, setUser, setError]);
+
+    // Verificação SIMPLIFICADA - só informa o status atual
+    const checkPaymentStatus = useCallback(async (): Promise<PaymentVerification> => {
+        try {
+            if (!tokenManager.hasToken()) {
+                return {
+                    success: false,
+                    message: 'Usuário não autenticado'
+                };
+            }
+
+            const response = await apiClient.get('/users/verify-payment');
+            const responseData = response.data;
+
+            if (responseData.success) {
+                // Sincroniza dados do usuário se necessário
+                if (responseData.data?.currentPlan !== user?.plan) {
+                    // Busca dados atualizados
+                    try {
+                        const userResponse = await apiClient.get('/users/profile');
+                        if (userResponse.data.success) {
+                            setUser(userResponse.data.data);
+                        }
+                    } catch (profileErr) {
+                        console.log('ℹ️ Não foi possível atualizar perfil:', profileErr);
+                    }
+                }
+
+                return {
+                    success: true,
+                    data: responseData.data,
+                    needsVerification: responseData.data?.currentPlan === 'free'
+                };
+            }
+
+            return {
+                success: false,
+                message: responseData.error
+            };
+
+        } catch (err: any) {
+            console.error('❌ Erro ao verificar pagamento:', err);
+            return {
+                success: false,
+                message: 'Erro ao verificar status'
+            };
+        }
+    }, [tokenManager, user?.plan, setUser]);
 
     const updateUser = useCallback(async (data: Partial<User>): Promise<boolean> => {
         setError(null);
