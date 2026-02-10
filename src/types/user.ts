@@ -52,3 +52,8 @@ export interface LoginResponseData {
 export type LoginResponse = ApiResponse<LoginResponseData>;
 
 export type UserResponse = ApiResponse<User>;
+
+export type AuthResult = {
+    success: boolean;
+    message?: string;
+};

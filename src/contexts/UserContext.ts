@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
-import { User } from '@/types/user';
+import { AuthResult, User } from '@/types/user';
 import { apiClient } from '@/lib/api-client';
 import { tokenManager } from '@/lib/token-manager';
 import axios from 'axios';
@@ -60,8 +60,8 @@ interface UserContextType {
     isAuthenticated: boolean;
 
     // Auth operations
-    registerEmail: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; message?: string }>;
-    login: (data: { email: string; password: string }) => Promise<boolean>;
+    registerEmail: (data: { name: string; email: string; password: string }) => Promise<AuthResult>;
+    login: (data: { email: string; password: string }) => Promise<AuthResult>;
     registerGoogle: (accessToken: string) => Promise<boolean>;
     logout: () => void;
 
@@ -193,7 +193,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         name: string;
         email: string;
         password: string
-    }): Promise<{ success: boolean; message?: string }> => {
+    }): Promise<AuthResult> => {
         setIsRegistering(true);
         setError(null);
 
@@ -296,7 +296,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const login = useCallback(async (data: {
         email: string;
         password: string
-    }): Promise<boolean> => {
+    }): Promise<AuthResult> => {
         setIsLoggingIn(true);
         setError(null);
 
@@ -340,10 +340,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     documentsCreatedThisMonth: userData.usage?.documentsCreatedThisMonth
                 });
 
-                return true;
+                return { success: true };
             } else {
                 setError('Credenciais inválidas ou usuário não retornado');
-                return false;
+                return { success: false };
             }
         } catch (err) {
             console.error('❌ [CONTEXT] Erro no login:', err);
@@ -352,7 +352,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             } else {
                 setError('Erro de conexão');
             }
-            return false;
+            return { success: false };
         } finally {
             setIsLoggingIn(false);
         }

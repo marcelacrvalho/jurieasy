@@ -1,4 +1,3 @@
-// app/auth/page.tsx
 "use client";
 
 import Image from "next/image";
@@ -12,6 +11,7 @@ import LoadingAnimation from "@/components/shared/LoadingAnimation";
 import { tokenManager } from '@/lib/token-manager';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from "next/link";
+import { AuthResult, RegisterResponse, User } from "@/types/user";
 
 export default function AuthPage() {
     const router = useRouter();
@@ -107,35 +107,27 @@ export default function AuthPage() {
         clearError();
         setIsGoogleAuth(false);
 
-        // Validações básicas
         if (!form.email || !form.password) return;
         if (!isLoginMode && !form.name) return;
 
-        try {
-            let success = false;
+        const result = isLoginMode
+            ? await login({
+                email: form.email,
+                password: form.password
+            })
+            : await registerEmail({
+                name: form.name,
+                email: form.email,
+                password: form.password
+            });
 
-            if (isLoginMode) {
-                success = await login({
-                    email: form.email,
-                    password: form.password
-                });
-            } else {
-                success = await registerEmail({
-                    name: form.name,
-                    email: form.email,
-                    password: form.password
-                });
-            }
+        if (!result.success) return;
 
-            if (success) {
-                if (!isLoginMode && selectedPlan) {
-                    setShouldRedirectToPayment(true);
-                }
-            }
-        } catch (error) {
-            console.error("❌ Erro na autenticação:", error);
+        if (!isLoginMode && selectedPlan) {
+            setShouldRedirectToPayment(true);
         }
     };
+
 
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
@@ -493,3 +485,32 @@ export default function AuthPage() {
         </div>
     );
 }
+
+function mapApiUserToUser(apiUser: any): User {
+    return {
+        id: apiUser._id,
+        name: apiUser.name,
+        email: apiUser.email,
+        plan: apiUser.plan,
+        authType: "email",
+        emailVerified: apiUser.emailVerified,
+        isOwner: true,
+        preferences: {
+            notifications: {
+                email: true,
+                documentExpiry: true,
+                usageAlerts: true
+            },
+            language: "pt-BR"
+        },
+        usage: {
+            documentsCreatedThisMonth: 0,
+            documentsRemaining: apiUser.limits.documentsPerMonth,
+            canSaveDocuments: apiUser.limits.saveDocuments,
+            canHaveTeamMembers: apiUser.limits.teamMembers > 0
+        },
+        hasActiveSubscription: apiUser.plan !== "free",
+        createdAt: apiUser.createdAt
+    };
+}
+
