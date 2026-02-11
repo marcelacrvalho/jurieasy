@@ -16,7 +16,6 @@ import { DocumentCard } from "./DocumentCard";
 import DocumentWizard from "./DocumentWizard";
 import { User } from "@/types/user";
 import { useDocuments } from "@/hooks/document";
-// Certifique-se de ter este hook (código no final da resposta se não tiver)
 import { useDebounce } from "@/utils/debounce";
 
 interface DocumentManagerModalProps {
@@ -26,7 +25,6 @@ interface DocumentManagerModalProps {
     onDraftSelect?: (document: UserDocument) => void;
     mode: 'create' | 'drafts';
     userDocuments?: UserDocument[];
-    // documents removido pois virá da API localmente
     title?: string;
     description?: string;
     userId?: string;
@@ -81,14 +79,12 @@ export default function DocumentManagerModal({
     let startIndex = 0;
     let endIndex = 0;
 
-    // --- CORREÇÃO 1: FETCH DATA EFFECT ---
     useEffect(() => {
         const loadDocuments = async () => {
             if (!isOpen || mode !== 'create') return;
 
             setIsLoading(true);
             try {
-                // Passamos skipStateUpdate: true (conforme sua alteração no hook)
                 const data = await fetchDocumentsApi({
                     category: selectedCategory === "Todos" ? undefined : selectedCategory,
                     search: debouncedSearch,
@@ -122,30 +118,25 @@ export default function DocumentManagerModal({
         }
     }, [isOpen, mode]);
 
-    // --- CORREÇÃO 2: LÓGICA DE FILTRAGEM E PAGINAÇÃO ---
-
     // Preparar os itens para renderização
     let currentItems: (Document | UserDocument)[] = [];
     let totalPages = 1;
     let totalItemsCount = 0;
 
     if (mode === 'create') {
-        // No modo CREATE, a API já devolve paginado e filtrado.
         currentItems = localDocuments;
 
-        // 🟢 CORREÇÃO: Calcular startIndex e endIndex para fins de exibição
         startIndex = (currentPage - 1) * itemsPerPage;
-        endIndex = startIndex + localDocuments.length; // Usa o length real dos itens carregados
+        endIndex = startIndex + localDocuments.length;
 
         const hasNextPage = localDocuments.length === itemsPerPage;
         totalPages = hasNextPage ? currentPage + 1 : currentPage;
-        totalItemsCount = localDocuments.length; // Aqui, representa o total da PÁGINA, não o total geral.
+        totalItemsCount = localDocuments.length;
     } else {
         // No modo DRAFTS, filtramos localmente o array estático userDocuments
         const filteredDrafts = userDocuments.filter(document => {
             const documentTitle = document.documentId?.title || 'Documento sem título';
 
-            // 🟢 CORREÇÃO AQUI: Use debouncedSearch para a lógica de filtragem.
             // Isso garante que a filtragem pesada (e a re-renderização resultante do filtro)
             // só ocorra após o usuário parar de digitar.
             const matchesSearch = documentTitle.toLowerCase().includes(debouncedSearch.toLowerCase());
@@ -202,7 +193,6 @@ export default function DocumentManagerModal({
 
     // Funções de paginação
     const goToNextPage = () => {
-        // No modo create (API), permitimos ir se tivermos itens cheios na página atual
         if (mode === 'create') {
             if (localDocuments.length === itemsPerPage) setCurrentPage(p => p + 1);
         } else {

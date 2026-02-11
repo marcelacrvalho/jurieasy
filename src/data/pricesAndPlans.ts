@@ -19,7 +19,7 @@ export const plans = [
     {
         name: "Profissional",
         label: "pro",
-        price: "R$ 29",
+        price: "R$ 19",
         description: "Para uso profissional individual",
         features: [
             "30 documentos/mês",
@@ -36,7 +36,7 @@ export const plans = [
     {
         name: "Escritório",
         label: "escritorio",
-        price: "R$ 97",
+        price: "R$ 57",
         description: "Para equipes jurídicas e alto volume",
         features: [
             "Documentos ilimitados",
@@ -46,7 +46,7 @@ export const plans = [
             "Backup automático ilimitado para documentos gerados",
             "Exportar em PDF e Word",
             "Biblioteca de dados reutilizáveis",
-            "Até 5 usuários inclusos no mesmo plano",
+            "Até 3 usuários inclusos no mesmo plano",
             "Fluxo de aprovação",
             "Painel administrativo",
             "Compatível para assinar com DocuSign e GOV BR",
