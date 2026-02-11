@@ -43,7 +43,6 @@ export default function CompletedDocumentsModal({
         if (!user?.id) return;
 
         try {
-            console.log('🔄 Carregando documentos:', { page, search });
             const result = await getUserCompletedDocuments(user.id, page, itemsPerPage, search);
             setDocuments(result.documents || []);
             setTotalItems(result.total || 0);
@@ -156,7 +155,6 @@ export default function CompletedDocumentsModal({
     const showingFrom = (currentPage - 1) * itemsPerPage + 1;
     const showingTo = Math.min(currentPage * itemsPerPage, totalItems);
 
-    // CONTEÚDO DO PREVIEW
     const renderPreviewContent = () => (
         <div className="h-full flex flex-col">
             {/* Header do Preview */}
@@ -349,8 +347,8 @@ export default function CompletedDocumentsModal({
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-[9999] p-2 sm:p-4">
             <div className={`bg-white rounded-xl md:rounded-2xl shadow-2xl overflow-hidden ${showPreview
-                    ? 'w-full max-w-6xl h-[95vh] md:h-[95vh]'
-                    : 'w-full max-w-4xl h-[80vh] md:h-[65vh]'
+                ? 'w-full max-w-6xl h-[95vh] md:h-[95vh]'
+                : 'w-full max-w-4xl h-[80vh] md:h-[65vh]'
                 } transition-all duration-300`}>
                 <div className={`h-full transition-all duration-300 ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
                     }`}>

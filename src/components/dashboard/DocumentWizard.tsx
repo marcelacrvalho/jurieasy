@@ -108,7 +108,7 @@ export default function DocumentWizard({
 
     const saveProgress = async (currentAnswers: Record<string, any>, step: number) => {
         if (!currentUserDocument || !template) {
-            console.log('⏸️ Save progress pausado: template ou userDocument não disponível');
+            console.log('Save progress pausado: template ou userDocument não disponível');
             return;
         }
 
@@ -168,16 +168,13 @@ export default function DocumentWizard({
             }
 
             if (result) {
-                console.log('✅ Documento gerado com sucesso:', result._id);
                 setCurrentUserDocument(result);
                 setShowPreview(true);
             } else {
-                console.error('❌ Falha ao gerar documento');
                 toast.error("Falha ao gerar documento");
             }
 
         } catch (error) {
-            console.error("💥 Erro ao gerar documento:", error);
             toast.error("Erro ao conectar com o servidor. Verifique se a API está rodando.");
         } finally {
             setIsGenerating(false);
@@ -306,8 +303,6 @@ export default function DocumentWizard({
 
             const generatedText = generateDocumentText(template, answers);
 
-            console.log('💾 SALVAMENTO MANUAL - Gerando texto para rascunho');
-
             if (currentUserDocument) {
                 result = await updateDocument(currentUserDocument._id, {
                     answers,
@@ -362,7 +357,7 @@ export default function DocumentWizard({
         }, 1000); // Debounce de 1 segundo
 
         return () => clearTimeout(timeoutId);
-    }, [answers, currentStep, currentUserDocument, template]); // ✅ Adicionar template como dependência
+    }, [answers, currentStep, currentUserDocument, template]);
 
     // LOADING PAGE
     if (isGenerating) {

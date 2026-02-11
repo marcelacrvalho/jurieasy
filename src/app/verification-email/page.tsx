@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { apiClient } from '../../lib/api-client';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
-// Componente principal
 function VerifyEmailContent() {
     const searchParams = useSearchParams();
     const router = useRouter();

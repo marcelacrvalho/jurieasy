@@ -90,7 +90,6 @@ export default function DocumentCreationModal({
     };
 
     const renderWizard = () => {
-        // ✅ CORREÇÃO: Verificar se pode criar E se o documento é válido
         if (!userDocument && !canCreateDocument) {
             return (
                 <div className="flex-1 flex items-center justify-center p-8">
@@ -110,7 +109,6 @@ export default function DocumentCreationModal({
             );
         }
 
-        // ✅ CORREÇÃO: Não renderizar wizard se documento não for válido
         if (!userDocument && !isValidDocument) {
             return (
                 <div className="flex-1 flex items-center justify-center p-8">

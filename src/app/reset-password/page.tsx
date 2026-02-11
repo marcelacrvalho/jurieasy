@@ -69,8 +69,6 @@ function ResetPasswordContent() {
             return;
         }
 
-        // Aqui você pode fazer uma verificação do token se quiser
-        // Por enquanto, apenas armazenamos o token
         setVerifying(false);
         setValidToken(true);
     }, [searchParams]);
@@ -407,7 +405,6 @@ function ResetPasswordContent() {
                 </div>
             </div>
 
-            {/* Footer/Branding */}
             {/* Footer/Branding */}
             <div className="mt-10 text-center">
                 <motion.div

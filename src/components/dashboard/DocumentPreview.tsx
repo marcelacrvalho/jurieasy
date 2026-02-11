@@ -279,7 +279,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
 
     const [textoEditavel, setTextoEditavel] = useState(documentText || "");
 
-    // 1. Primeiro, crie a função para gerar o texto baseado nas respostas
     const gerarTextoDasRespostas = useCallback(() => {
         let text = template.templateText || "";
 
@@ -316,12 +315,10 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         return text;
     }, [template.templateText, template.variables, template.title, editingAnswers]);
 
-    // 2. Use memo para o texto baseado nas respostas
     const textoBase = useMemo(() => {
         return gerarTextoDasRespostas();
     }, [gerarTextoDasRespostas]);
 
-    // 5. Efeito para sincronizar quando o texto base mudar (apenas na inicialização)
     useEffect(() => {
         // Só atualiza se o textoEditavel ainda não foi modificado pelo usuário
         // Verifica se o textoEditavel ainda é igual ao textoBase anterior
@@ -331,14 +328,14 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
         }
     }, [textoBase]);
 
-    // 6. Função para atualizar o texto conforme o usuário digita
+    // Função para atualizar o texto conforme o usuário digita
     const handleTextChange = (e: { currentTarget: { innerText: any; }; }) => {
         const novoTexto = e.currentTarget.innerText;
         setTextoEditavel(novoTexto);
         textoRef.current = novoTexto;
     };
 
-    // 3. (Opcional) Referência para pegar o texto na hora do download sem precisar re-renderizar tudo
+    // Referência para pegar o texto na hora do download sem precisar re-renderizar tudo
     const textoRef = useRef(documentText || "");
 
     const generatePDF = async (
@@ -737,9 +734,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
 
                 {/* Header Moderno */}
                 <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-200/50 p-6 mb-6 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
-                    {/* MOBILE: Empilhar verticalmente */}
                     <div className="sm:flex sm:items-center sm:justify-between gap-5">
-                        {/* MOBILE: Primeira linha - Botão + Título */}
                         <div className="flex items-center justify-between mb-4 sm:mb-0">
                             {/* BOTÃO VOLTAR */}
                             <button
@@ -752,7 +747,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                                 ←
                             </button>
 
-                            {/* MOBILE: Mostrar título ao lado do botão */}
                             <div className="sm:hidden ml-4 flex-1">
                                 <h1 className="text-lg font-bold text-gray-900 truncate">
                                     {template.title}
@@ -774,9 +768,7 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                             </p>
                         </div>
 
-                        {/* BOTÕES DE DOWNLOAD - Design moderno com tamanhos iguais */}
                         <div className="flex flex-col items-start gap-3">
-                            {/* PRIMEIRA LINHA - BOTÕES PDF E DOC */}
                             <div className="flex items-center gap-3">
                                 {/* BOTÃO BAIXAR PDF */}
                                 <button
@@ -831,7 +823,6 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                                 </button>
                             </div>
 
-                            {/* SEGUNDA LINHA - BOTÕES ASSINATURA */}
                             {(plan === 'escritório' || plan === 'escritorio') && (
                                 <div className="flex items-center gap-3">
                                     {/* BOTÃO DOCUSIGN */}
@@ -971,15 +962,14 @@ export default function DocumentPreview({ userDocument, template, plan, onBack, 
                                     className="outline-none focus:ring-2 focus:ring-blue-100 focus:bg-blue-50/30 rounded-lg p-2 -m-2 transition-all whitespace-pre-wrap min-h-[200px]"
                                     style={{
                                         textIndent: '0px',
-                                        maxHeight: '70vh', // 👈 Limitar altura máxima
-                                        overflowY: 'auto', // 👈 Forçar rolagem vertical
-                                        wordBreak: 'break-word' // 👈 Quebrar palavras longas
+                                        maxHeight: '70vh',
+                                        overflowY: 'auto',
+                                        wordBreak: 'break-word'
                                     }}
                                 >
                                     {documentText}
                                 </div>
 
-                                {/* Assinaturas (Mantidas estáticas para preservar layout) */}
                                 <div className="mt-10 sm:mt-20 pt-6 sm:pt-10 border-t border-gray-400 grid grid-cols-1 gap-8 sm:gap-16">
                                     {[1, 2].map((p) => (
                                         <div key={p} className="text-center">

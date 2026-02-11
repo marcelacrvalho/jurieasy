@@ -6,8 +6,8 @@ interface MobileMenuProps extends TouchHandlers {
     onClose: () => void;
     quickActions: QuickAction[];
     onNewDocument: () => void;
-    onMyDocuments: () => void; // ✅ NOVA PROP
-    onMyProfile: () => void;   // ✅ NOVA PROP
+    onMyDocuments: () => void;
+    onMyProfile: () => void;
 }
 
 export default function MobileMenu({
@@ -17,8 +17,8 @@ export default function MobileMenu({
     onTouchStart,
     onTouchEnd,
     onNewDocument,
-    onMyDocuments, // ✅ NOVA PROP
-    onMyProfile     // ✅ NOVA PROP
+    onMyDocuments,
+    onMyProfile
 }: MobileMenuProps) {
 
     const handleActionClick = (actionLabel: string) => {
@@ -27,10 +27,10 @@ export default function MobileMenu({
                 onNewDocument();
                 break;
             case "Meus Documentos":
-                onMyDocuments(); // ✅ CHAMA A FUNÇÃO
+                onMyDocuments();
                 break;
             case "Meu Perfil":
-                onMyProfile();   // ✅ CHAMA A FUNÇÃO
+                onMyProfile();
                 break;
             default:
                 console.log('Mobile action:', actionLabel);
@@ -69,7 +69,7 @@ export default function MobileMenu({
                             <button
                                 key={action.label}
                                 className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-100 rounded-2xl transition-all duration-200 active:scale-95"
-                                onClick={() => handleActionClick(action.label)} // ✅ FUNÇÃO UNIFICADA
+                                onClick={() => handleActionClick(action.label)}
                                 onTouchStart={onTouchStart}
                                 onTouchEnd={onTouchEnd}
                             >

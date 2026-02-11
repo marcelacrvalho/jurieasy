@@ -391,7 +391,6 @@ function TeamTab() {
         }));
     };
 
-    // CORREÇÃO: Usar NonNullable para garantir que as chaves são válidas
     const handlePermissionChange = (permission: keyof NonNullable<AddTeamMemberData['permissions']>, value: boolean) => {
         setFormData(prev => ({
             ...prev,
@@ -621,9 +620,7 @@ function BillingTab({ user }: { user: any }) {
     };
 
     return (
-        /* Adicionado 'mx-auto' na div pai para centralizar o bloco todo */
         <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
-            {/* Erro */}
             {(localError || upgradeError) && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                     <p className="text-red-700 text-sm">{localError || upgradeError}</p>
