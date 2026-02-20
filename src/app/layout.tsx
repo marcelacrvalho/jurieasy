@@ -31,14 +31,9 @@ export const metadata: Metadata = {
   keywords: [
     "contratos online",
     "modelos de contrato",
-    "automação jurídica",
-    "advogados",
-    "LGPD",
-    "segurança jurídica",
-    "documentos jurídicos",
+    "criação de contratos fácil",
+    "criar contrato automaticamente",
     "contratos profissionais",
-    "empresas",
-    "startups",
     "contrato de locação",
     "contrato de prestação de serviço",
     "contrato de eventos"

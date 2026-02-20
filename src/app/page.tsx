@@ -28,9 +28,9 @@ export default function LandingPage() {
       <SocialProof />
       <Benefits />
       <HowItWorks />
-      <Testimonial />
-      <ROICalculator />
-      <Prices />
+
+
+
       <FAQ />
       <Footer onLegalClick={handleLegalClick} />
 
